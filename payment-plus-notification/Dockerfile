@@ -5,7 +5,7 @@ FROM eclipse-temurin:21
 WORKDIR /app
 
 # Copy the jar file into the container
-COPY target/payment-plus-notification-app.jar app.jar
+COPY target/payment-plus-notification.jar app.jar
 
 # Run the jar
 ENTRYPOINT ["java","-jar","app.jar"]
