@@ -60,4 +60,6 @@ jobs:
           context: ./user-management
           file: ./user-management/Dockerfile
           push: true
-          tags: hellisback/library-user-management:${{ needs.get-version-subpackage-A.outputs.version }}
+          tags: |
+            hellisback/library-user-management:${{ needs.get-version-subpackage-A.outputs.version }}
+            hellisback/library-user-management:latest
