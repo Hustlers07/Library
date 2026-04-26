@@ -1,4 +1,4 @@
-name: Build and Publish Versioned Docker Images
+name: Build and Publish Numeric Versioned Docker Images
 
 on:
   push:
@@ -28,28 +28,10 @@ jobs:
               - 'payment-plus-notification/**'
 
   # ---------------- User Management ----------------
-  get-version-user-management:
-    if: needs.filter-changed.outputs.user-management == 'true'
-    runs-on: ubuntu-latest
-    needs: filter-changed
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Get next version for user-management
-        id: version
-        uses: reecetech/version-increment@2024.10.1
-        with:
-          scheme: semver
-          increment: patch
-          tag_prefix: user-management-
-
   build-push-user-management:
     if: needs.filter-changed.outputs.user-management == 'true'
     runs-on: ubuntu-latest
-    needs: get-version-user-management
+    needs: filter-changed
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 17
@@ -72,32 +54,14 @@ jobs:
           file: ./user-management/Dockerfile
           push: true
           tags: |
-            hellisback/library-user-management:${{ needs.get-version-user-management.outputs.version }}
+            hellisback/library-user-management:v${{ github.run_number }}
             hellisback/library-user-management:latest
 
   # ---------------- Booking Management ----------------
-  get-version-booking-management:
-    if: needs.filter-changed.outputs.booking-management == 'true'
-    runs-on: ubuntu-latest
-    needs: filter-changed
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Get next version for booking-management
-        id: version
-        uses: reecetech/version-increment@2024.10.1
-        with:
-          scheme: semver
-          increment: patch
-          tag_prefix: booking-management-
-
   build-push-booking-management:
     if: needs.filter-changed.outputs.booking-management == 'true'
     runs-on: ubuntu-latest
-    needs: get-version-booking-management
+    needs: filter-changed
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
@@ -120,32 +84,14 @@ jobs:
           file: ./booking-management/Dockerfile
           push: true
           tags: |
-            hellisback/library-booking-management:${{ needs.get-version-booking-management.outputs.version }}
+            hellisback/library-booking-management:v${{ github.run_number }}
             hellisback/library-booking-management:latest
 
   # ---------------- Payment Plus Notification ----------------
-  get-version-payment-plus-notification:
-    if: needs.filter-changed.outputs.payment-plus-notification == 'true'
-    runs-on: ubuntu-latest
-    needs: filter-changed
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Get next version for payment-plus-notification
-        id: version
-        uses: reecetech/version-increment@2024.10.1
-        with:
-          scheme: semver
-          increment: patch
-          tag_prefix: payment-plus-notification-
-
   build-push-payment-plus-notification:
     if: needs.filter-changed.outputs.payment-plus-notification == 'true'
     runs-on: ubuntu-latest
-    needs: get-version-payment-plus-notification
+    needs: filter-changed
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
@@ -168,5 +114,5 @@ jobs:
           file: ./payment-plus-notification/Dockerfile
           push: true
           tags: |
-            hellisback/library-payment-plus-notification:${{ needs.get-version-payment-plus-notification.outputs.version }}
+            hellisback/library-payment-plus-notification:v${{ github.run_number }}
             hellisback/library-payment-plus-notification:latest
