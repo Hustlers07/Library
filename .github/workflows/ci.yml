@@ -9,20 +9,27 @@ jobs:
   filter-changed:
     runs-on: ubuntu-latest
     outputs:
-      subpackageA: ${{ steps.filter.outputs.subpackageA }}
+      user-management: ${{ steps.filter.outputs.user-management }}
+      booking-management: ${{ steps.filter.outputs.booking-management }}
+      payment-plus-notification: ${{ steps.filter.outputs.payment-plus-notification }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Filter subpackage changes
+      - name: Filter package changes
         id: filter
         uses: dorny/paths-filter@v4
         with:
           filters: |
-            subpackageA:
+            user-management:
               - 'user-management/**'
+            booking-management:
+              - 'booking-management/**'
+            payment-plus-notification:
+              - 'payment-plus-notification/**'
 
-  get-version-subpackage-A:
-    if: needs.filter-changed.outputs.subpackageA == 'true'
+  # ---------------- User Management ----------------
+  get-version-user-management:
+    if: needs.filter-changed.outputs.user-management == 'true'
     runs-on: ubuntu-latest
     needs: filter-changed
     outputs:
@@ -31,44 +38,135 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Get next version for subpackage A
+      - name: Get next version for user-management
         id: version
         uses: reecetech/version-increment@2024.10.1
         with:
           scheme: semver
           increment: patch
-          tag_prefix: subpackage-a-
+          tag_prefix: user-management-
 
-  build-push-subpackage-A:
-    if: needs.filter-changed.outputs.subpackageA == 'true'
+  build-push-user-management:
+    if: needs.filter-changed.outputs.user-management == 'true'
     runs-on: ubuntu-latest
-    needs: get-version-subpackage-A
+    needs: get-version-user-management
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-
       - name: Build JAR with Maven
         run: mvn -f user-management/pom.xml clean package
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           logout: true
-
-      - name: Build and push Docker image for Subpackage A
+      - name: Build and push Docker image
         uses: docker/build-push-action@v7
         with:
           context: ./user-management
           file: ./user-management/Dockerfile
           push: true
           tags: |
-            hellisback/library-user-management:${{ needs.get-version-subpackage-A.outputs.version }}
+            hellisback/library-user-management:${{ needs.get-version-user-management.outputs.version }}
             hellisback/library-user-management:latest
+
+  # ---------------- Booking Management ----------------
+  get-version-booking-management:
+    if: needs.filter-changed.outputs.booking-management == 'true'
+    runs-on: ubuntu-latest
+    needs: filter-changed
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get next version for booking-management
+        id: version
+        uses: reecetech/version-increment@2024.10.1
+        with:
+          scheme: semver
+          increment: patch
+          tag_prefix: booking-management-
+
+  build-push-booking-management:
+    if: needs.filter-changed.outputs.booking-management == 'true'
+    runs-on: ubuntu-latest
+    needs: get-version-booking-management
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Build JAR with Maven
+        run: mvn -f booking-management/pom.xml clean package
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          logout: true
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: ./booking-management
+          file: ./booking-management/Dockerfile
+          push: true
+          tags: |
+            hellisback/library-booking-management:${{ needs.get-version-booking-management.outputs.version }}
+            hellisback/library-booking-management:latest
+
+  # ---------------- Payment Plus Notification ----------------
+  get-version-payment-plus-notification:
+    if: needs.filter-changed.outputs.payment-plus-notification == 'true'
+    runs-on: ubuntu-latest
+    needs: filter-changed
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get next version for payment-plus-notification
+        id: version
+        uses: reecetech/version-increment@2024.10.1
+        with:
+          scheme: semver
+          increment: patch
+          tag_prefix: payment-plus-notification-
+
+  build-push-payment-plus-notification:
+    if: needs.filter-changed.outputs.payment-plus-notification == 'true'
+    runs-on: ubuntu-latest
+    needs: get-version-payment-plus-notification
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Build JAR with Maven
+        run: mvn -f payment-plus-notification/pom.xml clean package
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          logout: true
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: ./payment-plus-notification
+          file: ./payment-plus-notification/Dockerfile
+          push: true
+          tags: |
+            hellisback/library-payment-plus-notification:${{ needs.get-version-payment-plus-notification.outputs.version }}
+            hellisback/library-payment-plus-notification:latest

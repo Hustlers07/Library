@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-plus-notification
+  namespace: library-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-plus-notification
+  template:
+    metadata:
+      labels:
+        app: payment-plus-notification
+    spec:
+      containers:
+      - name: payment-plus-notification
+        image: hellisback/library-payment-plus-notification-app:${IMAGE_VERSION}
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          valueFrom:
+            configMapKeyRef:
+              name: library-config
+              key: SPRING_PROFILES_ACTIVE
+        - name: SPRING_DATASOURCE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: library-config
+              key: SPRING_DATASOURCE_URL
+        - name: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: library-config
+              key: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: library-secret
+              key: SPRING_DATASOURCE_USERNAME
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: library-secret
+              key: SPRING_DATASOURCE_PASSWORD
+        livenessProbe:
+          httpGet:
+            path: /payment-plus-notification/actuator/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /payment-plus-notification/actuator/health
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 500
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-plus-notification-service
+spec:
+  selector: 
+    app: payment-plus-notification
+    namespace: library-dev
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+    nodePort: 30003
+  type: NodePort
