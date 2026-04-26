@@ -5,7 +5,7 @@ FROM eclipse-temurin:21
 WORKDIR /app
 
 # Copy the jar file into the container
-COPY target/booking-management-app.jar app.jar
+COPY target/booking-management.jar app.jar
 
 # Run the jar
 ENTRYPOINT ["java","-jar","app.jar"]
