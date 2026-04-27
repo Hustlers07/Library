@@ -4,9 +4,9 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://192.168.49.2:30001/demo?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC}
-    username: ${SPRING_DATASOURCE_USERNAME:demo}
-    password: ${SPRING_DATASOURCE_PASSWORD:demo}
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://192.168.49.2:30001/library?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC}
+    username: ${SPRING_DATASOURCE_USERNAME:admin}
+    password: ${SPRING_DATASOURCE_PASSWORD:library}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       connection-timeout: 20000
@@ -36,3 +36,14 @@ management:
     health:
       show-details: always
 
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:your-secret-key-change-this-in-production-environment-please-use-a-strong-random-string}
+  expiration: ${JWT_EXPIRATION:86400000}
+  refresh:
+    expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    com.library.user_management: DEBUG
