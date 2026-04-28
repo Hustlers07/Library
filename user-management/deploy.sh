@@ -25,10 +25,10 @@ kubectl apply -f ./k8s/user-deployment.yaml
 # kubectl set image deployment/user-management user-management=hellisback/library-user-management-app:latest --record
 
 # Wait for rollout to complete
-kubectl rollout status deployment/user-management -n app-dev
+kubectl rollout status deployment/user-management -n library-dev
 
 echo "Done! Your Spring Boot app should now be deployed to Minikube."
 
 # Checking pods
 echo "Checking pods..."
-kubectl get pods -n app-dev
+kubectl get pods -n library-dev
