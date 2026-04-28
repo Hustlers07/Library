@@ -14,7 +14,9 @@ public class ApiRuleDefiner {
         new SecurityRule("/api/booking/**", "hasAnyRole(ADMIN,MEMBER,LIBRARIAN)"),
         new SecurityRule("/api/payment/**", "hasAnyRole(ADMIN,MEMBER,LIBRARIAN)"),
         new SecurityRule("/api/admin/**", "hasRole(ADMIN)"),
-        new SecurityRule("/actuator/**", "permitAll")
+        new SecurityRule("/actuator/**", "permitAll"),
+        new SecurityRule("/swagger-ui/**", "permitAll"),
+        new SecurityRule("/v3/api-docs/**", "permitAll")
     );
 
     public List<SecurityRule> getSecurityRules() {
