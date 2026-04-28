@@ -87,24 +87,35 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(e -> e.authenticationEntryPoint(new JwtAuthenticationEntryPoint()))
                 .authorizeHttpRequests(auth -> {
-                    securityRules.getSecurityRules().forEach(r -> {
-                        String pattern = r.getPattern();
-                        String access = r.getAccess();
-                        if (access.equals("permitAll")) {
-                            auth.requestMatchers(pattern).permitAll();
+                    // Separate permitAll rules from others for cleaner configuration
+                    List<SecurityRule> permitAllRules = securityRules.getSecurityRules().stream()
+                            .filter(r -> r.getAccess().equals("permitAll"))
+                            .toList();
+                    
+                    List<SecurityRule> protectedRules = securityRules.getSecurityRules().stream()
+                            .filter(r -> !r.getAccess().equals("permitAll"))
+                            .toList();
+                    
+                    // Configure permitAll rules first
+                    for (SecurityRule rule : permitAllRules) {
+                        auth.requestMatchers(rule.getPattern()).permitAll();
+                    }
+                    
+                    // Configure protected rules
+                    for (SecurityRule rule : protectedRules) {
+                        String access = rule.getAccess();
+                        if (access.startsWith("hasAnyRole")) {
+                            String roles = access.substring(access.indexOf('(') + 1, access.indexOf(')'));
+                            auth.requestMatchers(rule.getPattern()).hasAnyRole(roles.split(","));
+                        } else if (access.startsWith("hasRole")) {
+                            String role = access.substring(access.indexOf('(') + 1, access.indexOf(')'));
+                            auth.requestMatchers(rule.getPattern()).hasRole(role);
                         } else {
-                            // simple parser for demo; adapt to your needs
-                            if (access.startsWith("hasAnyRole")) {
-                                String roles = access.substring(access.indexOf('(') + 1, access.indexOf(')'));
-                                auth.requestMatchers(pattern).hasAnyRole(roles.split(","));
-                            } else if (access.startsWith("hasRole")) {
-                                String role = access.substring(access.indexOf('(') + 1, access.indexOf(')'));
-                                auth.requestMatchers(pattern).hasRole(role);
-                            } else {
-                                auth.requestMatchers(pattern).authenticated();
-                            }
+                            auth.requestMatchers(rule.getPattern()).authenticated();
                         }
-                    });
+                    }
+                    
+                    // Default: require authentication for any other request
                     auth.anyRequest().authenticated();
                 }).authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

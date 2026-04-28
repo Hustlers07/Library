@@ -16,6 +16,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.util.AntPathMatcher;
 
 import java.io.IOException;
 import java.util.List;
@@ -47,10 +48,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
 
             String path = request.getRequestURI();
-            log.debug("Processing authentication for request: {}", path);
+            String method = request.getMethod();
+            log.debug("Processing authentication for request: {} {}", method, path);
+            
+            // Check if the request matches any permitAll rule using ant-style pattern matching
+            AntPathMatcher pathMatcher = new AntPathMatcher();
             Optional<SecurityRule> matchedRule = securityRules.getSecurityRules().stream()
-                    .filter(r -> path.startsWith(r.getPattern().replace("/**", ""))
-                            && r.getAccess().equals("permitAll"))
+                    .filter(r -> r.getAccess().equals("permitAll") && 
+                                pathMatcher.match(r.getPattern(), path))
                     .findFirst();
 
             if (matchedRule.isPresent()) {

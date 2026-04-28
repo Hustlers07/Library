@@ -9,12 +9,12 @@ public class ApiRuleDefiner {
 
 
     private final List<SecurityRule> rules = List.of(
-        new SecurityRule("/user-management/api/auth/**", "permitAll"),
-        new SecurityRule("/user-management/api/public/**", "permitAll"),
-        new SecurityRule("/user-management/api/booking/**", "hasAnyRole(ADMIN,MEMBER,LIBRARIAN)"),
-        new SecurityRule("/user-management/api/payment/**", "hasAnyRole(ADMIN,MEMBER,LIBRARIAN)"),
-        new SecurityRule("/user-management/api/admin/**", "hasRole(ADMIN)"),
-        new SecurityRule("/user-management/actuator/**", "permitAll")
+        new SecurityRule("/api/auth/**", "permitAll"),
+        new SecurityRule("/api/public/**", "permitAll"),
+        new SecurityRule("/api/booking/**", "hasAnyRole(ADMIN,MEMBER,LIBRARIAN)"),
+        new SecurityRule("/api/payment/**", "hasAnyRole(ADMIN,MEMBER,LIBRARIAN)"),
+        new SecurityRule("/api/admin/**", "hasRole(ADMIN)"),
+        new SecurityRule("/actuator/**", "permitAll")
     );
 
     public List<SecurityRule> getSecurityRules() {
