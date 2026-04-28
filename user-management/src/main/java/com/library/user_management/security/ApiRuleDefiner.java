@@ -17,6 +17,7 @@ public class ApiRuleDefiner {
         new SecurityRule("/actuator/**", "permitAll"),
         new SecurityRule("/swagger-ui/**", "permitAll"),
         new SecurityRule("/v3/api-docs/**", "permitAll")
+        
     );
 
     public List<SecurityRule> getSecurityRules() {
