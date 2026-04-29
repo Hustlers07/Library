@@ -1,0 +1,69 @@
+// Parent container (e.g., body or a wrapper div)
+// Wrapper around the card (could be body, or a div with class .login-wrapper)
+.login-wrapper {
+  display: flex;
+  justify-content: center;   // center horizontally
+  align-items: center;       // center vertically
+  min-height: 100vh;         // full viewport height
+  background: #eff0f3;       // optional: light background
+}
+
+// Card styling
+.login-card {
+  width: 30rem;
+  padding: 30px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;        // optional: rounded corners
+}
+
+.full-width {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+button {
+    width: 100%;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px; // spacing between form fields
+    width: 100%;
+    padding-top: 2rem;
+    max-width: 400px;
+    margin: 0 auto; // center horizontally
+
+    mat-form-field {
+        width: 100%;
+    }
+
+    .password-field {
+        position: relative;
+
+        button {
+            position: absolute;
+            top: 50%;
+            right: 8px;
+            transform: translateY(-50%);
+        }
+    }
+}
+
+.card-footer {
+    display: flex;
+    justify-content: center;
+    padding-top: 1rem;
+    margin-top: 1rem;
+
+    mat-chip {
+        margin: 0 8px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+
+        &:hover {
+            background-color: #e0e0e0;
+        }
+    }
+}

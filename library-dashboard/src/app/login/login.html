@@ -1,0 +1,51 @@
+<div class="login-wrapper">
+<mat-card class="login-card" appearance="outlined">
+    <mat-card-header>
+        <mat-card-title>Login</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+        <form [formGroup]="loginForm" class="login-form">
+            <mat-form-field appearance="outline">
+                <mat-label>Email</mat-label>
+                <input matInput formControlName="email" type="email" required>
+                <mat-error>
+
+                    @if(loginForm.get('email')?.hasError('required')){
+
+                    Email is required
+                    }
+                    @else if(loginForm.get('email')?.hasError('email')){
+                    Please enter a valid email
+                    }
+
+
+                </mat-error>
+
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Password</mat-label>
+                <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'" required>
+                <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword"
+                    [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hidePassword">
+                    <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+                </button>
+                <mat-error>
+                    @if(loginForm.get('password')?.hasError('required')){    
+                        Password is required
+                    }
+                </mat-error>
+            </mat-form-field>
+
+            <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid">Login</button>
+        </form>
+    </mat-card-content>
+    <mat-card-footer class="card-footer">
+        <mat-chip-set aria-label="Chihuahua traits">
+            <mat-chip>Forgot password</mat-chip>
+            <mat-chip>Register</mat-chip>
+            <mat-chip>Verify Email</mat-chip>
+        </mat-chip-set>
+    </mat-card-footer>
+</mat-card>
+</div>
