@@ -12,6 +12,7 @@ jobs:
       user-management: ${{ steps.filter.outputs.user-management }}
       booking-management: ${{ steps.filter.outputs.booking-management }}
       payment-plus-notification: ${{ steps.filter.outputs.payment-plus-notification }}
+      library-dashboard: ${{ steps.filter.outputs.library-dashboard }}
     steps:
       - uses: actions/checkout@v4
 
@@ -22,10 +23,8 @@ jobs:
           filters: |
             user-management:
               - 'user-management/**'
-            booking-management:
-              - 'booking-management/**'
-            payment-plus-notification:
-              - 'payment-plus-notification/**'
+            library-dashboard:
+              - 'library-dashboard/**'
 
   # ---------------- User Management ----------------
   build-push-user-management:
@@ -57,20 +56,23 @@ jobs:
             hellisback/library-user-management:v${{ github.run_number }}
             hellisback/library-user-management:latest
 
-  # ---------------- Booking Management ----------------
-  build-push-booking-management:
-    if: needs.filter-changed.outputs.booking-management == 'true'
+  # ---------------- Library Dashboard ----------------
+  build-push-library-dashboard:
+    if: needs.filter-changed.outputs.library-dashboard == 'true'
     runs-on: ubuntu-latest
     needs: filter-changed
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          distribution: 'temurin'
-          java-version: '21'
-      - name: Build JAR with Maven
-        run: mvn -f booking-management/pom.xml clean package
+          node-version: '18'
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./library-dashboard
+      - name: Build Angular application
+        run: npm run build -- --configuration production
+        working-directory: ./library-dashboard
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
         with:
@@ -80,39 +82,9 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v7
         with:
-          context: ./booking-management
-          file: ./booking-management/Dockerfile
+          context: ./library-dashboard
+          file: ./library-dashboard/Dockerfile
           push: true
           tags: |
-            hellisback/library-booking-management:v${{ github.run_number }}
-            hellisback/library-booking-management:latest
-
-  # ---------------- Payment Plus Notification ----------------
-  build-push-payment-plus-notification:
-    if: needs.filter-changed.outputs.payment-plus-notification == 'true'
-    runs-on: ubuntu-latest
-    needs: filter-changed
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-      - name: Build JAR with Maven
-        run: mvn -f payment-plus-notification/pom.xml clean package
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          logout: true
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v7
-        with:
-          context: ./payment-plus-notification
-          file: ./payment-plus-notification/Dockerfile
-          push: true
-          tags: |
-            hellisback/library-payment-plus-notification:v${{ github.run_number }}
-            hellisback/library-payment-plus-notification:latest
+            hellisback/library-dashboard:v${{ github.run_number }}
+            hellisback/library-dashboard:latest

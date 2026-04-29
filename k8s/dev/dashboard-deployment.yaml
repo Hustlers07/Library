@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: library-dashboard
+  namespace: library-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: library-dashboard
+  template:
+    metadata:
+      labels:
+        app: library-dashboard
+    spec:
+      containers:
+      - name: library-dashboard
+        image: hellisback/library-dashboard:latest
+        ports:
+        - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 20
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard-service
+  namespace: library-dev
+spec:
+  type: NodePort
+  selector:
+    app: library-dashboard
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30080
