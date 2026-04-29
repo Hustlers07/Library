@@ -5,7 +5,7 @@ FROM nginx:alpine
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copy pre-built application (built in CI pipeline)
-COPY dist /usr/share/nginx/html
+COPY dist/library-dashboard/browser /usr/share/nginx/html
 
 # Expose port
 EXPOSE 80
