@@ -16,6 +16,7 @@ spec:
       containers:
       - name: library-dashboard
         image: hellisback/library-dashboard:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
         livenessProbe:
