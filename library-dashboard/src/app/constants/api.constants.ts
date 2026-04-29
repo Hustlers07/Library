@@ -6,3 +6,5 @@ export const API_ENDPOINTS = {
   REGISTER: `${API_BASE_URL}/register`,
   PROFILE: `${API_BASE_URL}/profile`
 };
+
+export const TOKEN_KEY = 'authToken';
