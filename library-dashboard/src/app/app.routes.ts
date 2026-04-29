@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
-import { PageNotFound } from './page-not-found/page-not-found';
-import { Login } from './login/login';
-import { Register } from './register/register';
+import { PageNotFound } from './component/page-not-found/page-not-found';
+import { Login } from './component/login/login';
+import { Register } from './component/register/register';
 
 export const routes: Routes = [
     {
