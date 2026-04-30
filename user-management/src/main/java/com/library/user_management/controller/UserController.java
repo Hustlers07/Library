@@ -2,6 +2,7 @@ package com.library.user_management.controller;
 
 import com.library.user_management.dto.*;
 import com.library.user_management.entity.Role;
+import com.library.user_management.entity.User;
 import com.library.user_management.service.AuthenticationService;
 import com.library.user_management.service.UserDetailsServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -115,8 +116,10 @@ public class UserController {
             Authentication authentication) {
         log.info("Password change request for user: {}", authentication.getName());
         try {
+            User user = (User) authentication.getPrincipal();
+            String email = user.getEmail();
             authenticationService.changePassword(
-                    authentication.getName(),
+                    email,
                     request.get("currentPassword"),
                     request.get("newPassword")
             );

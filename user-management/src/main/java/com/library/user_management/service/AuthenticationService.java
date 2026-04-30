@@ -122,13 +122,13 @@ public class AuthenticationService {
     /**
      * Verify email
      */
-    public void verifyEmail(String email) {
-        User user = userRepository.findByEmail(email)
+    public void verifyEmail(String username) {
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         user.setIsVerifiedEmail(true);
         userRepository.save(user);
-        log.info("Email verified for user: {}", email);
+        log.info("Email verified for user: {}", username);
     }
 
     /**
