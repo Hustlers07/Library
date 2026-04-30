@@ -25,6 +25,11 @@ spec:
             configMapKeyRef:
               name: library-config
               key: SPRING_PROFILES_ACTIVE
+        - name: ALLOWED_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: library-config
+              key: ALLOWED_ORIGINS
         - name: SPRING_DATASOURCE_URL
           valueFrom:
             configMapKeyRef:
