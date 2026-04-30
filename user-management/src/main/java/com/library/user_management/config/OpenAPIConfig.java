@@ -34,7 +34,7 @@ public class OpenAPIConfig {
                         new Server().url("http://localhost:8080/user-management/").description("Local Development Server"),
                         new Server().url("/user-management").description("Current Server")
                 ))
-                .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
+                // .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
                 .components(new io.swagger.v3.oas.models.Components()
                         .addSecuritySchemes("Bearer Authentication", new SecurityScheme()
                                 .type(SecurityScheme.Type.HTTP)
