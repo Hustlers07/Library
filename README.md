@@ -13,3 +13,8 @@ This repository contains resources and code related to the Library project.
 ## License
 
 MIT License
+
+
+
+ng serve --proxy-config proxy.conf.json
+

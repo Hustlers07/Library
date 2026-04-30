@@ -134,8 +134,11 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // Split comma-separated origins from env variable
-        List<String> origins = Arrays.asList(allowedOrigins.split(","));
-        configuration.setAllowedOrigins(origins);
+        // List<String> origins = Arrays.asList(allowedOrigins.split(","));
+        // configuration.setAllowedOrigins(origins);
+
+        // Allow all origins
+        configuration.addAllowedOriginPattern("*");
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
