@@ -48,7 +48,8 @@ public class User implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role;
+    @Builder.Default
+    private Role role = Role.ROLE_MEMBER;
 
     @Column(name = "is_active")
     @lombok.Builder.Default
@@ -74,6 +75,11 @@ public class User implements UserDetails {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+
+        // Generate username if not already set
+        if (this.username == null || this.username.isBlank()) {
+            this.username = this.firstName + "_" + UUID.randomUUID().toString().substring(0, 8);
+        }
     }
 
     @PreUpdate

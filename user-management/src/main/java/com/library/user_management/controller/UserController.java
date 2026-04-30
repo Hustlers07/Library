@@ -41,7 +41,7 @@ public class UserController {
     @PostMapping("/auth/register")
     @Operation(summary = "Register a new user", description = "Create a new user account")
     public ResponseEntity<?> register(@RequestBody UserRegistrationRequest request) {
-        log.info("New registration request for username: {}", request.getUsername());
+        log.info("New registration request for email: {}", request.getEmail());
         try {
             AuthResponse response = authenticationService.register(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);

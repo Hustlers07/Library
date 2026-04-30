@@ -31,7 +31,7 @@ public class OpenAPIConfig {
                         )
                 )
                 .servers(Arrays.asList(
-                        new Server().url("http://localhost:8080/user-management/").description("Local Development Server"),
+                        new Server().url("http://192.168.49.2:30003/user-management/").description("Local Development Server"),
                         new Server().url("/user-management").description("Current Server")
                 ))
                 // .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))

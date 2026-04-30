@@ -4,13 +4,11 @@ import com.library.user_management.dto.AuthRequest;
 import com.library.user_management.dto.AuthResponse;
 import com.library.user_management.dto.UserRegistrationRequest;
 import com.library.user_management.dto.UserResponse;
-import com.library.user_management.entity.Role;
 import com.library.user_management.entity.User;
 import com.library.user_management.repository.UserRepository;
 import com.library.user_management.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,13 +38,6 @@ public class AuthenticationService {
             throw new IllegalArgumentException("Passwords do not match");
         }
 
-        if (request.getRole() == null) {
-
-            request.setRole(Role.ROLE_MEMBER); // Default role
-
-        } else if (request.getRole() == Role.ROLE_ADMIN) {
-            throw new IllegalArgumentException("Cannot assign ADMIN role during registration");
-        }
 
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
@@ -54,13 +45,11 @@ public class AuthenticationService {
 
         // Create new user
         User user = User.builder()
-                .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .phoneNumber(request.getPhoneNumber())
-                .role(request.getRole() != null ? request.getRole() : Role.ROLE_MEMBER)
                 .isActive(true)
                 .isVerifiedEmail(false)
                 .build();
