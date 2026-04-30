@@ -90,6 +90,9 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(e -> e.authenticationEntryPoint(new JwtAuthenticationEntryPoint()))
                 .authorizeHttpRequests(auth -> {
+                    // Allow preflight requests
+                    auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
+
                     // Separate permitAll rules from others for cleaner configuration
                     List<SecurityRule> permitAllRules = securityRules.getSecurityRules().stream()
                             .filter(r -> r.getAccess().equals("permitAll"))
