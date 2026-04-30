@@ -41,10 +41,17 @@ public class AuthenticationService {
             throw new IllegalArgumentException("Passwords do not match");
         }
 
+        if (request.getRole() == null) {
+
+            request.setRole(Role.ROLE_MEMBER); // Default role
+
+        } else if (request.getRole() == Role.ROLE_ADMIN) {
+            throw new IllegalArgumentException("Cannot assign ADMIN role during registration");
+        }
+
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
         }
-
 
         // Create new user
         User user = User.builder()
