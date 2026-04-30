@@ -16,6 +16,11 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.library.user_management.service.UserProfileDetailsService;
+
+import io.jsonwebtoken.Jwts;
+
 import org.springframework.util.AntPathMatcher;
 
 import java.io.IOException;
@@ -33,7 +38,7 @@ import java.util.Optional;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
-    private final UserDetailsService userDetailsService;
+    private final UserProfileDetailsService userDetailsService;
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
@@ -67,10 +72,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = extractJwtFromRequest(request);
 
             if (StringUtils.hasText(jwt)) {
-                String username = tokenProvider.extractUsername(jwt);
+                // String username = tokenProvider.extractUsername(jwt);
+                String email = tokenProvider.extractEmail(jwt);
 
-                if (StringUtils.hasText(username) && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                if (StringUtils.hasText(email) && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserDetails userDetails = userDetailsService.loadByEmail(email);
 
                     if (tokenProvider.isTokenValid(jwt, userDetails)) {
                         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
@@ -79,7 +85,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 new WebAuthenticationDetailsSource().buildDetails(request));
 
                         SecurityContextHolder.getContext().setAuthentication(authentication);
-                        log.debug("Set the security context for user: {}", username);
+                        log.debug("Set the security context for user: {}", email);
                     }
                 }
             }

@@ -6,6 +6,7 @@ import com.library.user_management.entity.User;
 import com.library.user_management.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class UserDetailsServiceImpl implements UserDetailsService {
+public class UserDetailsServiceImpl implements UserDetailsService, UserProfileDetailsService  {
 
     private final UserRepository userRepository;
 
@@ -37,9 +38,22 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     }
 
     /**
+     * Get user by Email
+     */
+    @Override
+    public UserDetails loadByEmail(String email) throws Exception {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.error("User not found with email: {}", email);
+                    return new Exception("User not found with email: " + email);
+                });
+    }
+
+    /**
      * Get user by ID
      */
-    public UserResponse getUserById(Long userId) {
+    @Override
+    public UserResponse getUserById(Long userId) throws Exception {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with ID: " + userId));
         return mapToUserResponse(user);
@@ -48,6 +62,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     /**
      * Get all active users
      */
+    @Override
     public List<UserResponse> getAllActiveUsers() {
         return userRepository.findAllActiveUsers()
                 .stream()

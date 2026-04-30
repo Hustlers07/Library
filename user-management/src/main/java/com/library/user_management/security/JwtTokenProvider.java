@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import com.library.user_management.entity.User;
+
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -36,24 +38,26 @@ public class JwtTokenProvider {
     /**
      * Generate JWT token from UserDetails
      */
-    public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails.getUsername());
+    public String generateToken(User user) {
+        return generateToken(new HashMap<>(), user.getUsername(), user.getEmail());
     }
 
     /**
      * Generate JWT token with additional claims
      */
-    public String generateToken(Map<String, Object> extraClaims, String subject) {
+    public String generateToken(Map<String, Object> extraClaims, String subject, String email) {
         extraClaims.put("tokenType", "access");
+        extraClaims.put("email", email);
         return buildToken(extraClaims, subject, jwtExpirationMs);
     }
 
     /**
      * Generate refresh token
      */
-    public String generateRefreshToken(String username) {
+    public String generateRefreshToken(String username, String email) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("tokenType", "refresh");
+        claims.put("email", email);
         return buildToken(claims, username, refreshTokenExpirationMs);
     }
 
@@ -81,6 +85,14 @@ public class JwtTokenProvider {
     }
 
     /**
+     * Extract email from token
+     */
+    public String extractEmail(String token) {
+        return extractAllClaims(token).get("email", String.class);
+    }
+
+
+    /**
      * Extract specific claim from token
      */
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -92,16 +104,24 @@ public class JwtTokenProvider {
      * Validate token
      */
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+        final String email = extractEmail(token);
+        return (email.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
 
+    // /**
+    //  * Validate token with username
+    //  */
+    // public boolean isTokenValid(String token, String username) {
+    //     final String tokenUsername = extractUsername(token);
+    //     return (tokenUsername.equals(username)) && !isTokenExpired(token);
+    // }
+
     /**
-     * Validate token with username
+     * Validate token with email
      */
-    public boolean isTokenValid(String token, String username) {
-        final String tokenUsername = extractUsername(token);
-        return (tokenUsername.equals(username)) && !isTokenExpired(token);
+    public boolean isTokenValid(String token, String email) {
+        final String tokenEmail = extractEmail(token);
+        return (tokenEmail.equals(email)) && !isTokenExpired(token);
     }
 
     /**
@@ -143,4 +163,5 @@ public class JwtTokenProvider {
     public long getTokenExpirationMs() {
         return jwtExpirationMs;
     }
+
 }

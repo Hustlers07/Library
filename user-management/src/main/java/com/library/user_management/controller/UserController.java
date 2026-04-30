@@ -57,13 +57,13 @@ public class UserController {
     @PostMapping("/auth/login")
     @Operation(summary = "Login user", description = "Authenticate user and receive JWT tokens")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
-        log.info("Login request for username: {}", request.getUsername());
+        log.info("Login request for email: {}", request.getEmail());
         try {
             AuthResponse response = authenticationService.authenticate(request);
             return ResponseEntity.ok(response);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid username or password"));
+                    .body(Map.of("error", "Invalid email or password"));
         }
     }
 
