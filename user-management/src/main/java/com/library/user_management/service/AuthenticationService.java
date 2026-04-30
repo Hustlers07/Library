@@ -29,7 +29,6 @@ public class AuthenticationService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
 
     /**
@@ -80,12 +79,6 @@ public class AuthenticationService {
      * Authenticate user with username and password
      */
     public AuthResponse authenticate(AuthRequest request) {
-        // Authentication authentication = authenticationManager.authenticate(
-        // new UsernamePasswordAuthenticationToken(
-        // request.getUsername(),
-        // request.getPassword()
-        // )
-        // );
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
