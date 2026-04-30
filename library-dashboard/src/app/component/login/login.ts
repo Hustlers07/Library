@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
+import { ConfigService } from '../../service/config-service';
 
 
 @Component({
@@ -26,10 +27,11 @@ import { MatChipsModule } from '@angular/material/chips';
 })
 export class Login {
 
+
   loginForm: FormGroup;
   hidePassword = true;
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private configService: ConfigService) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required]
@@ -37,6 +39,7 @@ export class Login {
   }
 
   onSubmit() {
+    console.log('API Base URL from ConfigService:', this.configService.apiUrl);
     if (this.loginForm.valid) {
       console.log(this.loginForm.value);
     }

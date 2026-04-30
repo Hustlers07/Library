@@ -1,10 +1,11 @@
-export const API_BASE_URL = 'http://localhost:3000/api';
+import { ConfigService } from "../service/config-service";
 
-// You can also define specific endpoints
+// api.constants.ts
 export const API_ENDPOINTS = {
-  LOGIN: `${API_BASE_URL}/login`,
-  REGISTER: `${API_BASE_URL}/register`,
-  PROFILE: `${API_BASE_URL}/profile`
+  LOGIN: (config: ConfigService) => `${config.apiUrl}/login`,
+  REGISTER: (config: ConfigService) => `${config.apiUrl}/register`,
+  PROFILE: (config: ConfigService) => `${config.apiUrl}/profile`
 };
+
 
 export const TOKEN_KEY = 'authToken';

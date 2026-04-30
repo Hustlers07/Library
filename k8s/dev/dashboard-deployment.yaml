@@ -19,6 +19,12 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 80
+        env:
+        - name: USER_SERVICE_URL
+          valueFrom:
+            configMapKeyRef: 
+              name: library-config
+              key: USER_SERVICE_URL
         livenessProbe:
           httpGet:
             path: /

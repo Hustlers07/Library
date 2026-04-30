@@ -4,7 +4,7 @@
         <mat-card-title>Login</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-        <form [formGroup]="loginForm" class="login-form">
+        <form [formGroup]="loginForm" class="login-form" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline">
                 <mat-label>Email</mat-label>
                 <input matInput formControlName="email" type="email" required>

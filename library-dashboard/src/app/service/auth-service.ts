@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { API_ENDPOINTS, TOKEN_KEY } from '../constants/api.constants';
+import { ConfigService } from './config-service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,10 +12,10 @@ import { API_ENDPOINTS, TOKEN_KEY } from '../constants/api.constants';
 export class AuthService {
   
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private config: ConfigService) {}
 
   login(credentials: { email: string; password: string }): Observable<string> {
-    return this.http.post<{ token: string }>(API_ENDPOINTS.LOGIN, credentials).pipe(
+    return this.http.post<{ token: string }>(API_ENDPOINTS.LOGIN(this.config), credentials).pipe(
       map(response => {
         const token = response?.token;
         if (token) {

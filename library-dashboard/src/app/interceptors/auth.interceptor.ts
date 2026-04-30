@@ -1,17 +1,21 @@
 import { Injectable } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_BASE_URL, API_ENDPOINTS, TOKEN_KEY } from '../constants/api.constants';
+import { API_ENDPOINTS, TOKEN_KEY } from '../constants/api.constants';
+import { ConfigService } from '../service/config-service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
+
+  constructor(private config:ConfigService) {}
+
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 
     console.log('Intercepted request:', req.url);
     // Only attach token for requests to your backend API
-    if (req.url.startsWith(API_BASE_URL)) {
+    if (req.url.startsWith(this.config.apiUrl)) {
       // Skip login and register
-      if (req.url.includes(API_ENDPOINTS.LOGIN) || req.url.includes(API_ENDPOINTS.REGISTER)) {
+      if (req.url.includes(API_ENDPOINTS.LOGIN(this.config)) || req.url.includes(API_ENDPOINTS.REGISTER(this.config))) {
         return next.handle(req);
       }
 
