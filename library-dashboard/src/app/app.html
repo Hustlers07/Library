@@ -1,2 +1,7 @@
-<h1>Welcome to Library!</h1>    
+@if(loading()) {
+<div class="spinner-overlay">
+    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+</div>
+}
+
 <router-outlet />

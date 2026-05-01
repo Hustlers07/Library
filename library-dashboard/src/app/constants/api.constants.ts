@@ -1,3 +1,4 @@
+import { signal } from "@angular/core";
 import { ConfigService } from "../service/config-service";
 
 // api.constants.ts
@@ -15,3 +16,5 @@ export const ROUTES = {
 
 
 export const TOKEN_KEY = 'authToken';
+
+export const progressLoading = signal(false);

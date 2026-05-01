@@ -10,7 +10,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { ConfigService } from '../../service/config-service';
 import { AuthService } from '../../service/auth-service';
 import { Router } from '@angular/router';
-import { ROUTES } from '../../constants/api.constants';
+import { progressLoading, ROUTES } from '../../constants/api.constants';
 
 
 @Component({
@@ -36,6 +36,12 @@ export class Login {
   
   errorMessage = signal('');
 
+  ngOnInit() {
+    progressLoading.set(false);
+    console.log('API Base URL from ConfigService:', this.configService.apiUrl);
+  }
+
+
   constructor(private fb: FormBuilder,
     private configService: ConfigService,
     private authService: AuthService,
@@ -51,16 +57,21 @@ export class Login {
     console.log('API Base URL from ConfigService:', this.configService.apiUrl);
     if (this.loginForm.valid) {
       console.log(this.loginForm.value);
+      progressLoading.set(true);
       this.authService.login(this.loginForm.value).subscribe({
         next: (token) => {
-          console.log('Login successful, token:', token);
+          // console.log('Login successful, token:', token);
           // Optionally navigate to another page or show success message
           this.router.navigate([ROUTES.DASHBOARD]); // Example navigation after successful login
         },
         error: (err) => {
           this.errorMessage.set(err?.error?.error || 'Login failed. Please try again.');
           console.error('Login error:', err);
-        }
+          progressLoading.set(false);
+        },
+        complete() {
+          progressLoading.set(false);
+        },
       });
     }
   }
