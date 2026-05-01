@@ -9,7 +9,12 @@ import com.library.user_management.repository.UserRepository;
 import com.library.user_management.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +42,6 @@ public class AuthenticationService {
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new IllegalArgumentException("Passwords do not match");
         }
-
 
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
@@ -80,6 +84,20 @@ public class AuthenticationService {
         // Update last login
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
+
+    // Build UserDetails (Spring Security expects this for @PreAuthorize checks)
+    // UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+    //         .username(user.getEmail()) // or user.getUsername()
+    //         .password(user.getPassword())
+    //         .authorities(user.getAuthorities()) // must return GrantedAuthority list
+    //         .build();
+
+       UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                user, null, user.getAuthorities());
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(null)); 
+
+    SecurityContextHolder.getContext().setAuthentication(authentication);
+    log.debug("Set the security context for user: {}", user.getEmail());
 
         String token = jwtTokenProvider.generateToken(user);
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername(), user.getEmail());
