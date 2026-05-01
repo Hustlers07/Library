@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.library.user_management.entity.User;
 import com.library.user_management.service.UserProfileDetailsService;
 
 import io.jsonwebtoken.Jwts;
@@ -76,7 +77,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String email = tokenProvider.extractEmail(jwt);
 
                 if (StringUtils.hasText(email) && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UserDetails userDetails = userDetailsService.loadByEmail(email);
+                    User user = userDetailsService.loadByEmail(email);
+
+                    UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                    .username(user.getEmail()) // or user.getUsername()
+                    .password(user.getPassword())
+                    .authorities(user.getAuthorities()) // must return GrantedAuthority list
+                    .build();
 
                     if (tokenProvider.isTokenValid(jwt, userDetails)) {
                         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(

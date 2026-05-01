@@ -41,7 +41,7 @@ public class UserDetailsServiceImpl implements UserDetailsService, UserProfileDe
      * Get user by Email
      */
     @Override
-    public UserDetails loadByEmail(String email) throws Exception {
+    public User loadByEmail(String email) throws Exception {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     log.error("User not found with email: {}", email);

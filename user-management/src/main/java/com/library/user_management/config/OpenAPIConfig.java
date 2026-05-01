@@ -6,6 +6,8 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,6 +19,9 @@ import java.util.Arrays;
  */
 @Configuration
 public class OpenAPIConfig {
+
+    @Value("${USER_SERVICE_SWAGGER_LOCAL_SERVER_URL:http://localhost:8080}")
+    private String localServerUrl;
 
     @Bean
     public OpenAPI customOpenAPI() {
@@ -31,8 +36,8 @@ public class OpenAPIConfig {
                         )
                 )
                 .servers(Arrays.asList(
-                        new Server().url("http://192.168.49.2:30003/user-management/").description("Local Development Server"),
-                        new Server().url("/user-management").description("Current Server")
+                        new Server().url(localServerUrl+"/user-management/").description("Local Development Server"),
+                        new Server().url(localServerUrl+"/user-management").description("Current Server")
                 ))
                 // .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
                 .components(new io.swagger.v3.oas.models.Components()

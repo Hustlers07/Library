@@ -9,3 +9,4 @@ data:
   SPRING_DATASOURCE_DRIVER_CLASS_NAME: "com.mysql.cj.jdbc.Driver"
   USER_SERVICE_URL : "http://user-management-service:8080/user-management"
   ALLOWED_ORIGINS : "http://192.168.49.2:30080,http://192.168.49.2:30003"
+  USER_SERVICE_SWAGGER_LOCAL_SERVER_URL : "http://192.168.49.2:30003"

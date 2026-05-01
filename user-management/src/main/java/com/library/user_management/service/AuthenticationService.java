@@ -94,7 +94,6 @@ public class AuthenticationService {
 
        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 user, null, user.getAuthorities());
-        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(null)); 
 
     SecurityContextHolder.getContext().setAuthentication(authentication);
     log.debug("Set the security context for user: {}", user.getEmail());
@@ -152,17 +151,13 @@ public class AuthenticationService {
     /**
      * Change password
      */
-    public void changePassword(String email, String currentPassword, String newPassword) {
-        User user = userRepository.findByEmail(email)
+    public void changePassword(String username, String newPassword) {
+        User user = userRepository.findByUsername( username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new IllegalArgumentException("Current password is incorrect");
-        }
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-        log.info("Password changed for user: {}", email);
+        log.info("Password changed for user: {}", username);
     }
 
     /**

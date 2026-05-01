@@ -110,17 +110,15 @@ public class UserController {
     @PostMapping("/auth/change-password")
     @Operation(summary = "Change password", description = "Change user password")
     @SecurityRequirement(name = "Bearer Authentication")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'LIBRARIAN')")
     public ResponseEntity<?> changePassword(
             @RequestBody Map<String, String> request,
             Authentication authentication) {
         log.info("Password change request for user: {}", authentication.getName());
         try {
-            User user = (User) authentication.getPrincipal();
-            String email = user.getEmail();
+            
             authenticationService.changePassword(
-                    email,
-                    request.get("currentPassword"),
+                    request.get("username"),
                     request.get("newPassword")
             );
             return ResponseEntity.ok(Map.of("message", "Password changed successfully"));

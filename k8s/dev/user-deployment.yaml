@@ -30,6 +30,11 @@ spec:
             configMapKeyRef:
               name: library-config
               key: ALLOWED_ORIGINS
+        - name: USER_SERVICE_SWAGGER_LOCAL_SERVER_URL
+          valueFrom:
+            configMapKeyRef:
+              name: library-config
+              key: USER_SERVICE_SWAGGER_LOCAL_SERVER_URL
         - name: SPRING_DATASOURCE_URL
           valueFrom:
             configMapKeyRef:
