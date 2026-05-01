@@ -7,5 +7,11 @@ export const API_ENDPOINTS = {
   PROFILE: (config: ConfigService) => `${config.apiUrl}/api/auth/profile`
 };
 
+export const ROUTES = {
+  LOGIN: '/login',
+  REGISTER: '/register',
+  DASHBOARD: '/dashboard'
+};
+
 
 export const TOKEN_KEY = 'authToken';

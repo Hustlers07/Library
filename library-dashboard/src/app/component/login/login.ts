@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,6 +9,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { ConfigService } from '../../service/config-service';
 import { AuthService } from '../../service/auth-service';
+import { Router } from '@angular/router';
+import { ROUTES } from '../../constants/api.constants';
 
 
 @Component({
@@ -31,15 +33,19 @@ export class Login {
 
   loginForm: FormGroup;
   hidePassword = true;
+  
+  errorMessage = signal('');
 
   constructor(private fb: FormBuilder,
     private configService: ConfigService,
-    private authService: AuthService) {
+    private authService: AuthService,
+    private router: Router) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required]
     });
   }
+
 
   onSubmit() {
     console.log('API Base URL from ConfigService:', this.configService.apiUrl);
@@ -49,10 +55,11 @@ export class Login {
         next: (token) => {
           console.log('Login successful, token:', token);
           // Optionally navigate to another page or show success message
+          this.router.navigate([ROUTES.DASHBOARD]); // Example navigation after successful login
         },
         error: (err) => {
-          console.error('Login failed:', err);
-          // Optionally show error message to user
+          this.errorMessage.set(err?.error?.error || 'Login failed. Please try again.');
+          console.error('Login error:', err);
         }
       });
     }
