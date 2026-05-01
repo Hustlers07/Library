@@ -169,14 +169,14 @@ public class UserController {
      * Get user by ID
      * GET /api/users/{userId}
      */
-    @GetMapping("/users/{userId}")
+    @GetMapping("/users/{userName}")
     @Operation(summary = "Get user by ID", description = "Retrieve user details by user ID (Admin or Librarian only)")
     @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
-    public ResponseEntity<?> getUserById(@PathVariable Long userId) {
-        log.info("User details request for ID: {}", userId);
+    public ResponseEntity<?> getUserById(@PathVariable String userName) {
+        log.info("User details request for ID: {}", userName);
         try {
-            UserResponse userResponse = userDetailsService.getUserById(userId);
+            UserResponse userResponse = userDetailsService.getUserByUsername(userName);
             return ResponseEntity.ok(userResponse);
         } catch (Exception ex) {
             return ResponseEntity.notFound().build();

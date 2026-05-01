@@ -59,6 +59,17 @@ public class UserDetailsServiceImpl implements UserDetailsService, UserProfileDe
         return mapToUserResponse(user);
     }
 
+
+     /**
+     * Get user by Username
+     */
+    @Override
+    public UserResponse getUserByUsername(String username) throws Exception {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+        return mapToUserResponse(user);
+    }
+
     /**
      * Get all active users
      */
