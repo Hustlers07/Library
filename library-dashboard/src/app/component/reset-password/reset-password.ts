@@ -12,11 +12,9 @@ import { AuthService } from '../../service/auth-service';
 import { Router, RouterLink } from '@angular/router';
 import { progressLoading, ROUTES } from '../../constants/api.constants';
 
-
 @Component({
-  selector: 'app-login',
-  imports: [
-    CommonModule,
+  selector: 'app-reset-password',
+  imports: [CommonModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -24,15 +22,14 @@ import { progressLoading, ROUTES } from '../../constants/api.constants';
     MatIconModule,
     MatCardModule,
     MatChipsModule,
-    RouterLink
-  ],
-  templateUrl: './login.html',
-  styleUrl: './login.scss',
+    RouterLink],
+  templateUrl: './reset-password.html',
+  styleUrl: './reset-password.scss',
 })
-export class Login {
+export class ResetPassword {
 
 
-  REGISTER = ROUTES.REGISTER;
+  LOGIN = ROUTES.LOGIN;
   loginForm: FormGroup;
   hidePassword = true;
   

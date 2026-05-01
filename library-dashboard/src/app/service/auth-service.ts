@@ -26,6 +26,18 @@ export class AuthService {
     );
   }
 
+  register(credentials:Object): Observable<string> {
+    return this.http.post<{ token: string }>(API_ENDPOINTS.REGISTER(this.config), credentials).pipe(
+      map(response => {
+        const token = response?.token;
+        if (token) {
+          this.setToken(token);
+        }
+        return token;
+      })
+    );
+  }
+
   setToken(token: string | null) {
     if (token) {
       localStorage.setItem(TOKEN_KEY, token);
