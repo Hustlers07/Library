@@ -51,6 +51,7 @@ mat-nav-list {
 
 .list-item mat-icon {
   margin-left: 12px;           /* keep icon padded from edge */
+  color: black;
   
 }
 
@@ -59,7 +60,7 @@ mat-nav-list {
   font-size: 1rem;
   line-height: 1.5rem;
   position: absolute;          /* take text out of flex flow */
-  left: 25%;                   /* move to middle */
+  left: 25%;                 /* move to middle */
 //   transform: translateX(-50%); /* center horizontally */
 //   text-align: left;
 }

@@ -29,8 +29,7 @@ export type MenuItem = {
 export const MENU_ITEMS: MenuItem[] = [
   { label: 'Dashboard', icon: 'dashboard', route: ROUTES.DASHBOARD },
   { label: 'Password', icon: 'key', route: ROUTES.RESET_PASSWORD },
-    { label: 'Register', icon: 'person_add', route: ROUTES.REGISTER },
-  { label: 'Logout', icon: 'logout', route: ROUTES.LOGIN },
+  { label: 'Register', icon: 'person_add', route: ROUTES.REGISTER }
 
   // ,
   // { label: 'Authors', icon: 'people', route: ROUTES.AUTHORS },
