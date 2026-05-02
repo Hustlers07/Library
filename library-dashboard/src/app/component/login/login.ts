@@ -40,7 +40,13 @@ export class Login {
 
   ngOnInit() {
     progressLoading.set(false);
-    console.log('API Base URL from ConfigService:', this.configService.apiUrl);
+
+    // try {
+    //   this.authService.logout(); // Clear any existing token on component initialization
+    // } catch (error) {
+    //   console.log('Error during preliminary logout');
+    // }
+    
   }
 
 

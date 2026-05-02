@@ -1,0 +1,24 @@
+<div class="side-nav-header">
+
+    <!-- Logo -->
+    <mat-card class="circular-card mat-elevation-z5">
+        <img src="assets/library-logo.png" alt="Library Logo" class="logo">
+    </mat-card>
+
+    <!-- Name -->
+    <div class="header-text">
+        <h2>Library</h2>
+        <span>{{"admin" | titlecase}}</span>
+    </div>
+
+    <!-- Menu Items -->
+    <mat-nav-list>
+        @for (item of menuItems(); track $index) {
+        <a mat-list-item [routerLink]="item.route" routerLinkActive="active-link" class="list-item">
+            <mat-icon matListIcon>{{ item.icon }}</mat-icon>
+            <h3 matListItemTitle>{{ item.label | titlecase}}</h3>
+        </a>
+        }
+    </mat-nav-list>
+
+</div>

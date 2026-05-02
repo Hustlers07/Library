@@ -3,8 +3,8 @@ import { PageNotFound } from './component/page-not-found/page-not-found';
 import { Login } from './component/login/login';
 import { Register } from './component/register/register';
 import { ROUTES } from './constants/api.constants';
-import { Dashboard } from './component/dashboard/dashboard';
 import { ResetPassword } from './component/reset-password/reset-password';
+import { Dashboard } from './component/dashboard/dashboard.component';
 
 export const routes: Routes = [
     {

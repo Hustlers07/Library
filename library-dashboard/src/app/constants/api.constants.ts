@@ -19,3 +19,21 @@ export const ROUTES = {
 export const TOKEN_KEY = 'authToken';
 
 export const progressLoading = signal(false);
+
+export type MenuItem = {
+  label: string;
+  icon: string;
+  route: string;
+};
+
+export const MENU_ITEMS: MenuItem[] = [
+  { label: 'Dashboard', icon: 'dashboard', route: ROUTES.DASHBOARD },
+  { label: 'Password', icon: 'key', route: ROUTES.RESET_PASSWORD },
+    { label: 'Register', icon: 'person_add', route: ROUTES.REGISTER },
+  { label: 'Logout', icon: 'logout', route: ROUTES.LOGIN },
+
+  // ,
+  // { label: 'Authors', icon: 'people', route: ROUTES.AUTHORS },
+  // { label: 'Genres', icon: 'category', route: ROUTES.GENRES },
+  // { label: 'Settings', icon: 'settings', route: ROUTES.SETTINGS },
+];
