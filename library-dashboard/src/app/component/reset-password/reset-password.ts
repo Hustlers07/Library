@@ -21,8 +21,8 @@ import { progressLoading, ROUTES } from '../../constants/api.constants';
     MatButtonModule,
     MatIconModule,
     MatCardModule,
-    MatChipsModule,
-    RouterLink],
+    MatChipsModule
+  ],
   templateUrl: './reset-password.html',
   styleUrl: './reset-password.scss',
 })
@@ -30,10 +30,11 @@ export class ResetPassword {
 
 
   LOGIN = ROUTES.LOGIN;
-  loginForm: FormGroup;
+  passwordUpdateForm: FormGroup;
   hidePassword = true;
   
-  errorMessage = signal('');
+  message = signal('');
+  messageColor = signal(''); // 'success' or 'error'
 
   ngOnInit() {
     progressLoading.set(false);
@@ -45,26 +46,29 @@ export class ResetPassword {
     private configService: ConfigService,
     private authService: AuthService,
     private router: Router) {
-    this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
+    this.passwordUpdateForm = this.fb.group({
+      username: ['', [Validators.required]],
+      newPassword: ['', Validators.required]
     });
   }
 
 
   onSubmit() {
-    console.log('API Base URL from ConfigService:', this.configService.apiUrl);
-    if (this.loginForm.valid) {
-      console.log(this.loginForm.value);
+    // console.log('API Base URL from ConfigService:', this.configService.apiUrl);
+    let message = '';
+    if (this.passwordUpdateForm.valid) {
+      console.log(this.passwordUpdateForm.value);
       progressLoading.set(true);
-      this.authService.login(this.loginForm.value).subscribe({
-        next: (token) => {
-          // console.log('Login successful, token:', token);
-          // Optionally navigate to another page or show success message
-          this.router.navigate([ROUTES.DASHBOARD]); // Example navigation after successful login
+      this.authService.changePassword(this.passwordUpdateForm.value).subscribe({
+        next: (msg) => {
+          this.passwordUpdateForm.reset({username: '', newPassword: ''});
+          this.messageColor.set('green');
+          this.message.set(msg || 'Password updated successfully');
+          
         },
         error: (err) => {
-          this.errorMessage.set(err?.error?.error || 'Login failed. Please try again.');
+          this.messageColor.set('red');
+          this.message.set(err?.error?.error || 'Update failed. Please try again.');
           console.error('Login error:', err);
           progressLoading.set(false);
         },

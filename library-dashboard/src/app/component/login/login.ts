@@ -62,7 +62,7 @@ export class Login {
         email: environment.devEmail,   // or environment.login.username
         password: environment.devPassword // or environment.login.password
       });
-      this.onSubmit();
+      // this.onSubmit();
     }
   }
 

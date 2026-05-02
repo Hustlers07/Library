@@ -41,6 +41,12 @@ export class AuthService {
     );
   }
 
+  changePassword(data: Object): Observable<string> {
+    return this.http.post<{ message: string }>(API_ENDPOINTS.CHANGE_PASSWORD(this.config), data).pipe(
+      map(response =>  response?.message)
+    );
+  }
+
   getProfile(): Observable<User> {
     return this.http.get(API_ENDPOINTS.PROFILE(this.config)).pipe(map(profile => new User(profile)));
   }

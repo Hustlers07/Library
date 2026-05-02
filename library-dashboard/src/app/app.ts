@@ -42,7 +42,7 @@ export class App {
         const path = event.urlAfterRedirects; // full path
         // console.log('Active path:', path);
 
-        if (path === ROUTES.DASHBOARD) {
+        if (path === ROUTES.DASHBOARD || path === ROUTES.RESET_PASSWORD) {
           this.enableNav.set(true);
         } else {
           this.enableNav.set(false);
