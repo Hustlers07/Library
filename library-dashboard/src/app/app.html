@@ -4,14 +4,22 @@
 </div>
 }
 
-<mat-toolbar class="mat-elevation-z3">
-    <mat-icon>menu</mat-icon>
-</mat-toolbar>
-<mat-sidenav-container class="sidenav-container">
-    <mat-sidenav mode="side" [opened]="true" class="sidenav">
-        <app-custom-sidenav></app-custom-sidenav>
+@if (enableNav()) {
+
+  <mat-toolbar class="mat-elevation-z3">
+    <mat-icon (click)="toggleSideNav.set(!toggleSideNav())">menu</mat-icon>
+  </mat-toolbar>
+
+  <mat-sidenav-container class="sidenav-container">
+    <mat-sidenav mode="side" [opened]="toggleSideNav()" class="sidenav">
+      <app-custom-sidenav></app-custom-sidenav>
     </mat-sidenav>
     <mat-sidenav-content class="container">
-        <router-outlet />
+      <router-outlet />
     </mat-sidenav-content>
-</mat-sidenav-container>
+  </mat-sidenav-container>
+} 
+
+@else {
+  <router-outlet />
+}

@@ -4,8 +4,8 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { RouterOutlet } from '@angular/router';
-import { progressLoading } from './constants/api.constants';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { progressLoading, ROUTES } from './constants/api.constants';
 import { CustomSidenav } from "./component/custom-sidenav/custom-sidenav";
 
 @Component({
@@ -16,11 +16,34 @@ import { CustomSidenav } from "./component/custom-sidenav/custom-sidenav";
     MatButtonModule,
     MatIconModule,
     MatSidenavModule, 
-    CustomSidenav],
+    CustomSidenav
+    ],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
 export class App {
   protected readonly title = signal('library-dashboard');
   protected readonly loading = computed(() => { return progressLoading() });
+
+  enableNav = signal(false);
+  toggleSideNav = signal(true);
+
+  constructor(private router: Router) {
+  }
+
+  ngOnInit() {
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        const path = event.urlAfterRedirects; // full path
+        // console.log('Active path:', path);
+
+        if (path === ROUTES.DASHBOARD) {
+          this.enableNav.set(true);
+        } else {
+          this.enableNav.set(false);
+        }
+      }
+    });
+  }
+
 }
