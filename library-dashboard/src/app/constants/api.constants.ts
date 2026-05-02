@@ -1,11 +1,12 @@
 import { signal } from "@angular/core";
 import { ConfigService } from "../service/config-service";
+import { User } from "../models/user/user-module";
 
 // api.constants.ts
 export const API_ENDPOINTS = {
   LOGIN: (config: ConfigService) => `${config.apiUrl}/api/auth/login`,
   REGISTER: (config: ConfigService) => `${config.apiUrl}/api/auth/register`,
-  PROFILE: (config: ConfigService) => `${config.apiUrl}/api/auth/profile`
+  PROFILE: (config: ConfigService) => `${config.apiUrl}/api/users/profile`
 };
 
 export const ROUTES = {
@@ -19,6 +20,8 @@ export const ROUTES = {
 export const TOKEN_KEY = 'authToken';
 
 export const progressLoading = signal(false);
+
+export const activeUser = signal<User | null>(null);
 
 export type MenuItem = {
   label: string;

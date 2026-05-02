@@ -12,7 +12,7 @@
         <mat-icon>menu</mat-icon>
     </button>
  
-    <span>Library</span>
+    <span>{{this.user()?.fullName}}</span>
     <span class="spacer"></span>
     
     <button matIconButton aria-label="Logout" (click)="logout()">
