@@ -7,7 +7,7 @@
 @if (enableNav()) {
 
 <mat-toolbar class="mat-elevation-z3">
-    <button matIconButton class="example-icon" (click)="toggleSideNav.set(!toggleSideNav())"
+    <button matIconButton  (click)="toggleSideNav.set(!toggleSideNav())"
         aria-label="Example icon-button with menu icon">
         <mat-icon>menu</mat-icon>
     </button>
@@ -15,7 +15,7 @@
     <span>Library</span>
     <span class="spacer"></span>
     
-    <button matIconButton class="example-icon" aria-label="Example icon-button with share icon">
+    <button matIconButton aria-label="Logout" (click)="logout()">
         <mat-icon>logout</mat-icon>
     </button>
 

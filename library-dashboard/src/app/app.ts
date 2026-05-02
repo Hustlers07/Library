@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, signal, SimpleChanges } from '@angular/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,6 +7,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { progressLoading, ROUTES } from './constants/api.constants';
 import { CustomSidenav } from "./component/custom-sidenav/custom-sidenav";
+import { AuthService } from './service/auth-service';
 
 @Component({
   selector: 'app-root',
@@ -28,7 +29,7 @@ export class App {
   enableNav = signal(false);
   toggleSideNav = signal(true);
 
-  constructor(private router: Router) {
+  constructor(private router: Router, private authService: AuthService) {
   }
 
   ngOnInit() {
@@ -44,6 +45,23 @@ export class App {
         }
       }
     });
+  }
+
+  
+
+  ngOnDestroy() {
+    try{
+      this.logout();
+      console.log('Component destroyed');
+    }catch(error){
+      console.error('Error during logout:', error);
+    }
+  }
+
+
+  logout(){
+    this.authService.logout();
+    this.router.navigate([ROUTES.LOGIN]);
   }
 
 }
