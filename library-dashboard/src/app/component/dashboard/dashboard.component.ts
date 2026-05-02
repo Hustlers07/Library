@@ -7,9 +7,6 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { AuthService } from '../../service/auth-service';
-import { Router } from '@angular/router';
-import { ROUTES, activeUser } from '../../constants/api.constants';
 
 @Component({
   selector: 'app-dashboard',
@@ -48,20 +45,9 @@ export class Dashboard {
     }),
   );
 
-  constructor(private authService: AuthService, private router: Router) {}
-
+ 
   ngOnInit() {
     console.log('Dashboard component initialized');
-    this.authService.getProfile().subscribe(
-      profile => {
-        console.log('User profile:', profile);
-        activeUser.set(profile);
-      },
-      error => {
-        console.error('Error fetching profile:', error);
-        this.authService.logout();
-        this.router.navigate([ROUTES.LOGIN]);
-      }
-    );
+    
   }
 }

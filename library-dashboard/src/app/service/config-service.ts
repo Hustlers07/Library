@@ -16,4 +16,5 @@ export class ConfigService {
   get apiUrl(): string {
     return this.env.apiUrl || 'http://192.168.49.2:30003/user-management';
   }
+
 }

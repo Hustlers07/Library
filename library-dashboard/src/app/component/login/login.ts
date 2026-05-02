@@ -11,6 +11,7 @@ import { ConfigService } from '../../service/config-service';
 import { AuthService } from '../../service/auth-service';
 import { Router, RouterLink } from '@angular/router';
 import { progressLoading, ROUTES } from '../../constants/api.constants';
+import { environment } from '../../../environments/environment';
 
 
 @Component({
@@ -35,19 +36,9 @@ export class Login {
   REGISTER = ROUTES.REGISTER;
   loginForm: FormGroup;
   hidePassword = true;
-  
+
   errorMessage = signal('');
 
-  ngOnInit() {
-    progressLoading.set(false);
-
-    // try {
-    //   this.authService.logout(); // Clear any existing token on component initialization
-    // } catch (error) {
-    //   console.log('Error during preliminary logout');
-    // }
-    
-  }
 
 
   constructor(private fb: FormBuilder,
@@ -58,6 +49,21 @@ export class Login {
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required]
     });
+
+    
+  }
+
+  ngOnInit() {
+    progressLoading.set(false);
+    // Pre-fill for dev environment
+    // console.log("Active env: ", environment);
+    if (!environment.production) {
+      this.loginForm.patchValue({
+        email: environment.devEmail,   // or environment.login.username
+        password: environment.devPassword // or environment.login.password
+      });
+      this.onSubmit();
+    }
   }
 
 
@@ -68,7 +74,7 @@ export class Login {
       progressLoading.set(true);
       this.authService.login(this.loginForm.value).subscribe({
         next: (token) => {
-          // console.log('Login successful, token:', token);
+          console.log('Login successful, token:', token);
           // Optionally navigate to another page or show success message
           this.router.navigate([ROUTES.DASHBOARD]); // Example navigation after successful login
         },

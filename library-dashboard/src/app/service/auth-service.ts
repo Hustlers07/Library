@@ -3,17 +3,19 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
-import { API_ENDPOINTS, TOKEN_KEY } from '../constants/api.constants';
+import { activeUser, API_ENDPOINTS, ROUTES, TOKEN_KEY } from '../constants/api.constants';
 import { ConfigService } from './config-service';
 import { User } from '../models/user/user-module';
-
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
 
-  constructor(private http: HttpClient, private config: ConfigService) { }
+  constructor(private http: HttpClient, 
+    private config: ConfigService,
+
+  ) { }
 
   login(credentials: { email: string; password: string }): Observable<string> {
     return this.http.post<{ token: string }>(API_ENDPOINTS.LOGIN(this.config), credentials).pipe(
@@ -45,6 +47,7 @@ export class AuthService {
 
   setToken(token: string | null) {
 
+    console.log('Setting token:', token);
     if (typeof window !== 'undefined' && window.localStorage) {
       if (token) {
         localStorage.setItem(TOKEN_KEY, token);
@@ -58,13 +61,22 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem(TOKEN_KEY);
+    try {
+      return localStorage.getItem(TOKEN_KEY);
+    } catch (error) {
+      console.error('Error fetching token:', error);
+      return null;
+    }
+    
   }
 
   logout() {
 
-    this.setToken(null);
-
+    if (this.getToken() != undefined && this.getToken() != null) {
+      this.setToken(null);
+      activeUser.set(null);
+      
+    }
   }
 
 }
