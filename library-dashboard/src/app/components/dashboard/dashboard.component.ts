@@ -8,6 +8,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 
+export type Card = {
+  title: string;
+  expandUrl: string;
+}
+
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
@@ -22,6 +27,14 @@ import { MatCardModule } from '@angular/material/card';
   ],
 })
 export class Dashboard {
+
+  card: Card[] = [
+    { title: 'Seats', expandUrl: "/seats" },
+    { title: 'Members', expandUrl: "/members" },
+    { title: 'Payments', expandUrl: "/payments" },
+    { title: 'Rooms', expandUrl: "/rooms" },
+  ];
+
   private breakpointObserver = inject(BreakpointObserver);
 
   /** Based on the screen size, switch from standard to one column per row */
@@ -29,18 +42,18 @@ export class Dashboard {
     map(({ matches }) => {
       if (matches) {
         return [
-          { title: 'Card 1', cols: 1, rows: 1 },
-          { title: 'Card 2', cols: 1, rows: 1 },
-          { title: 'Card 3', cols: 1, rows: 1 },
-          { title: 'Card 4', cols: 1, rows: 1 },
+          { title: this.card[0].title, expandUrl: this.card[0].expandUrl, cols: 1, rows: 1 },
+          { title: this.card[1].title, expandUrl: this.card[1].expandUrl, cols: 1, rows: 1 },
+          { title: this.card[2].title, expandUrl: this.card[2].expandUrl, cols: 1, rows: 1 },
+          { title: this.card[3].title, expandUrl: this.card[3].expandUrl, cols: 1, rows: 1 },
         ];
       }
 
       return [
-        { title: 'Card 1', cols: 2, rows: 1 },
-        { title: 'Card 2', cols: 1, rows: 1 },
-        { title: 'Card 3', cols: 1, rows: 2 },
-        { title: 'Card 4', cols: 1, rows: 1 },
+        { title: this.card[0].title, expandUrl: this.card[0].expandUrl, cols: 2, rows: 1 },
+        { title: this.card[1].title, expandUrl: this.card[1].expandUrl, cols: 1, rows: 1 },
+        { title: this.card[2].title, expandUrl: this.card[2].expandUrl, cols: 1, rows: 2 },
+        { title: this.card[3].title, expandUrl: this.card[3].expandUrl, cols: 1, rows: 1 },
       ];
     }),
   );
