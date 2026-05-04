@@ -7,8 +7,8 @@
 
     <!-- Name -->
     <div class="header-text">
-        <h3>{{ user()?.username }}</h3>
-        <span>{{ user()?.role | titlecase }}</span>
+        <div>{{ user()?.username }}</div>
+        <span>{{ user()?.role | role }}</span>
     </div>
 
     <!-- Menu Items -->

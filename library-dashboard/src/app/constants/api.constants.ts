@@ -13,6 +13,7 @@ export const API_ENDPOINTS = {
 export const ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
+  REGISTER_MEMEBER: '/register-member',
   DASHBOARD: '/dashboard',
   RESET_PASSWORD: '/reset-password',
 };
@@ -33,7 +34,7 @@ export type MenuItem = {
 export const MENU_ITEMS: MenuItem[] = [
   { label: 'Dashboard', icon: 'dashboard', route: ROUTES.DASHBOARD },
   { label: 'Password', icon: 'key', route: ROUTES.RESET_PASSWORD },
-  { label: 'Register', icon: 'person_add', route: ROUTES.REGISTER }
+  { label: 'Register', icon: 'person_add', route: ROUTES.REGISTER_MEMEBER }
 
   // ,
   // { label: 'Authors', icon: 'people', route: ROUTES.AUTHORS },

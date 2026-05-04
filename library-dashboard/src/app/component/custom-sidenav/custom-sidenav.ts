@@ -7,10 +7,11 @@ import { Router, RouterLink } from '@angular/router';
 import { TitleCasePipe } from '@angular/common';
 import { AuthService } from '../../service/auth-service';
 import { User } from '../../models/user/user-module';
+import { RolePipe } from "../../pipe/role-pipe";
 
 @Component({
   selector: 'app-custom-sidenav',
-  imports: [MatNavList, MatIcon, MatCard, RouterLink, TitleCasePipe],
+  imports: [MatNavList, MatIcon, MatCard, RouterLink, TitleCasePipe, RolePipe],
   templateUrl: './custom-sidenav.html',
   styleUrl: './custom-sidenav.scss',
 })
