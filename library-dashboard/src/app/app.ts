@@ -6,8 +6,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { activeUser, progressLoading, ROUTES } from './constants/api.constants';
-import { CustomSidenav } from "./component/custom-sidenav/custom-sidenav";
-import { AuthService } from './service/auth-service';
+import { CustomSidenav } from "./components/custom-sidenav/custom-sidenav";
+import { AuthService } from './services/auth-service';
 import { User } from './models/user/user-module';
 
 @Component({

@@ -1,13 +1,13 @@
 import { Component, computed, signal } from '@angular/core';
-import { MatList, MatNavList } from "@angular/material/list";
+import { MatNavList } from "@angular/material/list";
 import { MatIcon } from "@angular/material/icon";
 import { MatCard } from "@angular/material/card";
 import { activeUser, MENU_ITEMS, MenuItem, ROUTES } from '../../constants/api.constants';
 import { Router, RouterLink } from '@angular/router';
 import { TitleCasePipe } from '@angular/common';
-import { AuthService } from '../../service/auth-service';
+import { AuthService } from '../../services/auth-service';
 import { User } from '../../models/user/user-module';
-import { RolePipe } from "../../pipe/role-pipe";
+import { RolePipe } from "../../pipes/role-pipe";
 
 @Component({
   selector: 'app-custom-sidenav',

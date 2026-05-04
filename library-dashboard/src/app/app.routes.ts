@@ -1,11 +1,11 @@
 import { Routes } from '@angular/router';
-import { PageNotFound } from './component/page-not-found/page-not-found';
-import { Login } from './component/login/login';
-import { Register } from './component/register/register';
+import { PageNotFound } from './components/page-not-found/page-not-found';
+import { Login } from './components/login/login';
+import { Register } from './components/register/register';
 import { ROUTES } from './constants/api.constants';
-import { ResetPassword } from './component/reset-password/reset-password';
-import { Dashboard } from './component/dashboard/dashboard.component';
-import { RegisterMember } from './component/register-member/register-member';
+import { ResetPassword } from './components/reset-password/reset-password';
+import { Dashboard } from './components/dashboard/dashboard.component';
+import { RegisterMember } from './components/register-member/register-member';
 
 export const routes: Routes = [
     {

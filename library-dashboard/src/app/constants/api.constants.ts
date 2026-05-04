@@ -1,5 +1,5 @@
 import { signal } from "@angular/core";
-import { ConfigService } from "../service/config-service";
+import { ConfigService } from "../services/config-service";
 import { User } from "../models/user/user-module";
 
 // api.constants.ts
