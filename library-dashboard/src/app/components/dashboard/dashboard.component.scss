@@ -19,3 +19,11 @@
 .dashboard-card-content {
   text-align: center;
 }
+
+.scrollable-card {
+  max-height: 400px;   // or whatever fits your layout
+  overflow-y: auto;    // enables vertical scrolling
+  overflow-x: auto;
+  display: block;      // ensures proper block-level behavior
+  padding: 1rem;       // optional, keeps spacing consistent
+}

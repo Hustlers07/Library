@@ -7,10 +7,10 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MembersView } from "../members-view/members-view";
 import { SeatsView } from "../seats-view/seats-view";
 import { PaymentsView } from "../payments-view/payments-view";
 import { RoomsView } from "../rooms-view/rooms-view";
+import { MembersViewComponent } from "../members-view/members-view.component";
 
 export type Card = {
   title: string;
@@ -28,10 +28,10 @@ export type Card = {
     MatIconModule,
     MatButtonModule,
     MatCardModule,
-    MembersView,
     SeatsView,
     PaymentsView,
-    RoomsView
+    RoomsView,
+    MembersViewComponent
 ],
 })
 export class Dashboard {
