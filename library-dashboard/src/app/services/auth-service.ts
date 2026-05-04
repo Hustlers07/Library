@@ -1,18 +1,21 @@
 // src/app/services/auth.service.ts
-import { Injectable } from '@angular/core';
+import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { activeUser, API_ENDPOINTS, ROUTES, TOKEN_KEY } from '../constants/api.constants';
 import { ConfigService } from './config-service';
 import { User } from '../models/user/user-module';
+import { isPlatformBrowser } from '@angular/common';
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
 
-  constructor(private http: HttpClient, 
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private http: HttpClient,
     private config: ConfigService,
 
   ) { }
@@ -43,7 +46,15 @@ export class AuthService {
 
   changePassword(data: Object): Observable<string> {
     return this.http.post<{ message: string }>(API_ENDPOINTS.CHANGE_PASSWORD(this.config), data).pipe(
-      map(response =>  response?.message)
+      map(response => response?.message)
+    );
+  }
+
+  fetchUsers(): Observable<User[]> {
+    return this.http.get<any[]>(API_ENDPOINTS.USERS(this.config)).pipe(
+      map(
+        (users: any[]) => users.map(user => new User(user))
+      )
     );
   }
 
@@ -52,28 +63,20 @@ export class AuthService {
   }
 
   setToken(token: string | null) {
-
-    console.log('Setting token:', token);
-    if (typeof window !== 'undefined' && window.localStorage) {
+    if (isPlatformBrowser(this.platformId)) {
       if (token) {
         localStorage.setItem(TOKEN_KEY, token);
       } else {
         localStorage.removeItem(TOKEN_KEY);
       }
-    } else {
-      console.warn('No token found in localStorage during logout.');
     }
-
   }
 
   getToken(): string | null {
-    try {
+    if (isPlatformBrowser(this.platformId)) {
       return localStorage.getItem(TOKEN_KEY);
-    } catch (error) {
-      console.error('Error fetching token:', error);
-      return null;
     }
-    
+    return null;
   }
 
   logout() {
@@ -81,7 +84,7 @@ export class AuthService {
     if (this.getToken() != undefined && this.getToken() != null) {
       this.setToken(null);
       activeUser.set(null);
-      
+
     }
   }
 
