@@ -7,6 +7,10 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MembersView } from "../members-view/members-view";
+import { SeatsView } from "../seats-view/seats-view";
+import { PaymentsView } from "../../componenets/payments-view/payments-view";
+import { RoomsView } from "../../componenets/rooms-view/rooms-view";
 
 export type Card = {
   title: string;
@@ -24,7 +28,11 @@ export type Card = {
     MatIconModule,
     MatButtonModule,
     MatCardModule,
-  ],
+    MembersView,
+    SeatsView,
+    PaymentsView,
+    RoomsView
+],
 })
 export class Dashboard {
 
