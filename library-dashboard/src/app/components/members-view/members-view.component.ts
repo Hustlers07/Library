@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, signal, ViewChild, WritableSignal } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, signal, ViewChild, WritableSignal } from '@angular/core';
 import { MatTableModule, MatTable } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { MatSortModule, MatSort } from '@angular/material/sort';
@@ -22,7 +22,7 @@ export class MembersViewComponent implements AfterViewInit {
   dataSource = new MembersViewDataSource([]);
   displayedColumns = ['id', 'username', 'email'];
 
-  constructor(private authService: AuthService) { }
+constructor(private cdr: ChangeDetectorRef, private authService: AuthService) {}
 
   ngOnInit() {
     this.authService.fetchUsers().subscribe(users => {
@@ -40,14 +40,15 @@ export class MembersViewComponent implements AfterViewInit {
     });
   }
 
-  ngAfterViewInit() {
-    if (this.dataSource) {
-      this.dataSource.paginator = this.paginator;
-      this.dataSource.sort = this.sort;
+ngAfterViewInit() {
+  this.dataSource.paginator = this.paginator;
+  this.dataSource.sort = this.sort;
 
-      
-      this.paginator.pageSize = 10;
-      this.paginator.pageIndex = 0;
-    }
-  }
+  setTimeout(() => {
+    this.paginator.pageSize = 10;
+    this.paginator.pageIndex = 0;
+    this.cdr.detectChanges();
+  });
+}
+
 }
