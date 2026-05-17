@@ -3,7 +3,6 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { map } from 'rxjs/operators';
 import { Observable, BehaviorSubject, merge } from 'rxjs';
-import { AuthService } from '../../services/auth-service';
 import { User } from '../../models/user/user-module';
 
 export class MembersViewDataSource extends DataSource<User> {

@@ -6,6 +6,8 @@ import { MembersViewDataSource } from './members-view-datasource';
 import { AuthService } from '../../services/auth-service';
 import { User } from '../../models/user/user-module';
 import { MatProgressSpinner } from "@angular/material/progress-spinner";
+import { Router } from '@angular/router';
+import { ROUTES, UID } from '../../constants/api.constants';
 
 @Component({
   selector: 'app-members-view',
@@ -14,15 +16,16 @@ import { MatProgressSpinner } from "@angular/material/progress-spinner";
   imports: [MatTableModule, MatPaginatorModule, MatSortModule, MatProgressSpinner],
 })
 export class MembersViewComponent implements AfterViewInit {
+  
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatTable) table!: MatTable<User>;
 
   loading = signal(true);
   dataSource = new MembersViewDataSource([]);
-  displayedColumns = ['id', 'username', 'email'];
+  displayedColumns = ['uid', 'username', 'email'];
 
-constructor(private cdr: ChangeDetectorRef, private authService: AuthService) {}
+  constructor(private cdr: ChangeDetectorRef, private authService: AuthService, private router: Router) { }
 
   ngOnInit() {
     this.authService.fetchUsers().subscribe(users => {
@@ -40,15 +43,20 @@ constructor(private cdr: ChangeDetectorRef, private authService: AuthService) {}
     });
   }
 
-ngAfterViewInit() {
-  this.dataSource.paginator = this.paginator;
-  this.dataSource.sort = this.sort;
+  ngAfterViewInit() {
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
 
-  setTimeout(() => {
-    this.paginator.pageSize = 10;
-    this.paginator.pageIndex = 0;
-    this.cdr.detectChanges();
-  });
-}
+    setTimeout(() => {
+      this.paginator.pageSize = 10;
+      this.paginator.pageIndex = 0;
+      this.cdr.detectChanges();
+    });
+  }
+
+  onMembersRowClick(member: User):void {
+    console.log('Method not implemented.', member);
+    this.router.navigate([ROUTES.PROFILE.replace(":"+UID, member.username)])
+  }
 
 }

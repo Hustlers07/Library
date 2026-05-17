@@ -6,6 +6,7 @@ import { ROUTES } from './constants/api.constants';
 import { ResetPassword } from './components/reset-password/reset-password';
 import { Dashboard } from './components/dashboard/dashboard.component';
 import { RegisterMember } from './components/register-member/register-member';
+import { Profile } from './components/profile/profile';
 
 export const routes: Routes = [
     {
@@ -24,7 +25,7 @@ export const routes: Routes = [
         path: ROUTES.RESET_PASSWORD.slice(1), component: ResetPassword
     },
     {
-        path: ROUTES.REGISTER_MEMEBER.slice(1), component: RegisterMember
+        path: ROUTES.PROFILE.slice(1), component: Profile
     },
     {
         path: '**', redirectTo: '', pathMatch: 'full'

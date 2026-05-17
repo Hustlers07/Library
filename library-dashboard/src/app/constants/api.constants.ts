@@ -11,13 +11,18 @@ export const API_ENDPOINTS = {
   USERS: (config: ConfigService) => `${config.apiUrl}/api/users`,
 };
 
+
+export const UID = 'uid';
+
 export const ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
   REGISTER_MEMEBER: '/register-member',
   DASHBOARD: '/dashboard',
   RESET_PASSWORD: '/reset-password',
+  PROFILE:'/user/:'+UID
 };
+
 
 
 export const TOKEN_KEY = 'authToken';

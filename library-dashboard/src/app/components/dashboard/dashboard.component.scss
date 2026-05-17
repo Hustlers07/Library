@@ -17,13 +17,9 @@
 }
 
 .dashboard-card-content {
-  text-align: center;
+  display: grid;
+  place-items: center; /* centers both horizontally and vertically */
+  overflow-y: auto; 
+  overflow-x: auto;
 }
 
-.scrollable-card {
-  max-height: 400px;   // or whatever fits your layout
-  overflow-y: auto;    // enables vertical scrolling
-  overflow-x: auto;
-  display: block;      // ensures proper block-level behavior
-  padding: 1rem;       // optional, keeps spacing consistent
-}
