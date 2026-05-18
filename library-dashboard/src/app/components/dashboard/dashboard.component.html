@@ -24,7 +24,20 @@
           }
 
           @case ('Members') {
-          <app-members-view></app-members-view>
+          <!-- <app-members-view></app-members-view> -->
+
+          <div class="members-container">
+            <h2 class="mat-h2">Users</h2>
+            <div class="mat-h2">{{members()}}</div>
+          </div>
+          <div class="members-container">
+            <h2 class="mat-h2">Librarian</h2>
+            <div class="mat-h2">{{librarian()}}</div>
+          </div>
+          <div class="members-container">
+            <h2 class="mat-h2">Admin</h2>
+            <div class="mat-h2">{{admin()}}</div>
+          </div>
           }
 
           @case ('Payments') {

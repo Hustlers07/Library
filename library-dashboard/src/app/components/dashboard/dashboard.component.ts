@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Breakpoints, BreakpointObserver } from '@angular/cdk/layout';
 import { map } from 'rxjs/operators';
 import { AsyncPipe } from '@angular/common';
@@ -11,6 +11,7 @@ import { SeatsView } from "../seats-view/seats-view";
 import { PaymentsView } from "../payments-view/payments-view";
 import { RoomsView } from "../rooms-view/rooms-view";
 import { MembersViewComponent } from "../members-view/members-view.component";
+import { UserService } from '../../services/user-service';
 
 export type Card = {
   title: string;
@@ -30,8 +31,7 @@ export type Card = {
     MatCardModule,
     SeatsView,
     PaymentsView,
-    RoomsView,
-    MembersViewComponent
+    RoomsView
 ],
 })
 export class Dashboard {
@@ -66,9 +66,21 @@ export class Dashboard {
     }),
   );
 
+
+  constructor(private userService: UserService){}
+
+  members = signal(0);
+  librarian = signal(0);
+  admin = signal(0);
  
   ngOnInit() {
     console.log('Dashboard component initialized');
-    
+    this.userService.fetchUsers().subscribe(users=>{
+      console.log("Users: ", users);
+      this.members.set(users.filter(u => u.role === 'ROLE_MEMBER').length);
+      this.librarian.set(users.filter(u => u.role === 'ROLE_LIBRARIAN').length);
+      this.admin.set(users.filter(u => u.role === 'ROLE_ADMIN').length);
+      
+    })
   }
 }

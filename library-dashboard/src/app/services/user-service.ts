@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { User } from '../models/user/user-module';
 import { API_ENDPOINTS } from '../constants/api.constants';
 import { ConfigService } from './config-service';
-import { catchError, map, throwError } from 'rxjs';
+import { catchError, map, Observable, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -19,6 +19,13 @@ export class UserService {
         // Optionally transform the error into something user-friendly
         return throwError(() => new Error('Failed to load user details'));
       })
+    );
+  }
+
+  fetchUsers(): Observable<User[]>{
+
+    return this.http.get<any[]>(API_ENDPOINTS.USERS(this.config)).pipe(
+      map((users:any[]) => users.map(user=> new User(user)))
     );
   }
 }

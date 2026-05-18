@@ -50,13 +50,13 @@ export class AuthService {
     );
   }
 
-  fetchUsers(): Observable<User[]> {
-    return this.http.get<any[]>(API_ENDPOINTS.USERS(this.config)).pipe(
-      map(
-        (users: any[]) => users.map(user => new User(user))
-      )
-    );
-  }
+  // fetchUsers(): Observable<User[]> {
+  //   return this.http.get<any[]>(API_ENDPOINTS.USERS(this.config)).pipe(
+  //     map(
+  //       (users: any[]) => users.map(user => new User(user))
+  //     )
+  //   );
+  // }
 
   getProfile(): Observable<User> {
     return this.http.get(API_ENDPOINTS.PROFILE(this.config)).pipe(map(profile => new User(profile)));

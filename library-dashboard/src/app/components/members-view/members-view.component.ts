@@ -8,6 +8,7 @@ import { User } from '../../models/user/user-module';
 import { MatProgressSpinner } from "@angular/material/progress-spinner";
 import { Router } from '@angular/router';
 import { ROUTES, UID } from '../../constants/api.constants';
+import { UserService } from '../../services/user-service';
 
 @Component({
   selector: 'app-members-view',
@@ -25,10 +26,10 @@ export class MembersViewComponent implements AfterViewInit {
   dataSource = new MembersViewDataSource([]);
   displayedColumns = ['uid', 'username', 'email'];
 
-  constructor(private cdr: ChangeDetectorRef, private authService: AuthService, private router: Router) { }
+  constructor(private cdr: ChangeDetectorRef, private userService: UserService, private router: Router) { }
 
   ngOnInit() {
-    this.authService.fetchUsers().subscribe(users => {
+    this.userService.fetchUsers().subscribe(users => {
 
       console.log("Users: ", users);
 
