@@ -40,10 +40,11 @@
 
   >h2 {
     flex: 1;
-    color: purple;
+    color: var(--light-black);
   }
 
   >div {
     flex: 1;
+    color: var(--light-black);
   }
 }
