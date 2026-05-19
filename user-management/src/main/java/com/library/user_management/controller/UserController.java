@@ -2,7 +2,6 @@ package com.library.user_management.controller;
 
 import com.library.user_management.dto.*;
 import com.library.user_management.entity.Role;
-import com.library.user_management.entity.User;
 import com.library.user_management.service.AuthenticationService;
 import com.library.user_management.service.UserDetailsServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
