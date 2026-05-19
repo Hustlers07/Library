@@ -71,6 +71,23 @@ public class User implements UserDetails {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
+
+    @ManyToMany
+     @JoinTable(
+        name = "user_room", // join table name
+        joinColumns = @JoinColumn(
+            name = "user_id", referencedColumnName = "id"
+        ),
+        inverseJoinColumns = @JoinColumn(
+            name = "room_id", referencedColumnName = "room_id"
+        )
+    )
+    private List<Room> rooms;
+
+
+    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
+    private List<Seat> seats;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
