@@ -69,11 +69,19 @@ public class Room {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        toUpperCase();
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+        toUpperCase();
+    }
+
+    private void toUpperCase(){
+        if(houseNo !=null) houseNo = houseNo.toUpperCase();
+        if(location !=null) location = location.toUpperCase();
+        if(description !=null) description = description.toUpperCase();
     }
 
 }

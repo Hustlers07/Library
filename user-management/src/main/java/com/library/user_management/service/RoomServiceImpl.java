@@ -1,5 +1,7 @@
 package com.library.user_management.service;
 
+import java.util.*;
+
 import org.springframework.stereotype.Service;
 
 import com.library.user_management.dto.RoomRequest;
@@ -37,5 +39,28 @@ public class RoomServiceImpl {
         log.info("New room created with location: "+savedRoom);
 
         return savedRoom;
+    }
+
+    public Room update(Long rid, RoomRequest roomRequest) throws Exception{
+
+        Optional<Room> optRoom = roomRepository.findById(rid);
+
+        if(!optRoom.isPresent())
+            throw new Exception("Room not found exception");
+
+        Room room = optRoom.get();
+        room.setHouseNo(roomRequest.getHouseNo());
+        room.setFloor(roomRequest.getFloor());
+        room.setLocation(roomRequest.getLocation());
+        room.setDescription(roomRequest.getDescription());
+
+        Room updatedRoom = roomRepository.save(room);
+        log.info("New room created with location: "+updatedRoom);
+
+        return updatedRoom;
+    }
+
+    public List<Room> getAll(){
+        return roomRepository.findAll();
     }
 }
