@@ -66,6 +66,10 @@ public class RoomServiceImpl {
         return updatedRoom;
     }
 
+    public Optional<Room> getRoomById(long roomId){
+       return roomRepository.findById(roomId);
+    }
+
     public List<Room> getAll() {
         return roomRepository.findAll();
     }

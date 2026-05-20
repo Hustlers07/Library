@@ -1,6 +1,5 @@
 package com.library.user_management.dto;
 
-import com.library.user_management.entity.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
