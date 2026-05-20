@@ -18,34 +18,40 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 public class RoomServiceImpl {
 
-
     private final RoomRepository roomRepository;
 
     /**
      * Creates a new room entity
+     * 
      * @param location
      * @param description
      */
-    public Room create(RoomRequest roomRequest){
+    public Room create(RoomRequest roomRequest) {
+
+        boolean exists = roomRepository.existsByHouseNoAndFloorAndLocation(
+                roomRequest.getHouseNo(), roomRequest.getFloor(), roomRequest.getLocation());
+        if (exists) {
+            throw new IllegalArgumentException("Room with same houseNo, floor, and location already exists");
+        }
 
         Room room = Room.builder()
-        .houseNo(roomRequest.getHouseNo())
-        .floor(roomRequest.getFloor())
-        .location(roomRequest.getLocation())
-        .description(roomRequest.getDescription())
-        .build();
+                .houseNo(roomRequest.getHouseNo())
+                .floor(roomRequest.getFloor())
+                .location(roomRequest.getLocation())
+                .description(roomRequest.getDescription())
+                .build();
 
         Room savedRoom = roomRepository.save(room);
-        log.info("New room created with location: "+savedRoom);
+        log.info("New room created with location: " + savedRoom);
 
         return savedRoom;
     }
 
-    public Room update(Long rid, RoomRequest roomRequest) throws Exception{
+    public Room update(Long rid, RoomRequest roomRequest) throws Exception {
 
         Optional<Room> optRoom = roomRepository.findById(rid);
 
-        if(!optRoom.isPresent())
+        if (!optRoom.isPresent())
             throw new Exception("Room not found exception");
 
         Room room = optRoom.get();
@@ -55,12 +61,12 @@ public class RoomServiceImpl {
         room.setDescription(roomRequest.getDescription());
 
         Room updatedRoom = roomRepository.save(room);
-        log.info("New room created with location: "+updatedRoom);
+        log.info("New room created with location: " + updatedRoom);
 
         return updatedRoom;
     }
 
-    public List<Room> getAll(){
+    public List<Room> getAll() {
         return roomRepository.findAll();
     }
 }

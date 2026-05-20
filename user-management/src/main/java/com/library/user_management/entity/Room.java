@@ -33,7 +33,7 @@ public class Room {
     private String houseNo;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable=false)
+    @Column(nullable=false, length = 20)
     @Builder.Default
     private Floor floor = Floor.FLOOR_GF;
 

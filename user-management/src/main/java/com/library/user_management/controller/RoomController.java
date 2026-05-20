@@ -61,7 +61,7 @@ public class RoomController {
     @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
     public ResponseEntity<?> createRoom(@RequestBody RoomRequest request){
 
-        log.info("Creating room : ", request);
+        log.info("Creating room : {}", request);
         
         try{
             Room room = roomService.create(request);
@@ -88,8 +88,8 @@ public class RoomController {
         log.info("Updating room details for id: {] with req: {} ", request);
         
         try{
-            Room room = roomService.create(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(room);
+            Room room = roomService.update(roomId,request);
+            return ResponseEntity.status(HttpStatus.OK).body(room);
         } catch(Exception ex){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body(Map.of("error", ex.getMessage()));
