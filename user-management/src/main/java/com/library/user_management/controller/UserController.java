@@ -291,7 +291,7 @@ public class UserController {
     @GetMapping("/admin/test")
     @Operation(summary = "Admin test", description = "Test endpoint for admin verification")
     @SecurityRequirement(name = "Bearer Authentication")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
     public ResponseEntity<?> adminTest() {
         log.info("Admin test endpoint accessed");
         return ResponseEntity.ok(Map.of("message", "Admin access granted"));

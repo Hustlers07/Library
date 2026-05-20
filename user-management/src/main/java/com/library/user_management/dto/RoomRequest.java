@@ -8,15 +8,14 @@ import lombok.*;
  * DTO request for Room
  */
 
+@ToString
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class RoomRequest {
 
-    @NonNull String houseNo;
-    @NonNull Floor floor;
-    @NonNull String location;
-    String description;
-
+    private String houseNo;
+    private Floor floor;
+    private String location;
+    private String description;
 }

@@ -29,6 +29,7 @@ public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Long id;
 
     @Column(nullable = false, length = 50)
@@ -72,20 +73,12 @@ public class User implements UserDetails {
     private LocalDateTime lastLogin;
 
 
-    @ManyToMany
-     @JoinTable(
-        name = "user_room", // join table name
-        joinColumns = @JoinColumn(
-            name = "user_id", referencedColumnName = "id"
-        ),
-        inverseJoinColumns = @JoinColumn(
-            name = "room_id", referencedColumnName = "room_id"
-        )
-    )
+    
+    @ManyToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Room> rooms;
 
 
-    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<Seat> seats;
 
     @PrePersist

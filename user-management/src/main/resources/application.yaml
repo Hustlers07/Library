@@ -46,4 +46,5 @@ jwt:
 logging:
   level:
     org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
     com.library.user_management: DEBUG

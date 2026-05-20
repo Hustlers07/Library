@@ -16,7 +16,8 @@ public class ApiRuleDefiner {
         new SecurityRule("/api/admin/**", "hasRole(ADMIN)"),
         new SecurityRule("/actuator/**", "permitAll"),
         new SecurityRule("/swagger-ui/**", "permitAll"),
-        new SecurityRule("/v3/api-docs/**", "permitAll")
+        new SecurityRule("/v3/api-docs/**", "permitAll"),
+        new SecurityRule("/api/room/**", "hasRole(ADMIN)")
         
     );
 

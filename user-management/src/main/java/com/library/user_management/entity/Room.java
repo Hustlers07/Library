@@ -46,7 +46,17 @@ public class Room {
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
     private List<Seat> seats;
 
-    @ManyToMany(mappedBy = "rooms", cascade = CascadeType.ALL)
+    @ManyToMany
+     @JoinTable(
+        name = "user_room", // join table name
+        joinColumns = @JoinColumn(
+            name = "room_id", referencedColumnName = "room_id"
+        ),
+        inverseJoinColumns = @JoinColumn(
+            name = "user_id", referencedColumnName = "user_id"
+        ),
+        foreignKey = @ForeignKey(name="FK_user_room")
+    )
     private List<User> user;
 
     @Column(name = "created_at", nullable = false, updatable = false)

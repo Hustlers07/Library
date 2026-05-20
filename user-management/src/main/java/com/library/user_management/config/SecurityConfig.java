@@ -25,6 +25,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -44,7 +45,7 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-    @Value("${ALLOWED_ORIGINS:http://localhost:4200}")  // default value
+    @Value("${ALLOWED_ORIGINS:http://localhost:4200}") // default value
     private String allowedOrigins;
 
     @Autowired
@@ -86,8 +87,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(e -> e.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .authorizeHttpRequests(auth -> {
@@ -98,34 +99,46 @@ public class SecurityConfig {
                     List<SecurityRule> permitAllRules = securityRules.getSecurityRules().stream()
                             .filter(r -> r.getAccess().equals("permitAll"))
                             .toList();
-                    
+
                     List<SecurityRule> protectedRules = securityRules.getSecurityRules().stream()
                             .filter(r -> !r.getAccess().equals("permitAll"))
                             .toList();
-                    
+
                     // Configure permitAll rules first
                     for (SecurityRule rule : permitAllRules) {
                         auth.requestMatchers(rule.getPattern()).permitAll();
                     }
-                    
-                    // Configure protected rules
+
+                    // protectedRules loop (improved parsing)
+                    // protectedRules loop (robust parsing and ROLE_ stripping)
                     for (SecurityRule rule : protectedRules) {
-                        String access = rule.getAccess();
+                        String access = rule.getAccess().trim();
+
                         if (access.startsWith("hasAnyRole")) {
-                            String roles = access.substring(access.indexOf('(') + 1, access.indexOf(')'));
-                            auth.requestMatchers(rule.getPattern()).hasAnyRole(roles.split(","));
+                            String raw = access.substring(access.indexOf('(') + 1, access.lastIndexOf(')'));
+                            String[] parsed = Arrays.stream(raw.split(","))
+                                    .map(r -> r.trim().replaceAll("^['\"]|['\"]$", "")) // trim and strip quotes
+                                    .map(r -> r.startsWith("ROLE_") ? r.substring(5) : r) // remove ROLE_ prefix if
+                                                                                          // present
+                                    .toArray(String[]::new);
+                            auth.requestMatchers(rule.getPattern()).hasAnyRole(parsed);
                         } else if (access.startsWith("hasRole")) {
-                            String role = access.substring(access.indexOf('(') + 1, access.indexOf(')'));
+                            String raw = access.substring(access.indexOf('(') + 1, access.lastIndexOf(')'));
+                            String role = raw.trim().replaceAll("^['\"]|['\"]$", "");
+                            if (role.startsWith("ROLE_")) {
+                                role = role.substring(5);
+                            }
                             auth.requestMatchers(rule.getPattern()).hasRole(role);
                         } else {
                             auth.requestMatchers(rule.getPattern()).authenticated();
                         }
                     }
-                    
+
                     // Default: require authentication for any other request
                     auth.anyRequest().authenticated();
                 }).authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                // .addFilterBefore(jwtAuthenticationFilter, AnonymousAuthenticationFilter.class);
         return http.build();
     }
 

@@ -3,7 +3,6 @@ package com.library.user_management.service;
 import org.springframework.stereotype.Service;
 
 import com.library.user_management.dto.RoomRequest;
-import com.library.user_management.dto.RoomResponse;
 import com.library.user_management.entity.Room;
 import com.library.user_management.repository.RoomRepository;
 
@@ -25,7 +24,7 @@ public class RoomServiceImpl {
      * @param location
      * @param description
      */
-    public RoomResponse create(RoomRequest roomRequest){
+    public Room create(RoomRequest roomRequest){
 
         Room room = Room.builder()
         .houseNo(roomRequest.getHouseNo())
@@ -37,6 +36,6 @@ public class RoomServiceImpl {
         Room savedRoom = roomRepository.save(room);
         log.info("New room created with location: "+savedRoom);
 
-        return RoomResponse.builder().build();
+        return savedRoom;
     }
 }

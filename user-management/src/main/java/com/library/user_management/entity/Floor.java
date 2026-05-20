@@ -3,9 +3,9 @@ package com.library.user_management.entity;
 public enum Floor {
 
     FLOOR_GF("GF", "Ground Floor"),
-    FLOOR_FIRST("FIRST", "First Floor"),
-    FLOOR_SECOND("SECOND", "Second Floor"),
-    FLOOR_THIRD("THIRD", "Third Floor");
+    FLOOR_FF("FIRST", "First Floor"),
+    FLOOR_SF("SECOND", "Second Floor"),
+    FLOOR_TF("THIRD", "Third Floor");
 
 
     private final String displayName;
