@@ -36,7 +36,7 @@ public class Seat {
     @Column(name = "id")
     private Long id;
 
-    @Column(name="seat_id")
+    @Column(name="seat_id", unique=true)
     private String seatId;
 
 

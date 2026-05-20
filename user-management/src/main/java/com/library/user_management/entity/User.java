@@ -9,6 +9,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -79,6 +81,7 @@ public class User implements UserDetails {
 
 
     @OneToMany(mappedBy = "users", cascade = CascadeType.ALL, orphanRemoval = false)
+    @JsonIgnore
     private List<Seat> seats;
 
     @PrePersist

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.library.user_management.repository.SeatRepository;
+import com.library.user_management.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -25,6 +26,7 @@ import java.util.*;
 public class SeatServiceImpl {
 
     private final SeatRepository seatRepository;
+    private final UserRepository userRepository;
     private final RoomServiceImpl roomServiceImpl;
 
     public List<Seat> addSeats(long roomId, int count) {
@@ -68,6 +70,21 @@ public class SeatServiceImpl {
        selectedSeat.setActive(false);
 
        return seatRepository.save(selectedSeat);
+    }
+
+    public Seat addOrUpdateUser(String userName, String seatId){
+
+        if(!userRepository.existsByUsername(userName))
+            throw new IllegalArgumentException("Invalid user.");
+
+        Optional<Seat> seat = seatRepository.findBySeatId(seatId);
+  
+        if(!seat.isPresent())
+            throw new IllegalArgumentException("Invalid seatId.");
+        Seat currentSeat = seat.get();
+        currentSeat.setUsers(userRepository.findByUsername(userName).get());
+
+        return seatRepository.save(currentSeat);
     }
 
 }
