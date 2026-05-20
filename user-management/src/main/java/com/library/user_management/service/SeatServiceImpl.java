@@ -58,11 +58,16 @@ public class SeatServiceImpl {
         }
     }
 
-    public void disable(String seatId) throws BadRequestException{
+    public Seat disable(String seatId) throws BadRequestException{
        Optional<Seat> seat = seatRepository.findBySeatId(seatId.toUpperCase());
 
        if(!seat.isPresent())
             throw new BadRequestException("Seat id is incorrect");
+
+       Seat selectedSeat = seat.get();
+       selectedSeat.setActive(false);
+
+       return seatRepository.save(selectedSeat);
     }
 
 }

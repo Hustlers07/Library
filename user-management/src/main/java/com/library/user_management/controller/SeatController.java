@@ -2,9 +2,11 @@ package com.library.user_management.controller;
 
 import java.util.List;
 
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,12 +35,20 @@ public class SeatController {
     @Operation(summary = "Add seat to vacant room", description = "Add seat to seat entity if a vacant room is available.")
     @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
-  
     public ResponseEntity<?> addSeats(@RequestBody SeatRequest seatRequest){
 
         List<Seat> seats = seatService.addSeats(seatRequest.getRoomId(), seatRequest.getSeatCount());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(seats);
+    }
+
+    @PostMapping("/disable/{seatId}")
+    @Operation(summary = "Disables seat for usage", description = "Disables seat for usage.")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
+    public ResponseEntity<?> disableSeat(@PathVariable String seatId) throws BadRequestException{
+        Seat disabledSeat = seatService.disable(seatId);
+        return ResponseEntity.ok(disabledSeat);
     }
 
 }
