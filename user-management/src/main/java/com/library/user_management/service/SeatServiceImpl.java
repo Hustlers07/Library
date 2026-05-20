@@ -2,6 +2,7 @@ package com.library.user_management.service;
 
 import java.util.stream.IntStream;
 
+import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,7 +45,7 @@ public class SeatServiceImpl {
                     List<Seat> newSeats = IntStream.rangeClosed(selectedRoom.getSeats().size()+1, count)
                     .mapToObj(val -> Seat.builder()
                             .room(selectedRoom)
-                            .name(val + "")
+                            .seatId(val + "")
                             .build())
                     .toList();
 
@@ -55,6 +56,13 @@ public class SeatServiceImpl {
         } else {
             throw new IllegalArgumentException("Selected room is not available for seating.");
         }
+    }
+
+    public void disable(String seatId) throws BadRequestException{
+       Optional<Seat> seat = seatRepository.findBySeatId(seatId.toUpperCase());
+
+       if(!seat.isPresent())
+            throw new BadRequestException("Seat id is incorrect");
     }
 
 }

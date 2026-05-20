@@ -33,13 +33,14 @@ public class Seat {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "seat_id")
+    @Column(name = "id")
     private Long id;
 
-    @Column(name="seat_name")
-    private String name;
+    @Column(name="seat_id")
+    private String seatId;
 
 
+    @Column(name = "is_active", nullable = false)
     @Builder.Default
     private boolean isActive = true;
 
@@ -49,7 +50,7 @@ public class Seat {
     private Room room;
 
     @ManyToOne
-    @JoinColumn(name = "id", foreignKey = @ForeignKey(name="FK_seat_user"))
+    @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name="FK_seat_user"))
     private User users;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -63,12 +64,12 @@ public class Seat {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         
-        name = new StringBuilder()
+        seatId = new StringBuilder()
         .append("SEAT")
         .append("-")
         .append(room.getId())
         .append("-")
-        .append(name).toString();
+        .append(seatId).toString();
     }
 
     @PreUpdate
