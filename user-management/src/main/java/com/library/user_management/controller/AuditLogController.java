@@ -18,6 +18,8 @@ import com.library.user_management.dto.AuditLogResponse;
 import com.library.user_management.entity.AuditAction;
 import com.library.user_management.service.AuditLogService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,6 +39,8 @@ public class AuditLogController {
      * Only ADMIN and LIBRARIAN can view
      */
     @GetMapping("/entity/{entityType}/{entityId}")
+    @Operation(summary = "Get entity audit logs.", description = "Get entity audit logs for admin and librarian role.")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN')")
     public ResponseEntity<List<AuditLogResponse>> getEntityAuditLogs(
             @PathVariable String entityType,
@@ -51,6 +55,8 @@ public class AuditLogController {
      * Get audit logs for a specific entity with pagination
      */
     @GetMapping("/entity/{entityType}/{entityId}/page")
+    @Operation(summary = "Get entity audit logs paginated way.", description = "Get entity audit logs for admin and librarian role.")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN')")
     public ResponseEntity<Page<AuditLogResponse>> getEntityAuditLogsPage(
             @PathVariable String entityType,
@@ -67,6 +73,8 @@ public class AuditLogController {
      * Admin can view all, users can only view their own
      */
     @GetMapping("/user/{userId}")
+    @Operation(summary = "Get user audit logs.", description = "Get user audit logs.")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN') or (hasRole('MEMBER') and #userId == authentication.principal.id)")
     public ResponseEntity<List<AuditLogResponse>> getUserAuditLogs(
             @PathVariable Long userId) {
@@ -80,6 +88,8 @@ public class AuditLogController {
      * Get audit logs by user with pagination
      */
     @GetMapping("/user/{userId}/page")
+    @Operation(summary = "Get user audit logs.", description = "Get user audit logs.")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN') or (hasRole('MEMBER') and #userId == authentication.principal.id)")
     public ResponseEntity<Page<AuditLogResponse>> getUserAuditLogsPage(
             @PathVariable Long userId,
@@ -95,6 +105,8 @@ public class AuditLogController {
      * Only ADMIN can view
      */
     @GetMapping("/action/{actionType}")
+    @Operation(summary = "Get audit logs by action.", description = "Get entity audit logs by action for admin.")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<AuditLogResponse>> getAuditLogsByAction(
             @PathVariable AuditAction actionType) {
@@ -109,6 +121,8 @@ public class AuditLogController {
      * Only ADMIN and LIBRARIAN can view
      */
     @GetMapping("/entity-type/{entityType}")
+    @Operation(summary = "Gets audit log by entity type ", description = "Gets audit log by entity type ")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN')")
     public ResponseEntity<List<AuditLogResponse>> getAuditLogsByEntityType(
             @PathVariable String entityType) {
@@ -122,6 +136,7 @@ public class AuditLogController {
      * Get audit logs by entity type with pagination
      */
     @GetMapping("/entity-type/{entityType}/page")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN')")
     public ResponseEntity<Page<AuditLogResponse>> getAuditLogsByEntityTypePage(
             @PathVariable String entityType,
@@ -137,6 +152,7 @@ public class AuditLogController {
      * Only ADMIN can view
      */
     @GetMapping("/date-range")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<AuditLogResponse>> getAuditLogsByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
@@ -152,6 +168,7 @@ public class AuditLogController {
      * Only ADMIN can view
      */
     @GetMapping("/failed")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<AuditLogResponse>> getFailedOperations() {
         log.info("Fetching failed operations");
@@ -165,6 +182,7 @@ public class AuditLogController {
      * Only ADMIN and the user who performed the action can view
      */
     @GetMapping("/{auditLogId}")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN')")
     public ResponseEntity<AuditLogResponse> getAuditLogById(
             @PathVariable Long auditLogId) {
@@ -179,6 +197,7 @@ public class AuditLogController {
      * Only ADMIN and LIBRARIAN can view
      */
     @GetMapping("/change-count/{entityType}/{entityId}")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN')")
     public ResponseEntity<Long> getChangeCountForEntity(
             @PathVariable String entityType,
@@ -194,6 +213,7 @@ public class AuditLogController {
      * Only ADMIN can view
      */
     @GetMapping("/operation-count/{userId}")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Long> getOperationCountForUser(
             @PathVariable Long userId) {

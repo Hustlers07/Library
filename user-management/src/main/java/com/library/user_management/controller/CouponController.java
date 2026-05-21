@@ -11,6 +11,7 @@ import com.library.user_management.dto.CouponRequest;
 import com.library.user_management.dto.CouponResponse;
 import com.library.user_management.service.CouponService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,6 +27,7 @@ public class CouponController {
      * Create a new coupon (Admin only)
      */
     @PostMapping
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CouponResponse> createCoupon(@RequestBody CouponRequest couponRequest) {
         log.info("Create coupon request received");
@@ -38,6 +40,7 @@ public class CouponController {
      * Update a coupon (Admin only)
      */
     @PutMapping("/{couponId}")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CouponResponse> updateCoupon(
             @PathVariable Long couponId,
@@ -96,6 +99,7 @@ public class CouponController {
      * Apply a coupon code (increments usage count)
      */
     @PutMapping("/apply/{couponCode}")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('MEMBER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     public ResponseEntity<CouponResponse> applyCoupon(@PathVariable String couponCode) {
         log.info("Apply coupon request for code: {}", couponCode);
@@ -108,6 +112,7 @@ public class CouponController {
      * Activate a coupon (Admin only)
      */
     @PutMapping("/{couponId}/activate")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CouponResponse> activateCoupon(@PathVariable Long couponId) {
         log.info("Activate coupon request for ID: {}", couponId);
@@ -120,6 +125,7 @@ public class CouponController {
      * Deactivate a coupon (Admin only)
      */
     @PutMapping("/{couponId}/deactivate")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CouponResponse> deactivateCoupon(@PathVariable Long couponId) {
         log.info("Deactivate coupon request for ID: {}", couponId);
@@ -132,6 +138,7 @@ public class CouponController {
      * Delete a coupon (Admin only)
      */
     @DeleteMapping("/{couponId}")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteCoupon(@PathVariable Long couponId) {
         log.info("Delete coupon request for ID: {}", couponId);

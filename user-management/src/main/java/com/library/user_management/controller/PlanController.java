@@ -12,6 +12,7 @@ import com.library.user_management.dto.PlanResponse;
 import com.library.user_management.entity.PlanType;
 import com.library.user_management.service.PlanService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,6 +28,7 @@ public class PlanController {
      * Create a new plan (Admin only)
      */
     @PostMapping
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PlanResponse> createPlan(@RequestBody PlanRequest planRequest) {
         log.info("Create plan request received");
@@ -39,6 +41,7 @@ public class PlanController {
      * Update a plan (Admin only)
      */
     @PutMapping("/{planId}")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PlanResponse> updatePlan(
             @PathVariable Long planId,
@@ -75,6 +78,7 @@ public class PlanController {
      * Get all active plans
      */
     @GetMapping("/active")
+    @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<List<PlanResponse>> getActivePlans() {
         log.info("Get active plans request");
 
@@ -97,6 +101,7 @@ public class PlanController {
      * Activate a plan (Admin only)
      */
     @PutMapping("/{planId}/activate")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PlanResponse> activatePlan(@PathVariable Long planId) {
         log.info("Activate plan request for ID: {}", planId);
@@ -109,6 +114,7 @@ public class PlanController {
      * Deactivate a plan (Admin only)
      */
     @PutMapping("/{planId}/deactivate")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PlanResponse> deactivatePlan(@PathVariable Long planId) {
         log.info("Deactivate plan request for ID: {}", planId);
@@ -121,6 +127,7 @@ public class PlanController {
      * Delete a plan (Admin only)
      */
     @DeleteMapping("/{planId}")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletePlan(@PathVariable Long planId) {
         log.info("Delete plan request for ID: {}", planId);

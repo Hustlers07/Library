@@ -18,6 +18,7 @@ import com.library.user_management.service.BookingService;
 import com.library.user_management.entity.User;
 import com.library.user_management.service.UserDetailsServiceImpl;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,7 @@ public class BookingController {
      * Create a new booking
      */
     @PostMapping
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('MEMBER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     public ResponseEntity<BookingResponse> createBooking(
             @RequestBody BookingRequest bookingRequest,
@@ -53,6 +55,7 @@ public class BookingController {
      * Confirm a booking
      */
     @PutMapping("/{bookingId}/confirm")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('MEMBER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     public ResponseEntity<BookingResponse> confirmBooking(@PathVariable Long bookingId) {
         log.info("Confirm booking request for ID: {}", bookingId);
@@ -65,6 +68,7 @@ public class BookingController {
      * Cancel a booking
      */
     @PutMapping("/{bookingId}/cancel")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('MEMBER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     public ResponseEntity<BookingResponse> cancelBooking(@PathVariable Long bookingId) {
         log.info("Cancel booking request for ID: {}", bookingId);
@@ -77,6 +81,7 @@ public class BookingController {
      * Get booking by ID
      */
     @GetMapping("/{bookingId}")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('MEMBER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     public ResponseEntity<BookingResponse> getBookingById(@PathVariable Long bookingId) {
         log.info("Get booking request for ID: {}", bookingId);
@@ -89,6 +94,7 @@ public class BookingController {
      * Get all bookings for the current user
      */
     @GetMapping("/my-bookings")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('MEMBER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     public ResponseEntity<List<BookingResponse>> getMyBookings(HttpServletRequest httpRequest) {
         log.info("Get my bookings request");
@@ -104,6 +110,7 @@ public class BookingController {
      * Get all bookings for a room (Admin/Librarian only)
      */
     @GetMapping("/room/{roomId}")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('LIBRARIAN') or hasRole('ADMIN')")
     public ResponseEntity<List<BookingResponse>> getBookingsByRoom(@PathVariable Long roomId) {
         log.info("Get bookings for room ID: {}", roomId);
@@ -116,6 +123,7 @@ public class BookingController {
      * Get bookings by status (Admin only)
      */
     @GetMapping("/status/{status}")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<BookingResponse>> getBookingsByStatus(@PathVariable BookingStatus status) {
         log.info("Get bookings by status: {}", status);
@@ -128,6 +136,7 @@ public class BookingController {
      * Renew a booking after payment completion
      */
     @PostMapping("/{bookingId}/renew")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('MEMBER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     public ResponseEntity<BookingRenewalResponse> renewBooking(
             @PathVariable Long bookingId,
@@ -160,6 +169,7 @@ public class BookingController {
      * Get renewal history for a booking
      */
     @GetMapping("/{bookingId}/renewal-history")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('MEMBER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     public ResponseEntity<List<BookingResponse>> getBookingRenewalHistory(
             @PathVariable Long bookingId,

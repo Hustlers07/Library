@@ -13,6 +13,7 @@ import com.library.user_management.entity.PaymentStatus;
 import com.library.user_management.security.JwtTokenProvider;
 import com.library.user_management.service.PaymentService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class PaymentController {
      * Create a new payment
      */
     @PostMapping
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('MEMBER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     public ResponseEntity<PaymentResponse> createPayment(
             @RequestBody PaymentRequest paymentRequest,
@@ -47,6 +49,7 @@ public class PaymentController {
      * Process a payment
      */
     @PutMapping("/{paymentId}/process")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('MEMBER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     public ResponseEntity<PaymentResponse> processPayment(@PathVariable Long paymentId) {
         log.info("Process payment request for ID: {}", paymentId);
@@ -59,6 +62,7 @@ public class PaymentController {
      * Refund a payment (Admin only)
      */
     @PutMapping("/{paymentId}/refund")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PaymentResponse> refundPayment(@PathVariable Long paymentId) {
         log.info("Refund payment request for ID: {}", paymentId);
@@ -71,6 +75,7 @@ public class PaymentController {
      * Cancel a payment
      */
     @PutMapping("/{paymentId}/cancel")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('MEMBER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     public ResponseEntity<PaymentResponse> cancelPayment(@PathVariable Long paymentId) {
         log.info("Cancel payment request for ID: {}", paymentId);
@@ -83,6 +88,7 @@ public class PaymentController {
      * Get payment by ID
      */
     @GetMapping("/{paymentId}")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('MEMBER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     public ResponseEntity<PaymentResponse> getPaymentById(@PathVariable Long paymentId) {
         log.info("Get payment request for ID: {}", paymentId);
@@ -95,6 +101,7 @@ public class PaymentController {
      * Get all payments for the current user
      */
     @GetMapping("/my-payments")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('MEMBER') or hasRole('LIBRARIAN') or hasRole('ADMIN')")
     public ResponseEntity<List<PaymentResponse>> getMyPayments(HttpServletRequest httpRequest) {
         log.info("Get my payments request");
@@ -110,6 +117,7 @@ public class PaymentController {
      * Get payments by status (Admin only)
      */
     @GetMapping("/status/{status}")
+    @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<PaymentResponse>> getPaymentsByStatus(@PathVariable PaymentStatus status) {
         log.info("Get payments by status: {}", status);
