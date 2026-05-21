@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
-@RequestMapping("/user-management/api/coupons")
+@RequestMapping("/api/coupons")
 @RequiredArgsConstructor
 public class CouponController {
 
