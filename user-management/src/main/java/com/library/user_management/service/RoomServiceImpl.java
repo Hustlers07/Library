@@ -6,12 +6,14 @@ import org.springframework.stereotype.Service;
 
 import com.library.user_management.dto.RoomRequest;
 import com.library.user_management.entity.Room;
+import com.library.user_management.entity.User;
 import com.library.user_management.entity.RoomStatus;
 import com.library.user_management.repository.RoomRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 
 @Slf4j
 @Service
@@ -41,6 +43,7 @@ public class RoomServiceImpl {
                 .floor(roomRequest.getFloor())
                 .location(roomRequest.getLocation())
                 .description(roomRequest.getDescription())
+                .status(roomRequest.getStatus() != null ? roomRequest.getStatus() : RoomStatus.ROOM_VACANT)
                 .build();
 
         Room savedRoom = roomRepository.save(room);
@@ -56,10 +59,15 @@ public class RoomServiceImpl {
         if (!optRoom.isPresent())
             throw new Exception("Room not found exception");
 
+        User user = roomRequest.getUsrename() == null ? null : userDetailsService.findUserByUsername(roomRequest.getUsrename());
+        RoomStatus newStatus = roomRequest.getUsrename() == null ? RoomStatus.ROOM_VACANT :  roomRequest.getStatus();
+
         Room room = optRoom.get();
         room.setHouseNo(roomRequest.getHouseNo());
         room.setFloor(roomRequest.getFloor());
         room.setLocation(roomRequest.getLocation());
+        room.setUser(user == null ? null : List.of(user));
+        room.setStatus(newStatus);
         room.setDescription(roomRequest.getDescription());
 
         Room updatedRoom = roomRepository.save(room);
@@ -68,7 +76,7 @@ public class RoomServiceImpl {
         return updatedRoom;
     }
 
-    public void addUserToRoom(Long rid, String username) throws Exception {
+    public Room addUserToRoom(Long rid, String username) throws Exception {
         Optional<Room> optRoom = roomRepository.findById(rid);
 
         if (!optRoom.isPresent())
@@ -80,8 +88,9 @@ public class RoomServiceImpl {
             throw new Exception("Room is currently occupied");
 
         room.getUser().add(userDetailsService.findUserByUsername(username));
-        roomRepository.save(room);
+        return roomRepository.save(room);
     }
+
 
     public void delete(Long rid) throws Exception {
         Optional<Room> optRoom = roomRepository.findById(rid);

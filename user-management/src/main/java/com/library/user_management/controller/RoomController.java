@@ -105,8 +105,8 @@ public class RoomController {
         log.info("Adding user with username: {} to room with id: {}", username, roomId);
         
         try{
-            roomService.addUserToRoom(roomId, username);
-            return ResponseEntity.ok(Map.of("message", "User added to room successfully"));
+            Room room = roomService.addUserToRoom(roomId, username);
+            return ResponseEntity.ok(Map.of("message", "User added to room successfully", "room", room));
         } catch(Exception ex){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(Map.of("error", ex.getMessage()));
