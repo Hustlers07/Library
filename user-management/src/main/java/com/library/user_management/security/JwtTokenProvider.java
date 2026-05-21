@@ -52,12 +52,34 @@ public class JwtTokenProvider {
     }
 
     /**
+     * Generate JWT token with user ID
+     */
+    public String generateToken(User user, Long userId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("tokenType", "access");
+        claims.put("email", user.getEmail());
+        claims.put("userId", userId);
+        return buildToken(claims, user.getUsername(), jwtExpirationMs);
+    }
+
+    /**
      * Generate refresh token
      */
     public String generateRefreshToken(String username, String email) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("tokenType", "refresh");
         claims.put("email", email);
+        return buildToken(claims, username, refreshTokenExpirationMs);
+    }
+
+    /**
+     * Generate refresh token with user ID
+     */
+    public String generateRefreshToken(String username, String email, Long userId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("tokenType", "refresh");
+        claims.put("email", email);
+        claims.put("userId", userId);
         return buildToken(claims, username, refreshTokenExpirationMs);
     }
 
@@ -89,6 +111,13 @@ public class JwtTokenProvider {
      */
     public String extractEmail(String token) {
         return extractAllClaims(token).get("email", String.class);
+    }
+
+    /**
+     * Extract user ID from token
+     */
+    public Long getUserIdFromToken(String token) {
+        return extractAllClaims(token).get("userId", Long.class);
     }
 
 

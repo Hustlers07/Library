@@ -1,5 +1,6 @@
 package com.library.user_management.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -52,6 +53,10 @@ public class Seat {
     @ManyToOne
     @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name="FK_seat_user"))
     private User users;
+
+    @Column(name = "price_per_hour", precision = 10, scale = 2)
+    @Builder.Default
+    private BigDecimal pricePerHour = new BigDecimal("50.00");
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
