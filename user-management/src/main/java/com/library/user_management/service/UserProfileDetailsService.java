@@ -11,5 +11,6 @@ public interface UserProfileDetailsService {
     public UserResponse getUserById(Long userId) throws Exception;
     public List<UserResponse> getAllActiveUsers();
     public UserResponse getUserByUsername(String username) throws Exception;
+    public User findUserByUsername(String username) throws Exception;
 
 }

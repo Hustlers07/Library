@@ -51,12 +51,12 @@ public class SeatController {
         return ResponseEntity.ok(disabledSeat);
     }
 
-    @PostMapping("/add-user/{userId}/seat/{seatId}")
+    @PostMapping("/add-user/{seatId}/user/{username}")
     @Operation(summary = "Adds user to seat.", description = "Adds user to seat")
     @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
-    public ResponseEntity<?> addUser(@PathVariable String userId, @PathVariable String seatId){
-        Seat updatedSeat = seatService.addOrUpdateUser(userId,seatId);
+    public ResponseEntity<?> addUser(@PathVariable String username, @PathVariable String seatId){
+        Seat updatedSeat = seatService.addOrUpdateUser(username,seatId);
         return ResponseEntity.ok(updatedSeat);
     }
 

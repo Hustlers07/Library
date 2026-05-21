@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.library.user_management.dto.RoomRequest;
 import com.library.user_management.entity.Room;
+import com.library.user_management.entity.RoomStatus;
 import com.library.user_management.service.RoomServiceImpl;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -94,6 +95,40 @@ public class RoomController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body(Map.of("error", ex.getMessage()));
         }
+    }
+
+    @PostMapping("/add-user/{roomId}/username/{username}")
+    @Operation(summary = "Adds user to room", description = "Adds user to room if room is vacant")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
+    public ResponseEntity<?> addUserToRoom(@PathVariable Long roomId, @PathVariable String username){
+        log.info("Adding user with username: {} to room with id: {}", username, roomId);
+        
+        try{
+            roomService.addUserToRoom(roomId, username);
+            return ResponseEntity.ok(Map.of("message", "User added to room successfully"));
+        } catch(Exception ex){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(Map.of("error", ex.getMessage()));
+        }
+    } 
+
+    @GetMapping("/search")
+    @Operation(summary = "Search rooms by location and description", description = "Search rooms by location and description")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> searchRooms(String location, String description){
+        log.info("Searching rooms with location: {} and description: {}", location, description);
+        return ResponseEntity.ok(roomService.search(location, description));
+    }
+
+    @GetMapping("/search/status")
+    @Operation(summary = "Search rooms by status", description = "Search rooms by status")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> searchRoomsByStatus(RoomStatus status){
+        log.info("Searching rooms with status: {}", status);
+        return ResponseEntity.ok(roomService.searchByStatus(status));   
     }
 
 }

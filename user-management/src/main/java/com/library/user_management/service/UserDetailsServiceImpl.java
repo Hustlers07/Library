@@ -70,6 +70,14 @@ public class UserDetailsServiceImpl implements UserDetailsService, UserProfileDe
         return mapToUserResponse(user);
     }
 
+
+    @Override
+    public User findUserByUsername(String username) throws Exception {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+   
+    }
+
     /**
      * Get all active users
      */
