@@ -12,8 +12,11 @@ import com.library.user_management.dto.BookingResponse;
 import com.library.user_management.dto.BookingRenewalRequest;
 import com.library.user_management.dto.BookingRenewalResponse;
 import com.library.user_management.entity.BookingStatus;
+import com.library.user_management.entity.Role;
 import com.library.user_management.security.JwtTokenProvider;
 import com.library.user_management.service.BookingService;
+import com.library.user_management.entity.User;
+import com.library.user_management.service.UserDetailsServiceImpl;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +30,7 @@ public class BookingController {
 
     private final BookingService bookingService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserDetailsServiceImpl userService;
 
     /**
      * Create a new booking
@@ -141,7 +145,7 @@ public class BookingController {
         }
 
         List<BookingResponse> renewalBookings = bookingService.renewBooking(bookingId, renewalRequest);
-        
+
         BookingRenewalResponse response = BookingRenewalResponse.builder()
                 .originalBookingId(bookingId)
                 .renewalBookings(renewalBookings)
@@ -191,11 +195,19 @@ public class BookingController {
      */
     private boolean isAdmin(HttpServletRequest request) {
         String token = extractToken(request);
+        boolean isRoleAdmin = false;
+
         if (token != null) {
             String username = jwtTokenProvider.extractUsername(token);
-            // In a real application, you would check the user's roles from the database
-            return true; // Simplified for demo
+
+            try {
+
+                User user = userService.findUserByUsername(username);
+                isRoleAdmin = user.getRole() == Role.ROLE_ADMIN;
+            } catch (Exception ex) {
+                isRoleAdmin = false;
+            }
         }
-        return false;
+        return isRoleAdmin;
     }
 }
