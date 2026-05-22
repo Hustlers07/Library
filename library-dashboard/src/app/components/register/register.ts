@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { RegisterationForm } from "../registeration-form/registeration-form";
 import { ROUTES } from '../../constants/api.constants';
 

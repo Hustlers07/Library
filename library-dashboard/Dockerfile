@@ -11,8 +11,6 @@ COPY dist/library-dashboard/browser /usr/share/nginx/html
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Copy env-config.js template
-COPY src/app/env/env-config.js /usr/share/nginx/html/assets/env-config.js
 
 ENTRYPOINT ["/entrypoint.sh"]
 

@@ -7,7 +7,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
-import { ConfigService } from '../../services/config-service';
 import { AuthService } from '../../services/auth-service';
 import { Router, RouterLink } from '@angular/router';
 import { progressLoading, ROUTES } from '../../constants/api.constants';
@@ -42,7 +41,6 @@ export class Login {
 
 
   constructor(private fb: FormBuilder,
-    private configService: ConfigService,
     private authService: AuthService,
     private router: Router) {
     this.loginForm = this.fb.group({
@@ -68,7 +66,7 @@ export class Login {
 
 
   onSubmit() {
-    console.log('API Base URL from ConfigService:', this.configService.apiUrl);
+    console.log('API Base URL from ConfigService:', environment.apiUrl);
     if (this.loginForm.valid) {
       console.log(this.loginForm.value);
       progressLoading.set(true);

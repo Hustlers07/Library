@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
   devEmail: '',
-  devPassword: ''
+  devPassword: '',
+  apiUrl: 'http://user-management-service:8080/user-management'
 };

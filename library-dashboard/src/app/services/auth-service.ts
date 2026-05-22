@@ -4,7 +4,6 @@ import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { activeUser, API_ENDPOINTS, ROUTES, TOKEN_KEY } from '../constants/api.constants';
-import { ConfigService } from './config-service';
 import { User } from '../models/user/user-module';
 import { isPlatformBrowser } from '@angular/common';
 @Injectable({
@@ -16,12 +15,11 @@ export class AuthService {
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private http: HttpClient,
-    private config: ConfigService,
 
   ) { }
 
   login(credentials: { email: string; password: string }): Observable<string> {
-    return this.http.post<{ token: string }>(API_ENDPOINTS.LOGIN(this.config), credentials).pipe(
+    return this.http.post<{ token: string }>(API_ENDPOINTS.LOGIN(), credentials).pipe(
       map(response => {
         const token = response?.token;
         if (token) {
@@ -33,7 +31,7 @@ export class AuthService {
   }
 
   register(credentials: Object): Observable<string> {
-    return this.http.post<{ token: string }>(API_ENDPOINTS.REGISTER(this.config), credentials).pipe(
+    return this.http.post<{ token: string }>(API_ENDPOINTS.REGISTER(), credentials).pipe(
       map(response => {
         const token = response?.token;
         if (token) {
@@ -45,13 +43,13 @@ export class AuthService {
   }
 
   changePassword(data: Object): Observable<string> {
-    return this.http.post<{ message: string }>(API_ENDPOINTS.CHANGE_PASSWORD(this.config), data).pipe(
+    return this.http.post<{ message: string }>(API_ENDPOINTS.CHANGE_PASSWORD(), data).pipe(
       map(response => response?.message)
     );
   }
 
   // fetchUsers(): Observable<User[]> {
-  //   return this.http.get<any[]>(API_ENDPOINTS.USERS(this.config)).pipe(
+  //   return this.http.get<any[]>(API_ENDPOINTS.USERS()).pipe(
   //     map(
   //       (users: any[]) => users.map(user => new User(user))
   //     )
@@ -59,7 +57,7 @@ export class AuthService {
   // }
 
   getProfile(): Observable<User> {
-    return this.http.get(API_ENDPOINTS.PROFILE(this.config)).pipe(map(profile => new User(profile)));
+    return this.http.get(API_ENDPOINTS.PROFILE()).pipe(map(profile => new User(profile)));
   }
 
   setToken(token: string | null) {

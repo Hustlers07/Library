@@ -1,14 +1,15 @@
 import { signal } from "@angular/core";
-import { ConfigService } from "../services/config-service";
 import { User } from "../models/user/user-module";
+import { environment } from '../../environments/environment';
+
 
 // api.constants.ts
 export const API_ENDPOINTS = {
-  LOGIN: (config: ConfigService) => `${config.apiUrl}/api/auth/login`,
-  REGISTER: (config: ConfigService) => `${config.apiUrl}/api/auth/register`,
-  PROFILE: (config: ConfigService) => `${config.apiUrl}/api/users/profile`,
-  CHANGE_PASSWORD: (config: ConfigService) => `${config.apiUrl}/api/auth/change-password`,
-  USERS: (config: ConfigService) => `${config.apiUrl}/api/users`,
+  LOGIN: () => `${environment.apiUrl}/api/auth/login`,
+  REGISTER: () => `${environment.apiUrl}/api/auth/register`,
+  PROFILE: () => `${environment.apiUrl}/api/users/profile`,
+  CHANGE_PASSWORD: () => `${environment.apiUrl}/api/auth/change-password`,
+  USERS: () => `${environment.apiUrl}/api/users`,
 };
 
 

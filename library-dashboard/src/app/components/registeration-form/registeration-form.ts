@@ -7,10 +7,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
-import { ConfigService } from '../../services/config-service';
 import { AuthService } from '../../services/auth-service';
 import { Router, RouterLink } from '@angular/router';
 import { progressLoading, ROUTES } from '../../constants/api.constants';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-registeration-form',
@@ -40,12 +40,11 @@ export class RegisterationForm {
   
     ngOnInit() {
       progressLoading.set(false);
-      console.log('API Base URL from ConfigService:', this.configService.apiUrl);
+      console.log('API Base URL from ConfigService:', environment.apiUrl);
     }
   
   
     constructor(private fb: FormBuilder,
-      private configService: ConfigService,
       private authService: AuthService,
       private router: Router) {
       this.registerForm = this.fb.group({
@@ -70,7 +69,7 @@ export class RegisterationForm {
   
   
     onSubmit() {
-      console.log('API Base URL from ConfigService:', this.configService.apiUrl);
+      console.log('API Base URL from ConfigService:', environment.apiUrl);
       if (this.registerForm.valid) {
         console.log(this.registerForm.value);
         progressLoading.set(true);
