@@ -1,1 +1,18 @@
-<p>rooms-view works!</p>
+<mat-nav-list>
+@for (link of fragments; track link) {
+    <a
+      mat-list-item
+      [activated]="activeLink === link"
+      href="#{{link}}"
+      (click)="onClick($event)"
+    >
+      
+      <span matListItemTitle>{{ link | titlecase}}</span>
+      <span matListItemLine>Second line</span>
+ 
+      <div matListItemMeta>
+        <mat-icon>{{link}}</mat-icon>
+      </div>
+    </a>
+  }
+</mat-nav-list>
