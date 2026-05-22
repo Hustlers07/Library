@@ -1,18 +1,19 @@
 <mat-nav-list>
-@for (link of fragments; track link) {
-    <a
-      mat-list-item
-      [activated]="activeLink === link"
-      href="#{{link}}"
-      (click)="onClick($event)"
-    >
-      
-      <span matListItemTitle>{{ link | titlecase}}</span>
-      <span matListItemLine>Second line</span>
- 
-      <div matListItemMeta>
-        <mat-icon>{{link}}</mat-icon>
-      </div>
+    @for (room of rooms(); track room.id) {
+    <a mat-list-item [activated]=true href="#" (click)="onClick($event)">
+
+        <span matListItemTitle>{{room.houseNo +" "+room.floor | titlecase}}</span>
+        <span matListItemLine>{{room.description}}</span>
+
+        <div matListItemMeta>
+            <mat-icon
+                [style.color]="room.status.split('_')[1] === 'OCCUPIED' ? 'red' : 'green'">{{room.status.split('_')[1]
+                === 'OCCUPIED' ? 'event_busy' : 'event_available'}}</mat-icon>
+        </div>
     </a>
-  }
+    }
+
+    @empty {
+    <h3 class="subtitle-2">{{message}}</h3>
+    }
 </mat-nav-list>

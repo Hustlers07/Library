@@ -10,6 +10,7 @@ export const API_ENDPOINTS = {
   PROFILE: () => `${environment.apiUrl}/api/users/profile`,
   CHANGE_PASSWORD: () => `${environment.apiUrl}/api/auth/change-password`,
   USERS: () => `${environment.apiUrl}/api/users`,
+  ROOM: () => `${environment.apiUrl}/api/room`,
 };
 
 
