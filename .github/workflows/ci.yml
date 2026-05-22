@@ -61,6 +61,10 @@ jobs:
           tags: |
             hellisback/library-user-management:v${{ github.run_number }}
             hellisback/library-user-management:latest
+      - name: Print image name
+        run: |
+          echo "Pushed: hellisback/library-user-management:v${{ github.run_number }}"
+          echo "Pushed: hellisback/library-user-management:latest"
 
   # ---------------- Library Dashboard ----------------
   build-push-library-dashboard:
@@ -99,3 +103,7 @@ jobs:
           tags: |
             hellisback/library-dashboard:v${{ github.run_number }}
             hellisback/library-dashboard:latest
+      - name: Print image name
+        run: |
+          echo "Pushed: hellisback/library-dashboard:v${{ github.run_number }}"
+          echo "Pushed: hellisback/library-dashboard:latest"
