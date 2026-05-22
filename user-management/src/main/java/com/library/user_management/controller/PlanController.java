@@ -56,6 +56,7 @@ public class PlanController {
      * Get plan by ID
      */
     @GetMapping("/{planId}")
+    @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<PlanResponse> getPlanById(@PathVariable Long planId) {
         log.info("Get plan request for ID: {}", planId);
 
@@ -67,6 +68,7 @@ public class PlanController {
      * Get all plans
      */
     @GetMapping
+    @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<List<PlanResponse>> getAllPlans() {
         log.info("Get all plans request");
 
@@ -90,6 +92,7 @@ public class PlanController {
      * Get plans by type
      */
     @GetMapping("/type/{planType}")
+    @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<List<PlanResponse>> getPlansByType(@PathVariable PlanType planType) {
         log.info("Get plans by type: {}", planType);
 

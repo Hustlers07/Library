@@ -35,6 +35,8 @@ public class BookingRequest {
 
     private Long couponId;
 
+    private Long planId;
+
     /**
      * List of seat IDs to book (required if bookingType is SEAT or FLOOR_AND_SEAT)
      * Leave empty or null for FLOOR booking

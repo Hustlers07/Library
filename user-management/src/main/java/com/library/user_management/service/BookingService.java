@@ -14,13 +14,18 @@ import com.library.user_management.dto.BookingResponse;
 import com.library.user_management.entity.Booking;
 import com.library.user_management.entity.BookingItem;
 import com.library.user_management.entity.BookingStatus;
+import com.library.user_management.entity.BookingType;
+import com.library.user_management.entity.PlanType;
 import com.library.user_management.entity.Coupon;
+import com.library.user_management.entity.DurationType;
+import com.library.user_management.entity.Plan;
 import com.library.user_management.entity.Room;
 import com.library.user_management.entity.Seat;
 import com.library.user_management.entity.User;
 import com.library.user_management.repository.BookingItemRepository;
 import com.library.user_management.repository.BookingRepository;
 import com.library.user_management.repository.CouponRepository;
+import com.library.user_management.repository.PlanRepository;
 import com.library.user_management.repository.RoomRepository;
 import com.library.user_management.repository.SeatRepository;
 import com.library.user_management.repository.UserRepository;
@@ -41,24 +46,55 @@ public class BookingService {
     private final RoomRepository roomRepository;
     private final SeatRepository seatRepository;
     private final CouponRepository couponRepository;
+    private final PlanRepository planRepository;
 
     /**
      * Create a new booking
      * Supports booking complete floor or specific seats
      */
-    public BookingResponse createBooking(Long userId, BookingRequest bookingRequest) {
-        log.info("Creating booking for user: {} in room: {} with type: {}", 
-                userId, bookingRequest.getRoomId(), bookingRequest.getBookingType());
+    public BookingResponse createBooking(String username, BookingRequest bookingRequest) {
+        log.info("Creating booking for user: {} in room: {} with type: {}",
+                username, bookingRequest.getRoomId(), bookingRequest.getBookingType());
 
         // Validate user and room
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         Room room = roomRepository.findById(bookingRequest.getRoomId())
                 .orElseThrow(() -> new IllegalArgumentException("Room not found"));
 
+        Plan plan = null;
+
+        if (bookingRequest.getPlanId() != 0)
+            plan = planRepository.findById(bookingRequest.getPlanId()).orElseThrow(
+                    () -> new IllegalArgumentException("Plan not found"));
+
         // Validate booking type and seats
-        validateBookingType(bookingRequest);
+        validateBookingType(bookingRequest, plan);
+
+        // Overriden start and date with selected plan
+        if (plan != null) {
+
+            
+
+            bookingRequest.setStartTime(LocalDateTime.now());
+            bookingRequest.setEndTime(bookingRequest.getStartTime().plusDays(plan.getValidityDays()));
+
+
+            if(plan.getMonthlyLimit() != 0){
+                bookingRequest.setDurationType(DurationType.MONTHLY);
+                bookingRequest.setDuration(plan.getMonthlyLimit());
+            }
+
+            if(plan.getDailyLimit() !=0)
+                bookingRequest.setDurationType(DurationType.DAILY);
+                bookingRequest.setDuration(plan.getDailyLimit());
+
+            if(plan.getHourlyLimit() != 0)
+                bookingRequest.setDurationType(DurationType.HOURLY);
+                bookingRequest.setDuration(plan.getHourlyLimit());
+
+        }
 
         // Check for conflicting bookings
         List<Booking> conflicts = bookingRepository.findConflictingBookings(
@@ -73,8 +109,8 @@ public class BookingService {
         // Get seats if booking includes seats
         List<Seat> bookedSeats = new ArrayList<>();
         if (bookingRequest.getBookingType() == com.library.user_management.entity.BookingType.SEAT ||
-            bookingRequest.getBookingType() == com.library.user_management.entity.BookingType.FLOOR_AND_SEAT) {
-            
+                bookingRequest.getBookingType() == com.library.user_management.entity.BookingType.FLOOR_AND_SEAT) {
+
             if (bookingRequest.getSeatIds() == null || bookingRequest.getSeatIds().isEmpty()) {
                 throw new IllegalArgumentException("Seat IDs are required for SEAT booking type");
             }
@@ -83,15 +119,17 @@ public class BookingService {
         }
 
         // Calculate base price based on duration and booking type
-        BigDecimal basePrice = calculatePrice(bookingRequest.getDurationType(), bookingRequest.getDuration(), 
-                                              bookingRequest.getBookingType(), bookedSeats.size());
+        // BigDecimal basePrice = calculatePrice(bookingRequest.getDurationType(), bookingRequest.getDuration(),
+        //         bookingRequest.getBookingType(), bookedSeats.size());
+
+        BigDecimal basePrice = plan.getPrice();
 
         // Apply coupon if provided
         Coupon coupon = null;
         if (bookingRequest.getCouponId() != null) {
             coupon = couponRepository.findById(bookingRequest.getCouponId())
                     .orElseThrow(() -> new IllegalArgumentException("Coupon not found"));
-            
+
             if (!isCouponValid(coupon)) {
                 throw new IllegalArgumentException("Coupon is not valid");
             }
@@ -128,7 +166,7 @@ public class BookingService {
                             .pricePerUnit(seat.getPricePerHour())
                             .build())
                     .collect(Collectors.toList());
-            
+
             List<BookingItem> savedItems = bookingItemRepository.saveAll(bookingItems);
             savedBooking.setBookingItems(savedItems);
             log.info("Created {} booking items for booking ID: {}", savedItems.size(), savedBooking.getId());
@@ -140,21 +178,69 @@ public class BookingService {
     /**
      * Validate booking type and seat requirements
      */
-    private void validateBookingType(BookingRequest bookingRequest) {
+    private void validateBookingType(BookingRequest bookingRequest, Plan plan) throws IllegalArgumentException {
         com.library.user_management.entity.BookingType bookingType = bookingRequest.getBookingType();
-        
+
         if (bookingType == null) {
             throw new IllegalArgumentException("Booking type is required");
         }
 
         if (bookingType == com.library.user_management.entity.BookingType.SEAT ||
-            bookingType == com.library.user_management.entity.BookingType.FLOOR_AND_SEAT) {
-            
+                bookingType == com.library.user_management.entity.BookingType.FLOOR_AND_SEAT) {
+
             if (bookingRequest.getSeatIds() == null || bookingRequest.getSeatIds().isEmpty()) {
                 throw new IllegalArgumentException("Seat IDs are required for " + bookingType + " booking");
             }
         }
+
+        if(plan != null)
+            validateBookingPlan(bookingRequest, plan);
+
+        
     }
+
+    /***
+     * Validates selected plan for booking
+     * @param bookingRequest booking request params
+     * @param plan selected plan to apply
+     */
+
+    private void validateBookingPlan(BookingRequest bookingRequest, Plan plan){
+
+        
+
+        if (!plan.getIsActive())
+            throw new IllegalArgumentException("Plan is not active");
+
+        if ((bookingRequest.getBookingType() == BookingType.FLOOR && !plan.getFloorAccessAllowed()) ||
+                (bookingRequest.getBookingType() == BookingType.SEAT && !plan.getSeatAccessAllowed())
+
+        ) {
+            throw new IllegalArgumentException("Invalid plan selection");
+        }
+
+        if ((bookingRequest.getBookingType() == BookingType.FLOOR) &&
+                !(plan.getPlanType() == PlanType.FLOOR_BASIC ||
+                        plan.getPlanType() == PlanType.FLOOR_STANDARD ||
+                        plan.getPlanType() == PlanType.FLOOR_PREMIUM ||
+                        plan.getPlanType() == PlanType.FLOOR_ENTERPRISE)) {
+
+                throw new IllegalArgumentException("Invalid plan selection");
+        }
+
+
+        if ((bookingRequest.getBookingType() == BookingType.SEAT) &&
+                !(plan.getPlanType() == PlanType.SEAT_BASIC ||
+                        plan.getPlanType() == PlanType.SEAT_STANDARD ||
+                        plan.getPlanType() == PlanType.SEAT_PREMIUM ||
+                        plan.getPlanType() == PlanType.SEAT_ENTERPRISE)) {
+
+                throw new IllegalArgumentException("Invalid plan selection");
+        }
+
+    }
+
+    
 
     /**
      * Validate seats exist and belong to the specified room
@@ -260,17 +346,18 @@ public class BookingService {
     }
 
     /**
-     * Calculate base price based on duration type, duration, booking type, and seat count
+     * Calculate base price based on duration type, duration, booking type, and seat
+     * count
      */
-    private BigDecimal calculatePrice(com.library.user_management.entity.DurationType durationType, 
-                                     Integer duration,
-                                     com.library.user_management.entity.BookingType bookingType,
-                                     int seatCount) {
+    private BigDecimal calculatePrice(com.library.user_management.entity.DurationType durationType,
+            Integer duration,
+            com.library.user_management.entity.BookingType bookingType,
+            int seatCount) {
         // Base prices per unit
-        BigDecimal hourlyRate = new BigDecimal("50");      // ₹50/hour for floor
-        BigDecimal dailyRate = new BigDecimal("300");      // ₹300/day for floor
-        BigDecimal weeklyRate = new BigDecimal("1500");    // ₹1500/week for floor
-        BigDecimal monthlyRate = new BigDecimal("5000");   // ₹5000/month for floor
+        BigDecimal hourlyRate = new BigDecimal("50"); // ₹50/hour for floor
+        BigDecimal dailyRate = new BigDecimal("300"); // ₹300/day for floor
+        BigDecimal weeklyRate = new BigDecimal("1500"); // ₹1500/week for floor
+        BigDecimal monthlyRate = new BigDecimal("5000"); // ₹5000/month for floor
 
         BigDecimal basePrice;
 
@@ -293,7 +380,7 @@ public class BookingService {
 
         // If booking includes seats, multiply by number of seats
         if (bookingType == com.library.user_management.entity.BookingType.SEAT ||
-            bookingType == com.library.user_management.entity.BookingType.FLOOR_AND_SEAT) {
+                bookingType == com.library.user_management.entity.BookingType.FLOOR_AND_SEAT) {
             basePrice = basePrice.multiply(new BigDecimal(seatCount));
         }
 
@@ -348,8 +435,8 @@ public class BookingService {
         }
 
         // Apply maximum discount limit
-        if (coupon.getMaximumDiscountAmount() != null && 
-            discount.compareTo(coupon.getMaximumDiscountAmount()) > 0) {
+        if (coupon.getMaximumDiscountAmount() != null &&
+                discount.compareTo(coupon.getMaximumDiscountAmount()) > 0) {
             discount = coupon.getMaximumDiscountAmount();
         }
 
@@ -386,8 +473,8 @@ public class BookingService {
      * Renew a booking after payment completion
      * Creates new booking(s) with same details but for the next period
      */
-    public List<BookingResponse> renewBooking(Long bookingId, 
-                                             com.library.user_management.dto.BookingRenewalRequest renewalRequest) {
+    public List<BookingResponse> renewBooking(Long bookingId,
+            com.library.user_management.dto.BookingRenewalRequest renewalRequest) {
         log.info("Renewing booking with ID: {} - renewal count: {}", bookingId, renewalRequest.getRenewalCount());
 
         Booking originalBooking = bookingRepository.findById(bookingId)
@@ -399,7 +486,7 @@ public class BookingService {
         }
 
         if (originalBooking.getPayment().getStatus() != com.library.user_management.entity.PaymentStatus.COMPLETED) {
-            throw new IllegalArgumentException("Payment must be completed before renewal. Current status: " + 
+            throw new IllegalArgumentException("Payment must be completed before renewal. Current status: " +
                     originalBooking.getPayment().getStatus());
         }
 
@@ -410,14 +497,14 @@ public class BookingService {
         }
 
         List<BookingResponse> renewedBookings = new ArrayList<>();
-        LocalDateTime currentStartTime = renewalRequest.getNewStartTime() != null ? 
-            renewalRequest.getNewStartTime() : originalBooking.getEndTime();
+        LocalDateTime currentStartTime = renewalRequest.getNewStartTime() != null ? renewalRequest.getNewStartTime()
+                : originalBooking.getEndTime();
 
         // Get seats if booking type includes seats
         List<Seat> bookedSeats = new ArrayList<>();
         if (originalBooking.getBookingType() == com.library.user_management.entity.BookingType.SEAT ||
-            originalBooking.getBookingType() == com.library.user_management.entity.BookingType.FLOOR_AND_SEAT) {
-            
+                originalBooking.getBookingType() == com.library.user_management.entity.BookingType.FLOOR_AND_SEAT) {
+
             bookedSeats = originalBooking.getBookingItems().stream()
                     .map(BookingItem::getSeat)
                     .collect(Collectors.toList());
@@ -428,7 +515,7 @@ public class BookingService {
         if (renewalRequest.getCouponId() != null) {
             renewalCoupon = couponRepository.findById(renewalRequest.getCouponId())
                     .orElseThrow(() -> new IllegalArgumentException("Coupon not found"));
-            
+
             if (!isCouponValid(renewalCoupon)) {
                 throw new IllegalArgumentException("Coupon is not valid for renewal");
             }
@@ -437,8 +524,8 @@ public class BookingService {
         // Create renewal bookings
         for (int i = 0; i < renewalCount; i++) {
             LocalDateTime renewalStartTime = currentStartTime;
-            LocalDateTime renewalEndTime = calculateEndTime(renewalStartTime, 
-                    originalBooking.getDurationType(), 
+            LocalDateTime renewalEndTime = calculateEndTime(renewalStartTime, 1,
+                    originalBooking.getDurationType(),
                     originalBooking.getDuration());
 
             // Check for conflicts
@@ -449,14 +536,14 @@ public class BookingService {
 
             if (!conflicts.isEmpty()) {
                 log.warn("Conflict found for renewal {} at {}", i + 1, renewalStartTime);
-                throw new IllegalArgumentException("Cannot create renewal " + (i + 1) + 
-                    ": Room is already booked for this period");
+                throw new IllegalArgumentException("Cannot create renewal " + (i + 1) +
+                        ": Room is already booked for this period");
             }
 
             // Calculate price
-            BigDecimal basePrice = calculatePrice(originalBooking.getDurationType(), 
+            BigDecimal basePrice = calculatePrice(originalBooking.getDurationType(),
                     originalBooking.getDuration(),
-                    originalBooking.getBookingType(), 
+                    originalBooking.getBookingType(),
                     bookedSeats.size());
 
             BigDecimal totalPrice = calculateTotalPrice(basePrice, renewalCoupon);
@@ -474,9 +561,8 @@ public class BookingService {
                     .basePrice(basePrice)
                     .totalPrice(totalPrice)
                     .coupon(renewalCoupon)
-                    .specialNotes(renewalRequest.getRenewalNotes() != null ? 
-                            renewalRequest.getRenewalNotes() : 
-                            "Renewal of booking #" + originalBooking.getId())
+                    .specialNotes(renewalRequest.getRenewalNotes() != null ? renewalRequest.getRenewalNotes()
+                            : "Renewal of booking #" + originalBooking.getId())
                     .parentBooking(originalBooking)
                     .isRenewal(true)
                     .renewalCount(i + 1)
@@ -495,10 +581,11 @@ public class BookingService {
                                 .pricePerUnit(seat.getPricePerHour())
                                 .build())
                         .collect(Collectors.toList());
-                
+
                 List<BookingItem> savedItems = bookingItemRepository.saveAll(bookingItems);
                 savedRenewalBooking.setBookingItems(savedItems);
-                log.info("Created {} booking items for renewal booking ID: {}", savedItems.size(), savedRenewalBooking.getId());
+                log.info("Created {} booking items for renewal booking ID: {}", savedItems.size(),
+                        savedRenewalBooking.getId());
             }
 
             renewedBookings.add(mapToResponse(savedRenewalBooking));
@@ -518,18 +605,18 @@ public class BookingService {
     /**
      * Calculate end time based on start time, duration type, and duration
      */
-    private LocalDateTime calculateEndTime(LocalDateTime startTime, 
-                                          com.library.user_management.entity.DurationType durationType,
-                                          Integer duration) {
+    private LocalDateTime calculateEndTime(LocalDateTime startTime, int validityDays,
+            com.library.user_management.entity.DurationType durationType,
+            Integer duration) {
         switch (durationType) {
             case HOURLY:
-                return startTime.plusHours(duration);
+                return  startTime.plusHours( validityDays * duration);
             case DAILY:
-                return startTime.plusDays(duration);
+                return  startTime.plusDays( validityDays * duration);
             case WEEKLY:
-                return startTime.plusWeeks(duration);
+                return  startTime.plusWeeks( validityDays * duration);
             case MONTHLY:
-                return startTime.plusMonths(duration);
+                return  startTime.plusMonths( validityDays * duration);
             default:
                 throw new IllegalArgumentException("Unknown duration type");
         }
@@ -546,7 +633,7 @@ public class BookingService {
 
         // Find all renewals of this booking
         List<Booking> renewals = bookingRepository.findByParentBookingId(bookingId);
-        
+
         return renewals.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());

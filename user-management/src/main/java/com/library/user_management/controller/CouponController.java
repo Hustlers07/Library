@@ -55,6 +55,7 @@ public class CouponController {
      * Get coupon by ID
      */
     @GetMapping("/{couponId}")
+    @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<CouponResponse> getCouponById(@PathVariable Long couponId) {
         log.info("Get coupon request for ID: {}", couponId);
 
@@ -66,6 +67,7 @@ public class CouponController {
      * Get coupon by code
      */
     @GetMapping("/code/{couponCode}")
+    @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<CouponResponse> getCouponByCode(@PathVariable String couponCode) {
         log.info("Get coupon request for code: {}", couponCode);
 
@@ -77,6 +79,7 @@ public class CouponController {
      * Get all coupons
      */
     @GetMapping
+    @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<List<CouponResponse>> getAllCoupons() {
         log.info("Get all coupons request");
 
@@ -88,6 +91,7 @@ public class CouponController {
      * Get all active coupons
      */
     @GetMapping("/active")
+    @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<List<CouponResponse>> getActiveCoupons() {
         log.info("Get active coupons request");
 

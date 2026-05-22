@@ -45,9 +45,9 @@ public class BookingController {
         log.info("Create booking request received");
 
         String token = extractToken(httpRequest);
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+        String username = jwtTokenProvider.extractUsername(token);
 
-        BookingResponse response = bookingService.createBooking(userId, bookingRequest);
+        BookingResponse response = bookingService.createBooking(username, bookingRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
