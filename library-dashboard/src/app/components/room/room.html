@@ -1,5 +1,6 @@
 <div class="form-header">
-    <mat-button-toggle-group name="fontStyle" aria-label="Font Style" (change)="onActionChange($event)" [value]="actions[0].value">
+    <mat-button-toggle-group name="fontStyle" aria-label="Font Style" (change)="onActionChange($event)"
+        [value]="actions[0].value">
         @for (action of actions; track action.value) {
         <mat-button-toggle [value]="action.value">{{action.key}}</mat-button-toggle>
         }
@@ -8,5 +9,24 @@
 
 </div>
 <div class="form-content">
-    <p>Selected: {{ selectedChange }}</p>
+
+    @switch (selectedChange) {
+    
+        @case (actions[1].value) {
+        <p>Selected: {{ actions[1].value }}</p>
+        }
+
+         @case (actions[2].value) {
+        <p>Selected: {{ actions[2].value }}</p>
+        }
+
+         @case (actions[3].value) {
+        <p>Selected: {{ actions[3].value }}</p>
+        }
+
+        @default {
+            <p>Selected: {{ actions[0].value }}</p>
+        }
+
+    }
 </div>
