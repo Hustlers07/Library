@@ -1,15 +1,29 @@
-import { Injectable } from '@angular/core';
+import { PLATFORM_ID, Inject, Injectable } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_ENDPOINTS, TOKEN_KEY } from '../constants/api.constants';
 import { environment } from '../../environments/environment';
+import { isPlatformBrowser } from '@angular/common';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
 
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) { }
+
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 
-    console.log('Intercepted request:', req.url);
+    if (!environment.production) {
+      console.log('Intercepted request:', req.url);
+      console.log('environment.apiUrl:', environment.apiUrl);           // ← add this
+      console.log('URL matches?', req.url.startsWith(environment.apiUrl)); // ← add this
+      console.log('Token:', localStorage.getItem(TOKEN_KEY));
+    }
+
+    // ✅ Guard against SSR — localStorage doesn't exist on server
+    if (!isPlatformBrowser(this.platformId)) {
+      return next.handle(req);
+    }
+
     // Only attach token for requests to your backend API
     if (req.url.startsWith(environment.apiUrl)) {
       // Skip login and register

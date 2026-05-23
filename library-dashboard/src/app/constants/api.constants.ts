@@ -5,12 +5,12 @@ import { environment } from '../../environments/environment';
 
 // api.constants.ts
 export const API_ENDPOINTS = {
-  LOGIN: () => `${environment.apiUrl}/api/auth/login`,
-  REGISTER: () => `${environment.apiUrl}/api/auth/register`,
-  PROFILE: () => `${environment.apiUrl}/api/users/profile`,
-  CHANGE_PASSWORD: () => `${environment.apiUrl}/api/auth/change-password`,
-  USERS: () => `${environment.apiUrl}/api/users`,
-  ROOM: () => `${environment.apiUrl}/api/room`,
+  LOGIN: () => `${environment.apiUrl}/${environment.basePath}/api/auth/login`,
+  REGISTER: () => `${environment.apiUrl}/${environment.basePath}/api/auth/register`,
+  PROFILE: () => `${environment.apiUrl}/${environment.basePath}/api/users/profile`,
+  CHANGE_PASSWORD: () => `${environment.apiUrl}/${environment.basePath}/api/auth/change-password`,
+  USERS: () => `${environment.apiUrl}/${environment.basePath}/api/users`,
+  ROOM: () => `${environment.apiUrl}/${environment.basePath}/api/room`,
 };
 
 
@@ -22,7 +22,8 @@ export const ROUTES = {
   REGISTER_MEMEBER: '/register-member',
   DASHBOARD: '/dashboard',
   RESET_PASSWORD: '/reset-password',
-  PROFILE:'/user/:'+UID
+  PROFILE:'/user/:'+UID,
+  ROOM:'/room'
 };
 
 
@@ -42,7 +43,8 @@ export type MenuItem = {
 export const MENU_ITEMS: MenuItem[] = [
   { label: 'Dashboard', icon: 'dashboard', route: ROUTES.DASHBOARD },
   { label: 'Password', icon: 'key', route: ROUTES.RESET_PASSWORD },
-  { label: 'Register', icon: 'person_add', route: ROUTES.REGISTER_MEMEBER }
+  { label: 'Register', icon: 'person_add', route: ROUTES.REGISTER_MEMEBER },
+  { label: 'Room', icon: 'room_preferences', route: ROUTES.ROOM }
 
   // ,
   // { label: 'Authors', icon: 'people', route: ROUTES.AUTHORS },
