@@ -1,0 +1,25 @@
+// .room-wrapper {
+//   display: flex;
+//   justify-content: space-evenly;   // center horizontally
+// //   align-items: center;       // center vertically
+//   min-height: 100vh;         // full viewport height
+//   background: #eff0f3;       // optional: light background
+  
+// }
+
+.form-header[_ngcontent-ng-c1644512956] {
+  background-color: aquamarine;
+  height: 10vh;
+  justify-content: space-between;
+  display: flex;
+}
+
+.form-content[_ngcontent-ng-c1644512956] {
+  background-color: green;
+  height: 90vh;
+  justify-content: center;
+  display: flex;
+  padding: 10px;
+}
+
+

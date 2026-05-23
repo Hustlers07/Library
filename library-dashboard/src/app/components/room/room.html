@@ -1,1 +1,12 @@
-<p>room works!</p>
+<div class="form-header">
+    <mat-button-toggle-group name="fontStyle" aria-label="Font Style" (change)="onActionChange($event)" [value]="actions[0].value">
+        @for (action of actions; track action.value) {
+        <mat-button-toggle [value]="action.value">{{action.key}}</mat-button-toggle>
+        }
+
+    </mat-button-toggle-group>
+
+</div>
+<div class="form-content">
+    <p>Selected: {{ selectedChange }}</p>
+</div>
