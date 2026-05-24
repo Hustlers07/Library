@@ -5,8 +5,8 @@ metadata:
   namespace: library-dev
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web
-    traefik.ingress.kubernetes.io/router.middlewares: library-dev-phpmyadmin-strip@kubernetescrd
-spec:
+    traefik.ingress.kubernetes.io/router.middlewares: library-dev-strip-phpmyadmin-prefix@kubernetescrd
+
   rules:
   - http:
       paths:
