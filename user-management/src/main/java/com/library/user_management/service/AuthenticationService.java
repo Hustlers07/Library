@@ -4,21 +4,19 @@ import com.library.user_management.dto.AuthRequest;
 import com.library.user_management.dto.AuthResponse;
 import com.library.user_management.dto.UserRegistrationRequest;
 import com.library.user_management.dto.UserResponse;
-import com.library.user_management.entity.Role;
 import com.library.user_management.entity.User;
 import com.library.user_management.repository.UserRepository;
 import com.library.user_management.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 /**
  * Authentication Service
@@ -32,7 +30,6 @@ public class AuthenticationService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
 
     /**
@@ -44,33 +41,27 @@ public class AuthenticationService {
             throw new IllegalArgumentException("Passwords do not match");
         }
 
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new IllegalArgumentException("Username already exists");
-        }
-
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
         }
 
         // Create new user
         User user = User.builder()
-                .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .phoneNumber(request.getPhoneNumber())
-                .role(request.getRole() != null ? request.getRole() : Role.ROLE_MEMBER)
                 .isActive(true)
                 .isVerifiedEmail(false)
                 .build();
 
         User savedUser = userRepository.save(user);
-        log.info("New user registered with username: {}", savedUser.getUsername());
+        log.info("New user registered with email: {}", savedUser.getEmail());
 
         // Generate tokens
         String token = jwtTokenProvider.generateToken(savedUser);
-        String refreshToken = jwtTokenProvider.generateRefreshToken(savedUser.getUsername());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(savedUser.getUsername(), savedUser.getEmail());
 
         return buildAuthResponse(savedUser, token, refreshToken);
     }
@@ -79,22 +70,34 @@ public class AuthenticationService {
      * Authenticate user with username and password
      */
     public AuthResponse authenticate(AuthRequest request) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
-                        request.getPassword()
-                )
-        );
 
-        User user = userRepository.findByUsername(request.getUsername())
+        User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // Verify password using PasswordEncoder
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Invalid email or password");
+        }
 
         // Update last login
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
 
+    // Build UserDetails (Spring Security expects this for @PreAuthorize checks)
+    // UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+    //         .username(user.getEmail()) // or user.getUsername()
+    //         .password(user.getPassword())
+    //         .authorities(user.getAuthorities()) // must return GrantedAuthority list
+    //         .build();
+
+       UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                user, null, user.getAuthorities());
+
+    SecurityContextHolder.getContext().setAuthentication(authentication);
+    log.debug("Set the security context for user: {}", user.getEmail());
+
         String token = jwtTokenProvider.generateToken(user);
-        String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername(), user.getEmail());
 
         log.info("User authenticated successfully: {}", user.getUsername());
 
@@ -105,18 +108,18 @@ public class AuthenticationService {
      * Refresh access token using refresh token
      */
     public AuthResponse refreshToken(String refreshToken) {
-        if (!jwtTokenProvider.isTokenValid(refreshToken, extractUsernameFromRefreshToken(refreshToken))) {
+        if (!jwtTokenProvider.isTokenValid(refreshToken, extractEmailFromRefreshToken(refreshToken))) {
             throw new IllegalArgumentException("Invalid or expired refresh token");
         }
 
-        String username = jwtTokenProvider.extractUsername(refreshToken);
-        User user = userRepository.findByUsername(username)
+        String email = jwtTokenProvider.extractEmail(refreshToken);
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         String newAccessToken = jwtTokenProvider.generateToken(user);
-        String newRefreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername());
+        String newRefreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername(), user.getEmail());
 
-        log.info("Token refreshed for user: {}", username);
+        log.info("Token refreshed for user: {}", user.getUsername());
 
         return buildAuthResponse(user, newAccessToken, newRefreshToken);
     }
@@ -124,8 +127,8 @@ public class AuthenticationService {
     /**
      * Get user profile
      */
-    public UserResponse getUserProfile(String username) {
-        User user = userRepository.findByUsername(username)
+    public UserResponse getUserProfile(String email) {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         return mapToUserResponse(user);
@@ -134,25 +137,21 @@ public class AuthenticationService {
     /**
      * Verify email
      */
-    public void verifyEmail(String username) {
-        User user = userRepository.findByUsername(username)
+    public void verifyEmail(String email) {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         user.setIsVerifiedEmail(true);
         userRepository.save(user);
-        log.info("Email verified for user: {}", username);
+        log.info("Email verified for user: {}", email);
     }
 
     /**
      * Change password
      */
-    public void changePassword(String username, String currentPassword, String newPassword) {
-        User user = userRepository.findByUsername(username)
+    public void changePassword(String username, String newPassword) {
+        User user = userRepository.findByUsername( username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new IllegalArgumentException("Current password is incorrect");
-        }
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
@@ -162,13 +161,13 @@ public class AuthenticationService {
     /**
      * Deactivate account
      */
-    public void deactivateAccount(String username) {
-        User user = userRepository.findByUsername(username)
+    public void deactivateAccount(String email) {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         user.setIsActive(false);
         userRepository.save(user);
-        log.info("Account deactivated for user: {}", username);
+        log.info("Account deactivated for user: {}", email);
     }
 
     /**
@@ -210,10 +209,10 @@ public class AuthenticationService {
     }
 
     /**
-     * Helper method to extract username from refresh token
+     * Helper method to extract email from refresh token
      */
-    private String extractUsernameFromRefreshToken(String refreshToken) {
-        return jwtTokenProvider.extractUsername(refreshToken);
+    private String extractEmailFromRefreshToken(String refreshToken) {
+        return jwtTokenProvider.extractEmail(refreshToken);
     }
 
     /**

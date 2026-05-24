@@ -22,6 +22,10 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
 
+  devtools:
+    liverreload:
+      enable: false
+
 server:
   port: 8080
   servlet:
@@ -46,4 +50,5 @@ jwt:
 logging:
   level:
     org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
     com.library.user_management: DEBUG

@@ -1,0 +1,50 @@
+.grid-container {
+  margin: 20px;
+}
+
+.dashboard-card {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  right: 15px;
+  bottom: 15px;
+}
+
+.more-button {
+  position: absolute;
+  top: 5px;
+  right: 10px;
+}
+
+.dashboard-card-content {
+  display: grid;
+  place-items: center;
+  /* centers both horizontally and vertically */
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+.members-container {
+  display: flex;
+  flex-direction: row;
+  /* horizontal layout */
+  justify-content: center;
+  /* spacing between items */
+  align-items: center;
+  /* vertical alignment */
+  width: 100%;
+  /* fill parent card */
+  // background: #f5f5f5;
+
+  padding: 1%;
+
+  >h2 {
+    flex: 1;
+    color: var(--light-black);
+  }
+
+  >div {
+    flex: 1;
+    color: var(--light-black);
+  }
+}

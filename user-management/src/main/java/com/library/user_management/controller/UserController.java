@@ -41,7 +41,7 @@ public class UserController {
     @PostMapping("/auth/register")
     @Operation(summary = "Register a new user", description = "Create a new user account")
     public ResponseEntity<?> register(@RequestBody UserRegistrationRequest request) {
-        log.info("New registration request for username: {}", request.getUsername());
+        log.info("New registration request for email: {}", request.getEmail());
         try {
             AuthResponse response = authenticationService.register(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -57,13 +57,13 @@ public class UserController {
     @PostMapping("/auth/login")
     @Operation(summary = "Login user", description = "Authenticate user and receive JWT tokens")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
-        log.info("Login request for username: {}", request.getUsername());
+        log.info("Login request for email: {}", request.getEmail());
         try {
             AuthResponse response = authenticationService.authenticate(request);
             return ResponseEntity.ok(response);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid username or password"));
+                    .body(Map.of("error", "Invalid email or password"));
         }
     }
 
@@ -109,15 +109,15 @@ public class UserController {
     @PostMapping("/auth/change-password")
     @Operation(summary = "Change password", description = "Change user password")
     @SecurityRequirement(name = "Bearer Authentication")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'LIBRARIAN')")
     public ResponseEntity<?> changePassword(
             @RequestBody Map<String, String> request,
             Authentication authentication) {
         log.info("Password change request for user: {}", authentication.getName());
         try {
+            
             authenticationService.changePassword(
-                    authentication.getName(),
-                    request.get("currentPassword"),
+                    request.get("username"),
                     request.get("newPassword")
             );
             return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
@@ -168,14 +168,14 @@ public class UserController {
      * Get user by ID
      * GET /api/users/{userId}
      */
-    @GetMapping("/users/{userId}")
+    @GetMapping("/users/{userName}")
     @Operation(summary = "Get user by ID", description = "Retrieve user details by user ID (Admin or Librarian only)")
     @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("hasAnyRole('ADMIN', 'LIBRARIAN')")
-    public ResponseEntity<?> getUserById(@PathVariable Long userId) {
-        log.info("User details request for ID: {}", userId);
+    public ResponseEntity<?> getUserById(@PathVariable String userName) {
+        log.info("User details request for ID: {}", userName);
         try {
-            UserResponse userResponse = userDetailsService.getUserById(userId);
+            UserResponse userResponse = userDetailsService.getUserByUsername(userName);
             return ResponseEntity.ok(userResponse);
         } catch (Exception ex) {
             return ResponseEntity.notFound().build();
@@ -291,7 +291,7 @@ public class UserController {
     @GetMapping("/admin/test")
     @Operation(summary = "Admin test", description = "Test endpoint for admin verification")
     @SecurityRequirement(name = "Bearer Authentication")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
     public ResponseEntity<?> adminTest() {
         log.info("Admin test endpoint accessed");
         return ResponseEntity.ok(Map.of("message", "Admin access granted"));

@@ -3,20 +3,18 @@ package com.library.user_management.config;
 import com.library.user_management.security.ApiRuleDefiner;
 import com.library.user_management.security.JwtAuthenticationEntryPoint;
 import com.library.user_management.security.JwtAuthenticationFilter;
-import com.library.user_management.security.JwtTokenProvider;
 import com.library.user_management.security.SecurityRule;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -26,11 +24,12 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.OrRequestMatcher;
-import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpMethod;
 
 /**
  * Spring Security Configuration
@@ -44,6 +43,9 @@ public class SecurityConfig {
 
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
+    @Value("${ALLOWED_ORIGINS:http://localhost:4200}") // default value
+    private String allowedOrigins;
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -83,42 +85,79 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable())
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(e -> e.authenticationEntryPoint(new JwtAuthenticationEntryPoint()))
+                .exceptionHandling(e -> e.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .authorizeHttpRequests(auth -> {
+                    // Allow preflight requests
+                    auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
+
                     // Separate permitAll rules from others for cleaner configuration
                     List<SecurityRule> permitAllRules = securityRules.getSecurityRules().stream()
                             .filter(r -> r.getAccess().equals("permitAll"))
                             .toList();
-                    
+
                     List<SecurityRule> protectedRules = securityRules.getSecurityRules().stream()
                             .filter(r -> !r.getAccess().equals("permitAll"))
                             .toList();
-                    
+
                     // Configure permitAll rules first
                     for (SecurityRule rule : permitAllRules) {
                         auth.requestMatchers(rule.getPattern()).permitAll();
                     }
-                    
-                    // Configure protected rules
+
+                    // protectedRules loop (improved parsing)
+                    // protectedRules loop (robust parsing and ROLE_ stripping)
                     for (SecurityRule rule : protectedRules) {
-                        String access = rule.getAccess();
+                        String access = rule.getAccess().trim();
+
                         if (access.startsWith("hasAnyRole")) {
-                            String roles = access.substring(access.indexOf('(') + 1, access.indexOf(')'));
-                            auth.requestMatchers(rule.getPattern()).hasAnyRole(roles.split(","));
+                            String raw = access.substring(access.indexOf('(') + 1, access.lastIndexOf(')'));
+                            String[] parsed = Arrays.stream(raw.split(","))
+                                    .map(r -> r.trim().replaceAll("^['\"]|['\"]$", "")) // trim and strip quotes
+                                    .map(r -> r.startsWith("ROLE_") ? r.substring(5) : r) // remove ROLE_ prefix if
+                                                                                          // present
+                                    .toArray(String[]::new);
+                            auth.requestMatchers(rule.getPattern()).hasAnyRole(parsed);
                         } else if (access.startsWith("hasRole")) {
-                            String role = access.substring(access.indexOf('(') + 1, access.indexOf(')'));
+                            String raw = access.substring(access.indexOf('(') + 1, access.lastIndexOf(')'));
+                            String role = raw.trim().replaceAll("^['\"]|['\"]$", "");
+                            if (role.startsWith("ROLE_")) {
+                                role = role.substring(5);
+                            }
                             auth.requestMatchers(rule.getPattern()).hasRole(role);
                         } else {
                             auth.requestMatchers(rule.getPattern()).authenticated();
                         }
                     }
-                    
+
                     // Default: require authentication for any other request
                     auth.anyRequest().authenticated();
                 }).authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                // .addFilterBefore(jwtAuthenticationFilter, AnonymousAuthenticationFilter.class);
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // Split comma-separated origins from env variable
+        // List<String> origins = Arrays.asList(allowedOrigins.split(","));
+        // configuration.setAllowedOrigins(origins);
+
+        // Allow all origins
+        configuration.addAllowedOriginPattern("*");
+
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

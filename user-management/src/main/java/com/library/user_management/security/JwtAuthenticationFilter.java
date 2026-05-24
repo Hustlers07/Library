@@ -6,93 +6,96 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.util.AntPathMatcher;
+
+import com.library.user_management.entity.User;
+import com.library.user_management.service.UserProfileDetailsService;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 
-/**
- * JWT Authentication Filter
- * Intercepts requests, extracts JWT token, and validates it
- * Sets authentication in SecurityContextHolder if token is valid
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider tokenProvider;
-    private final UserDetailsService userDetailsService;
+    private final UserProfileDetailsService userDetailsService;
+    private final ApiRuleDefiner securityRules;
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
-
-    @Autowired
-    private final ApiRuleDefiner securityRules;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
-        try {
 
-            String path = request.getRequestURI();
-            String method = request.getMethod();
-            log.debug("Processing authentication for request: {} {}", method, path);
-            
-            // Check if the request matches any permitAll rule using ant-style pattern matching
+        String path = request.getServletPath();
+        String method = request.getMethod();
+        log.debug("JwtFilter start: {} {}", method, path);
+        log.debug("Authorization header present: {}",
+                StringUtils.hasText(request.getHeader(AUTHORIZATION_HEADER)));
+
+        try {
             AntPathMatcher pathMatcher = new AntPathMatcher();
             Optional<SecurityRule> matchedRule = securityRules.getSecurityRules().stream()
-                    .filter(r -> r.getAccess().equals("permitAll") && 
-                                pathMatcher.match(r.getPattern(), path))
+                    .filter(r -> "permitAll".equals(r.getAccess()) && pathMatcher.match(r.getPattern(), path))
                     .findFirst();
 
             if (matchedRule.isPresent()) {
-                log.debug("Request matches permitAll rule: {}", matchedRule.get().getPattern());
+                log.debug("PermitAll matched: {} for path {}", matchedRule.get().getPattern(), path);
                 filterChain.doFilter(request, response);
                 return;
             }
 
             String jwt = extractJwtFromRequest(request);
+            log.debug("JWT extracted: {}", jwt != null ? "present" : "none");
 
             if (StringUtils.hasText(jwt)) {
-                String username = tokenProvider.extractUsername(jwt);
+                String email = tokenProvider.extractEmail(jwt);
+                log.debug("Email from token: {}", email);
 
-                if (StringUtils.hasText(username) && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                if (StringUtils.hasText(email) && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    User user = userDetailsService.loadByEmail(email);
 
-                    if (tokenProvider.isTokenValid(jwt, userDetails)) {
+                    UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                            .username(user.getEmail())
+                            .password(user.getPassword())
+                            .authorities(user.getAuthorities())
+                            .build();
+
+                    boolean valid = tokenProvider.isTokenValid(jwt, userDetails);
+                    log.debug("Token valid: {}", valid);
+
+                    if (valid) {
                         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                                 userDetails, null, userDetails.getAuthorities());
-                        authentication.setDetails(
-                                new WebAuthenticationDetailsSource().buildDetails(request));
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
+                        log.debug("SecurityContext before setting: {}",
+                                SecurityContextHolder.getContext().getAuthentication());
                         SecurityContextHolder.getContext().setAuthentication(authentication);
-                        log.debug("Set the security context for user: {}", username);
+                        log.debug("SecurityContext after setting: {}",
+                                SecurityContextHolder.getContext().getAuthentication());
                     }
                 }
             }
         } catch (Exception ex) {
-            log.error("Could not set user authentication in security context: {}", ex.getMessage());
+            log.error("Could not set user authentication in security context: {}", ex.getMessage(), ex);
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Extract JWT token from Authorization header
-     */
     private String extractJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {

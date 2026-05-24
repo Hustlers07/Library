@@ -9,6 +9,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -29,9 +31,10 @@ public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, length = 50)
     private String username;
 
     @Column(nullable = false, unique = true, length = 100)
@@ -48,7 +51,8 @@ public class User implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role;
+    @Builder.Default
+    private Role role = Role.ROLE_MEMBER;
 
     @Column(name = "is_active")
     @lombok.Builder.Default
@@ -70,10 +74,25 @@ public class User implements UserDetails {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
+
+    
+    @ManyToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Room> rooms;
+
+
+    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL, orphanRemoval = false)
+    @JsonIgnore
+    private List<Seat> seats;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+
+        // Generate username if not already set
+        if (this.username == null || this.username.isBlank()) {
+            this.username = this.firstName + "_" + UUID.randomUUID().toString().substring(0, 8);
+        }
     }
 
     @PreUpdate

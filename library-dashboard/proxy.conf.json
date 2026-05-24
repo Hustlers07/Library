@@ -1,0 +1,8 @@
+{
+  "/user-management/api": {
+    "target": "http://192.168.49.2:30003",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}
