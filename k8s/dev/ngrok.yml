@@ -18,8 +18,8 @@ spec:
           image: ngrok/ngrok:latest
           args:
             - "http"
-            - "traefik.kube-system.svc.cluster.local:80"  # 👈 points to Traefik's ClusterIP
-            - "--domain=your-domain.ngrok-free.app"        # 👈 your reserved ngrok domain
+            - "traefik.kube-system.svc.cluster.local:80"
+            - "--domain=cotton-overripe-skyrocket.ngrok-free.dev"
           env:
             - name: NGROK_AUTHTOKEN
               valueFrom:
@@ -34,4 +34,4 @@ metadata:
   namespace: library-dev
 type: Opaque
 stringData:
-  authtoken: "YOUR_NGROK_AUTHTOKEN_HERE"   # 👈 replace this
+  authtoken: "${NGROK_AUTHTOKEN}"

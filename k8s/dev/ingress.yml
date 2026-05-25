@@ -18,7 +18,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.middlewares: library-dev-strip-phpmyadmin-prefix@kubernetescrd
 spec:
   rules:
-    - host: cotton-overripe-skyrocket.ngrok-free.dev   # 👈 Add your ngrok domain here
+    - host: cotton-overripe-skyrocket.ngrok-free.dev
       http:
         paths:
           - path: /user-management
