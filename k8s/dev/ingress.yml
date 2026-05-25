@@ -18,26 +18,27 @@ metadata:
     traefik.ingress.kubernetes.io/router.middlewares: library-dev-strip-phpmyadmin-prefix@kubernetescrd
 spec:
   rules:
-  - http:
-      paths:
-      - path: /user-management
-        pathType: Prefix
-        backend:
-          service:
-            name: user-management-service
-            port:
-              number: 8080
-      - path: /library-dashboard
-        pathType: Prefix
-        backend:
-          service:
-            name: dashboard-service
-            port:
-              number: 80
-      - path: /phpmyadmin
-        pathType: Prefix
-        backend:
-          service:
-            name: phpmyadmin-service
-            port:
-              number: 80
+    - host: cotton-overripe-skyrocket.ngrok-free.dev   # 👈 Add your ngrok domain here
+      http:
+        paths:
+          - path: /user-management
+            pathType: Prefix
+            backend:
+              service:
+                name: user-management-service
+                port:
+                  number: 8080
+          - path: /library-dashboard
+            pathType: Prefix
+            backend:
+              service:
+                name: dashboard-service
+                port:
+                  number: 80
+          - path: /phpmyadmin
+            pathType: Prefix
+            backend:
+              service:
+                name: phpmyadmin-service
+                port:
+                  number: 80

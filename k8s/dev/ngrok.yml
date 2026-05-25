@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ngrok-tunnel
+  namespace: library-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ngrok-tunnel
+  template:
+    metadata:
+      labels:
+        app: ngrok-tunnel
+    spec:
+      containers:
+        - name: ngrok
+          image: ngrok/ngrok:latest
+          args:
+            - "http"
+            - "traefik.kube-system.svc.cluster.local:80"  # 👈 points to Traefik's ClusterIP
+            - "--domain=your-domain.ngrok-free.app"        # 👈 your reserved ngrok domain
+          env:
+            - name: NGROK_AUTHTOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ngrok-credentials
+                  key: authtoken
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ngrok-credentials
+  namespace: library-dev
+type: Opaque
+stringData:
+  authtoken: "YOUR_NGROK_AUTHTOKEN_HERE"   # 👈 replace this
