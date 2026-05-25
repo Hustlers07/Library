@@ -102,7 +102,8 @@ spec:
               value: "mysql-service"
             - name: PMA_PORT
               value: "3306"
-            # 👈 PMA_USER and PMA_PASSWORD removed to enable login form
+            - name: PMA_ABSOLUTE_URI
+              value: "https://cotton-overripe-skyrocket.ngrok-free.dev/phpmyadmin/"
           ports:
             - containerPort: 80
           resources:
