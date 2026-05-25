@@ -3,9 +3,8 @@ import { Injectable } from '@angular/core';
 import { API_ENDPOINTS } from '../constants/api.constants';
 import { catchError, map } from 'rxjs/operators';
 import { Observable, throwError } from 'rxjs';
-import { error } from 'console';
 
-export interface Room {
+export interface RoomObj {
   id: number,
   status: string,
   houseNo: string,
@@ -21,10 +20,10 @@ export class RoomService {
 
   constructor(private http: HttpClient){}
 
-  getAllRooms(): Observable<Room[]>{
+  getAllRooms(): Observable<RoomObj[]>{
 
-    return this.http.get<Room[]>(API_ENDPOINTS.ROOM()+"/all").pipe(
-      map((rooms: Room[]) =>  rooms.sort((a, b) => {
+    return this.http.get<RoomObj[]>(API_ENDPOINTS.ROOM()+"/all").pipe(
+      map((rooms: RoomObj[]) =>  rooms.sort((a, b) => {
         const aOccupied = a.status.split('_')[1] === 'OCCUPIED';
         const bOccupied = b.status.split('_')[1] === 'OCCUPIED';
         return +aOccupied - +bOccupied; // available first

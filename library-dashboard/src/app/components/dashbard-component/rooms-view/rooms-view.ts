@@ -2,7 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import {TitleCasePipe} from '@angular/common';
 import {MatIconModule} from '@angular/material/icon';
 import {MatListModule} from '@angular/material/list';
-import { Room, RoomService } from '../../services/room-service';
+import { RoomObj, RoomService } from '../../../services/room-service';
 
 @Component({
   selector: 'app-rooms-view',
@@ -17,7 +17,7 @@ throw new Error('Method not implemented.');
 
   constructor(private roomService: RoomService){}
 
-  rooms= signal<Room[]>([]);
+  rooms= signal<RoomObj[]>([]);
   message = 'Loading please wait.';
 
 

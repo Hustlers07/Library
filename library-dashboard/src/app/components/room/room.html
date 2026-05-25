@@ -11,22 +11,33 @@
 <div class="form-content">
 
     @switch (selectedChange) {
-    
-        @case (actions[1].value) {
-        <p>Selected: {{ actions[1].value }}</p>
+
+    @case (actions[1].value) {
+    <p>Selected: {{ actions[1].value }}</p>
+    }
+
+    @case (actions[2].value) {
+    <p>Selected: {{ actions[2].value }}</p>
+    }
+
+    @case (actions[3].value) {
+    <p>Selected: {{ actions[3].value }}</p>
+    }
+
+    @default {
+
+        @if(rooms == null || rooms.length==0){
+        <h3>No room available</h3>
+        }
+        @else{
+        <ul>
+            @for(room of rooms; track room.id){
+            <li>{{room.id}</li>
+            }
+        </ul>
         }
 
-         @case (actions[2].value) {
-        <p>Selected: {{ actions[2].value }}</p>
-        }
-
-         @case (actions[3].value) {
-        <p>Selected: {{ actions[3].value }}</p>
-        }
-
-        @default {
-            <p>Selected: {{ actions[0].value }}</p>
-        }
+    }
 
     }
 </div>
