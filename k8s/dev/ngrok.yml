@@ -19,7 +19,7 @@ spec:
           args:
             - "http"
             - "traefik.kube-system.svc.cluster.local:80"
-            - "--domain=cotton-overripe-skyrocket.ngrok-free.dev"
+            - "--url=cotton-overripe-skyrocket.ngrok-free.dev"  # 👈 fixed
           env:
             - name: NGROK_AUTHTOKEN
               valueFrom:
