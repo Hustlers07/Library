@@ -42,7 +42,7 @@ spec:
     - host: cotton-overripe-skyrocket.ngrok-free.dev
       http:
         paths:
-          - path: /library-dashboard
+          - path: /
             pathType: Prefix
             backend:
               service:
