@@ -39,4 +39,17 @@ export class RoomService {
 
     return this.http.post<RoomObj>(API_ENDPOINTS.ROOM()+"/create", data);
   }
+
+  updateRoom(roomId: number, data: Object): Observable<RoomObj> {
+    return this.http.put<RoomObj>(`${API_ENDPOINTS.ROOM()}/update/${roomId}`, data);
+  }
+
+  addUserToRoom(roomId: number, username: string): Observable<any> {
+    return this.http.post(`${API_ENDPOINTS.ROOM()}/add-user/${roomId}/username/${username}`, {});
+  }
+
+  addSeatsToRoom(roomId: number, seatCount: number): Observable<any> {
+    return this.http.post(`${API_ENDPOINTS.SEAT()}/add`, { roomId, seatCount });
+  }
 }
+

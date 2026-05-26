@@ -1,0 +1,57 @@
+.form-card{
+    margin-top: 20px;
+}
+
+.update-form{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    > .form-group{
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    > submit-button{
+        align-self: flex-end;
+    }
+}
+
+.sub-forms{
+    display: flex;
+    gap: 20px;
+    > .form-group{
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+.sub-form{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 20px;
+    padding: 20px;
+    
+}
+
+.mat-divider {
+  display: block;
+  margin-top: 50px;
+  border-top-style: solid;
+  border-top-color: var(--mat-divider-color, var(--mat-sys-outline-variant));
+  border-top-width: 5px;
+}
+
+.metadata{
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    >h4{
+        border: 1px solid var(--mat-divider-color, var(--mat-sys-outline-variant));
+        margin: 0;
+    }
+}

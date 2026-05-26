@@ -11,6 +11,7 @@ export const API_ENDPOINTS = {
   CHANGE_PASSWORD: () => `${environment.apiUrl}/${environment.basePath}/api/auth/change-password`,
   USERS: () => `${environment.apiUrl}/${environment.basePath}/api/users`,
   ROOM: () => `${environment.apiUrl}/${environment.basePath}/api/room`,
+  SEAT: () => `${environment.apiUrl}/${environment.basePath}/api/seat`,
 };
 
 
