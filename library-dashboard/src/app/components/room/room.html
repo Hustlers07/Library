@@ -26,16 +26,31 @@
 
     @default {
 
-        @if(rooms == null || rooms.length==0){
-        <h3>No room available</h3>
-        }
-        @else{
-        <ul>
-            @for(room of rooms; track room.id){
-            <li>{{room.id }}</li>
-            }
-        </ul>
-        }
+    @if(rooms == null || rooms.length==0){
+    <h3>No room available</h3>
+    }
+    @else{
+
+    @for(room of rooms; track room.id){
+    <mat-accordion class="mat-accordion">
+        <mat-expansion-panel hideToggle>
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    {{room.houseNo}}
+                </mat-panel-title>
+                <mat-panel-description>
+                    {{room.status}}
+                </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <pre>{{room | json }}</pre>
+
+        </mat-expansion-panel>
+
+    </mat-accordion>
+
+    }
+    }
 
     }
 

@@ -1,14 +1,16 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { MatButtonToggleChange, MatButtonToggleModule } from '@angular/material/button-toggle';
 import { RoomService, RoomObj } from '../../services/room-service';
-import { FormControl } from '@angular/forms';
 import { progressLoading } from '../../constants/api.constants';
 import { Create } from './create/create';
-
+import { MatListModule } from '@angular/material/list';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatGridListModule} from '@angular/material/grid-list';
+import { CommonModule } from '@angular/common'
 
 @Component({
   selector: 'app-room',
-  imports: [MatButtonToggleModule, Create],
+  imports: [MatButtonToggleModule, Create, MatListModule, MatExpansionModule, MatGridListModule, CommonModule],
   templateUrl: './room.html',
   styleUrl: './room.scss',
 })
