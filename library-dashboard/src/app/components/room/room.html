@@ -10,10 +10,10 @@
 </div>
 <div class="form-content">
 
-    @switch (selectedChange) {
+    @switch (selectedChange()) {
 
     @case (actions[1].value) {
-    <p>Selected: {{ actions[1].value }}</p>
+    <app-create></app-create>
     }
 
     @case (actions[2].value) {

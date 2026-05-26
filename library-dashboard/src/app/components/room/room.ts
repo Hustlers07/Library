@@ -3,12 +3,13 @@ import { MatButtonToggleChange, MatButtonToggleModule } from '@angular/material/
 import { RoomService, RoomObj } from '../../services/room-service';
 import { FormControl } from '@angular/forms';
 import { progressLoading } from '../../constants/api.constants';
+import { Create } from './create/create';
 
 
 
 @Component({
   selector: 'app-room',
-  imports: [MatButtonToggleModule],
+  imports: [MatButtonToggleModule, Create],
   templateUrl: './room.html',
   styleUrl: './room.scss',
 })
@@ -36,13 +37,14 @@ export class Room implements OnInit {
       value: 'delete'
     }
   ];
-  selectedChange: string=this.actions[0].value;
+  // selectedChange: string=this.actions[0].value;
+  selectedChange = signal(this.actions[1].value)
 
   rooms: RoomObj[] = [];
 
   onActionChange(event: MatButtonToggleChange): void {
     console.log(event.value);   // 'create' | 'update' | 'delete'
-    this.selectedChange = event.value;
+    this.selectedChange.set(event.value);
   }
 
   ngOnInit(): void {
