@@ -2,7 +2,7 @@ export const environment = {
   production: true,
   devEmail: '',
   devPassword: '',
-  apiUrl: 'http://user-management-service:8080',
+  apiUrl: 'https://cotton-overripe-skyrocket.ngrok-free.dev',
   basePath: '/user-management'
 
 };
