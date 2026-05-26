@@ -34,4 +34,9 @@ export class RoomService {
       })
     );
   }
+
+  createRoom(data: Object):Observable<RoomObj>{
+
+    return this.http.post<RoomObj>(API_ENDPOINTS.ROOM()+"/create", data);
+  }
 }

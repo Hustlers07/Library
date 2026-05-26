@@ -6,7 +6,6 @@ import { progressLoading } from '../../constants/api.constants';
 import { Create } from './create/create';
 
 
-
 @Component({
   selector: 'app-room',
   imports: [MatButtonToggleModule, Create],
@@ -37,8 +36,8 @@ export class Room implements OnInit {
       value: 'delete'
     }
   ];
-  // selectedChange: string=this.actions[0].value;
-  selectedChange = signal(this.actions[1].value)
+
+  selectedChange = signal(this.actions[0].value)
 
   rooms: RoomObj[] = [];
 
@@ -52,20 +51,20 @@ export class Room implements OnInit {
     this.loadAllRooms();
   }
 
-  loadAllRooms(){
+  loadAllRooms() {
 
     progressLoading.set(true);
 
     this.roomService.getAllRooms().subscribe({
-      next:(rooms)=>{
+      next: (rooms) => {
         this.rooms = rooms;
         console.log("Rooms list : ", rooms)
       },
-      error:(err) => {
+      error: (err) => {
         console.log("No room available");
         progressLoading.set(false);
       },
-      complete(){
+      complete() {
         progressLoading.set(false);
       }
     });
