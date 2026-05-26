@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -26,14 +26,16 @@ import { HttpErrorResponse } from '@angular/common/http';
   styleUrl: './update.scss',
 })
 export class Update {
+  @Input() room: any | null = null;
 
   updateForm: FormGroup;
   addUserForm: FormGroup;
   addSeatForm: FormGroup;
+  disableSeatForm: FormGroup;
   floors = ['FLOOR_GF', 'FLOOR_FF', 'FLOOR_SF', 'FLOOR_TF'];
   statuses = ['ROOM_VACANT', 'ROOM_OCCUPIED', 'ROOM_MAINTENANCE'];
 
-  room = {
+  defaultRoom = {
     id: 1,
     status: 'ROOM_VACANT',
     houseNo: 'B 9/2',
@@ -44,17 +46,21 @@ export class Update {
     updatedAt: '2026-05-26T19:20:55.728058',
   };
 
+  get activeRoom() {
+    return this.room ?? this.defaultRoom;
+  }
+
   constructor(
     private fb: FormBuilder,
     private roomService: RoomService,
     private snackBar: MatSnackBar
   ) {
     this.updateForm = this.fb.group({
-      status: [this.room.status, [Validators.required]],
-      houseNo: [this.room.houseNo, [Validators.required]],
-      floor: [this.room.floor, [Validators.required]],
-      location: [this.room.location, [Validators.required]],
-      description: [this.room.description],
+      status: [this.defaultRoom.status, [Validators.required]],
+      houseNo: [this.defaultRoom.houseNo, [Validators.required]],
+      floor: [this.defaultRoom.floor, [Validators.required]],
+      location: [this.defaultRoom.location, [Validators.required]],
+      description: [this.defaultRoom.description],
     });
 
     this.addUserForm = this.fb.group({
@@ -64,6 +70,23 @@ export class Update {
     this.addSeatForm = this.fb.group({
       seatCount: [5, [Validators.required, Validators.min(1)]],
     });
+
+    this.disableSeatForm = this.fb.group({
+      seatId: [null, [Validators.required, Validators.min(1)]],
+    });
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['room'] && this.room) {
+      // patch form values when input room changes
+      this.updateForm.patchValue({
+        status: this.room.status ?? this.updateForm.value.status,
+        houseNo: this.room.houseNo ?? this.updateForm.value.houseNo,
+        floor: this.room.floor ?? this.updateForm.value.floor,
+        location: this.room.location ?? this.updateForm.value.location,
+        description: this.room.description ?? this.updateForm.value.description,
+      });
+    }
   }
 
   onSubmit() {
@@ -71,13 +94,14 @@ export class Update {
       return;
     }
 
+    const active = this.activeRoom;
     const payload = {
       ...this.updateForm.value,
-      id: this.room.id,
+      id: active.id,
     };
 
     console.log('Updating room:', payload);
-    this.roomService.updateRoom(this.room.id, payload).subscribe({
+    this.roomService.updateRoom(active.id, payload).subscribe({
       next: (resp) => {
         this.snackBar.open(`Room ${resp.id} updated successfully`, 'Close', { duration: 3000 });
       },
@@ -95,9 +119,10 @@ export class Update {
     }
 
     const username = this.addUserForm.value.username.trim();
-    this.roomService.addUserToRoom(this.room.id, username).subscribe({
+    const active = this.activeRoom;
+    this.roomService.addUserToRoom(active.id, username).subscribe({
       next: () => {
-        this.snackBar.open(`User '${username}' added to room ${this.room.id}`, 'Close', { duration: 3000 });
+        this.snackBar.open(`User '${username}' added to room ${active.id}`, 'Close', { duration: 3000 });
         this.addUserForm.reset({ username: '' });
       },
       error: (error: HttpErrorResponse) => {
@@ -114,14 +139,35 @@ export class Update {
     }
 
     const seatCount = this.addSeatForm.value.seatCount;
-    this.roomService.addSeatsToRoom(this.room.id, seatCount).subscribe({
+    const active = this.activeRoom;
+    this.roomService.addSeatsToRoom(active.id, seatCount).subscribe({
       next: () => {
-        this.snackBar.open(`Added ${seatCount} seats to room ${this.room.id}`, 'Close', { duration: 3000 });
+        this.snackBar.open(`Added ${seatCount} seats to room ${active.id}`, 'Close', { duration: 3000 });
       },
       error: (error: HttpErrorResponse) => {
         console.error('Error while adding seats to room', error);
         const errorMsg = error.message || 'Unexpected error occurred';
         this.snackBar.open(`Failed to add seats: ${errorMsg}`, 'Close', { duration: 4000 });
+      },
+    });
+  }
+
+  onDisableSeat() {
+    if (this.disableSeatForm.invalid) {
+      return;
+    }
+
+    const seatId = this.disableSeatForm.value.seatId;
+    const active = this.activeRoom;
+    this.roomService.disableSeat(seatId).subscribe({
+      next: () => {
+        this.snackBar.open(`Seat ${seatId} disabled`, 'Close', { duration: 3000 });
+        this.disableSeatForm.reset({ seatId: null });
+      },
+      error: (error: HttpErrorResponse) => {
+        console.error('Error while disabling seat', error);
+        const errorMsg = error.message || 'Unexpected error occurred';
+        this.snackBar.open(`Failed to disable seat: ${errorMsg}`, 'Close', { duration: 4000 });
       },
     });
   }

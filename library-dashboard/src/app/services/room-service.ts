@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { API_ENDPOINTS } from '../constants/api.constants';
 import { catchError, map } from 'rxjs/operators';
@@ -50,6 +50,31 @@ export class RoomService {
 
   addSeatsToRoom(roomId: number, seatCount: number): Observable<any> {
     return this.http.post(`${API_ENDPOINTS.SEAT()}/add`, { roomId, seatCount });
+  }
+
+  /**
+   * Search rooms by optional location and description
+   */
+  searchRooms(location?: string, description?: string): Observable<RoomObj[]> {
+    let params = new HttpParams();
+    if (location) params = params.set('location', location);
+    if (description) params = params.set('description', description);
+    return this.http.get<RoomObj[]>(`${API_ENDPOINTS.ROOM()}/search`, { params });
+  }
+
+  /**
+   * Search rooms by status
+   */
+  searchRoomsByStatus(status: string): Observable<RoomObj[]> {
+    const params = new HttpParams().set('status', status);
+    return this.http.get<RoomObj[]>(`${API_ENDPOINTS.ROOM()}/search/status`, { params });
+  }
+
+  /**
+   * Disable a seat by id
+   */
+  disableSeat(seatId: number): Observable<any> {
+    return this.http.post(`${API_ENDPOINTS.SEAT()}/disable/${seatId}`, {});
   }
 }
 

@@ -7,11 +7,15 @@ import { Update } from './update/update';
 import { MatListModule } from '@angular/material/list';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatGridListModule} from '@angular/material/grid-list';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatInputModule } from '@angular/material/input';
+import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { CommonModule } from '@angular/common'
 
 @Component({
   selector: 'app-room',
-  imports: [MatButtonToggleModule, Create, Update, MatListModule, MatExpansionModule, MatGridListModule, CommonModule],
+  imports: [MatButtonToggleModule, Create, Update, MatListModule, MatExpansionModule, MatGridListModule, MatFormFieldModule, MatInputModule, MatAutocompleteModule, ReactiveFormsModule, CommonModule],
   templateUrl: './room.html',
   styleUrl: './room.scss',
 })
@@ -33,23 +37,41 @@ export class Room implements OnInit {
     {
       key: 'Update',
       value: 'update'
-    },
-    {
-      key: 'Delete',
-      value: 'delete'
     }
+    
   ];
 
   selectedChange = signal(this.actions[0].value)
 
   rooms: RoomObj[] = [];
+  filteredRooms: RoomObj[] = [];
+  roomControl = new FormControl<RoomObj | string | null>(null);
+  selectedRoom: RoomObj | null = null;
 
   onActionChange(event: MatButtonToggleChange): void {
-    console.log(event.value);   // 'create' | 'update' | 'delete'
+    console.log(event.value);   // 'create' | 'update'
     this.selectedChange.set(event.value);
   }
 
+  onSelectRoom(room: RoomObj) {
+    this.selectedRoom = room;
+  }
+
+  displayRoom(room: RoomObj | string | null): string {
+    if (!room) {
+      return '';
+    }
+    return typeof room === 'string' ? room : room.houseNo;
+  }
+
   ngOnInit(): void {
+    this.roomControl.valueChanges.subscribe(value => {
+      const search = typeof value === 'string' ? value : value?.houseNo ?? '';
+      this.filteredRooms = this.rooms.filter(room =>
+        room.houseNo.toLowerCase().includes(search.toLowerCase()) ||
+        room.location.toLowerCase().includes(search.toLowerCase())
+      );
+    });
 
     this.loadAllRooms();
   }
@@ -61,6 +83,7 @@ export class Room implements OnInit {
     this.roomService.getAllRooms().subscribe({
       next: (rooms) => {
         this.rooms = rooms;
+        this.filteredRooms = rooms;
         console.log("Rooms list : ", rooms)
       },
       error: (err) => {

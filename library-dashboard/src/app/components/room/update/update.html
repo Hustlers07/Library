@@ -1,8 +1,8 @@
 <div class="form-wrapper">
     <mat-card class="form-card">
-        <mat-card-header>
+            <mat-card-header>
             <mat-card-title>Update Room</mat-card-title>
-            <mat-card-subtitle>Room ID: {{ room.id }}</mat-card-subtitle>
+            <mat-card-subtitle>Room ID: {{ activeRoom.id }}</mat-card-subtitle>
         </mat-card-header>
 
         <mat-card-content>
@@ -65,11 +65,20 @@
                     </mat-form-field>
                     <button mat-raised-button color="primary" type="submit" [disabled]="addSeatForm.invalid">Add Seats</button>
                 </form>
+
+                <h3>Disable seat</h3>
+                <form [formGroup]="disableSeatForm" class="sub-form" (ngSubmit)="onDisableSeat()">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Seat ID</mat-label>
+                        <input matInput type="number" formControlName="seatId" min="1" />
+                    </mat-form-field>
+                    <button mat-raised-button color="warn" type="submit" [disabled]="disableSeatForm.invalid">Disable Seat</button>
+                </form>
             </section>
 
             <div class="metadata">
-                <h4>Created at: {{ room.createdAt }}</h4>
-                <h4>Last updated: {{ room.updatedAt }}</h4>
+                <h4>Created at: {{ activeRoom.createdAt }}</h4>
+                <h4>Last updated: {{ activeRoom.updatedAt }}</h4>
             </div>
         </mat-card-content>
     </mat-card>

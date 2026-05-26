@@ -17,11 +17,23 @@
     }
 
     @case (actions[2].value) {
-    <app-update></app-update>
+    @if(rooms == null || rooms.length==0){
+    <h3>No room available</h3>
     }
+    @else{
+    <mat-form-field appearance="outline" style="width: 100%; margin-top: 30px;">
+        <mat-label>Select room</mat-label>
+        <input type="text" matInput [formControl]="roomControl" [matAutocomplete]="roomAuto">
+        <mat-autocomplete #roomAuto="matAutocomplete" [displayWith]="displayRoom" (optionSelected)="onSelectRoom($event.option.value)">
+            @for(room of filteredRooms; track room.id){
+            <mat-option [value]="room">{{room.houseNo}} ({{room.id}}) - {{room.location}}</mat-option>
+            }
+        </mat-autocomplete>
+    </mat-form-field>
 
-    @case (actions[3].value) {
-    <p>Selected: {{ actions[3].value }}</p>
+    <app-update [room]="selectedRoom"></app-update>
+
+    }
     }
 
     @default {
