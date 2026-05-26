@@ -52,6 +52,10 @@ export class RoomService {
     return this.http.post(`${API_ENDPOINTS.SEAT()}/add`, { roomId, seatCount });
   }
 
+  mapUserToSeat(seatId: number, username: string): Observable<any> {
+    return this.http.post(`${API_ENDPOINTS.SEAT()}/add-user/${seatId}/user/${username}`, {});
+  }
+
   /**
    * Search rooms by optional location and description
    */

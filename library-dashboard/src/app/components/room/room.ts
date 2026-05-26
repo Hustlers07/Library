@@ -12,10 +12,24 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatInputModule } from '@angular/material/input';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { CommonModule } from '@angular/common'
+import { Seat } from './seat/seat';
 
 @Component({
   selector: 'app-room',
-  imports: [MatButtonToggleModule, Create, Update, MatListModule, MatExpansionModule, MatGridListModule, MatFormFieldModule, MatInputModule, MatAutocompleteModule, ReactiveFormsModule, CommonModule],
+  imports: [
+    MatButtonToggleModule, 
+    Create, 
+    Update, 
+    Seat, 
+    MatListModule, 
+    MatExpansionModule, 
+    MatGridListModule, 
+    MatFormFieldModule, 
+    MatInputModule, 
+    MatAutocompleteModule, 
+    ReactiveFormsModule, 
+    CommonModule
+  ],
   templateUrl: './room.html',
   styleUrl: './room.scss',
 })
@@ -37,6 +51,10 @@ export class Room implements OnInit {
     {
       key: 'Update',
       value: 'update'
+    },
+    {
+      key: 'Seat',
+      value: 'seat'
     }
     
   ];
@@ -49,7 +67,7 @@ export class Room implements OnInit {
   selectedRoom: RoomObj | null = null;
 
   onActionChange(event: MatButtonToggleChange): void {
-    console.log(event.value);   // 'create' | 'update'
+    console.log(event.value);   // 'create' | 'update' | 'seat'
     this.selectedChange.set(event.value);
   }
 
