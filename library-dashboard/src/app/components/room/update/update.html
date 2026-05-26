@@ -1,0 +1,86 @@
+<div class="form-wrapper">
+    <mat-card class="form-card">
+            <mat-card-header>
+            <mat-card-title>Update Room</mat-card-title>
+            <mat-card-subtitle>Room ID: {{ activeRoom.id }}</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+            <form [formGroup]="updateForm" class="update-form" (ngSubmit)="onSubmit()">
+                <mat-form-field appearance="outline">
+                    <mat-label>Status</mat-label>
+                    <input matInput formControlName="status" [matAutocomplete]="statusAuto" style="text-transform: uppercase;">
+                    <mat-autocomplete #statusAuto="matAutocomplete">
+                        @for(status of statuses; track $index){
+                        <mat-option [value]="status">{{ status }}</mat-option>
+                        }
+                    </mat-autocomplete>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>House No.</mat-label>
+                    <input matInput formControlName="houseNo" style="text-transform: uppercase;">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Floor</mat-label>
+                    <input matInput formControlName="floor" [matAutocomplete]="floorAuto" style="text-transform: uppercase;">
+                    <mat-autocomplete #floorAuto="matAutocomplete">
+                        @for(floor of floors; track $index){
+                        <mat-option [value]="floor">{{ floor }}</mat-option>
+                        }
+                    </mat-autocomplete>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Location</mat-label>
+                    <input matInput formControlName="location">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Description</mat-label>
+                    <input matInput formControlName="description">
+                </mat-form-field>
+
+                <button mat-raised-button color="primary" type="submit" [disabled]="updateForm.invalid">Update</button>
+            </form>
+
+            <mat-divider></mat-divider>
+
+            <section class="sub-forms">
+                <h3>Add user to room</h3>
+                <form [formGroup]="addUserForm" class="sub-form" (ngSubmit)="onAddUser()">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Username</mat-label>
+                        <input matInput formControlName="username" placeholder="test_34d42428" />
+                    </mat-form-field>
+                    <button mat-raised-button color="primary" type="submit" [disabled]="addUserForm.invalid">Add User</button>
+                </form>
+
+                <h3>Add seats to room</h3>
+                <form [formGroup]="addSeatForm" class="sub-form" (ngSubmit)="onAddSeats()">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Seat count</mat-label>
+                        <input matInput type="number" formControlName="seatCount" min="1" />
+                    </mat-form-field>
+                    <button mat-raised-button color="primary" type="submit" [disabled]="addSeatForm.invalid">Add Seats</button>
+                </form>
+
+                <h3>Disable seat</h3>
+                <form [formGroup]="disableSeatForm" class="sub-form" (ngSubmit)="onDisableSeat()">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Seat ID</mat-label>
+                        <input matInput type="number" formControlName="seatId" min="1" />
+                    </mat-form-field>
+                    <button mat-raised-button color="warn" type="submit" [disabled]="disableSeatForm.invalid">Disable Seat</button>
+                </form>
+            </section>
+
+            <div class="metadata">
+                <h4>Created at: {{ activeRoom.createdAt }}</h4>
+                <h4>Last updated: {{ activeRoom.updatedAt }}</h4>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</div>
+

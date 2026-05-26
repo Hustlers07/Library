@@ -3,8 +3,9 @@ import { Login } from './components/login/login';
 import { Register } from './components/register/register';
 import { ROUTES } from './constants/api.constants';
 import { ResetPassword } from './components/reset-password/reset-password';
-import { Dashboard } from './components/dashboard/dashboard.component';
+import { Dashboard } from './components/dashbard-component/dashboard/dashboard.component';
 import { Profile } from './components/profile/profile';
+import { Room } from './components/room/room';
 
 export const routes: Routes = [
     {
@@ -24,6 +25,9 @@ export const routes: Routes = [
     },
     {
         path: ROUTES.PROFILE.slice(1), component: Profile
+    },
+    {
+        path: ROUTES.ROOM.slice(1), component: Room
     },
     {
         path: '**', redirectTo: '', pathMatch: 'full'

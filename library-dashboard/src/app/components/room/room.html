@@ -1,0 +1,74 @@
+<div class="form-header">
+    <mat-button-toggle-group name="fontStyle" aria-label="Font Style" (change)="onActionChange($event)"
+        [value]="actions[0].value">
+        @for (action of actions; track action.value) {
+        <mat-button-toggle [value]="action.value">{{action.key}}</mat-button-toggle>
+        }
+
+    </mat-button-toggle-group>
+
+</div>
+<div class="form-content">
+
+    @switch (selectedChange()) {
+
+    @case (actions[1].value) {
+    <app-create></app-create>
+    }
+
+    @case (actions[2].value) {
+    @if(rooms == null || rooms.length==0){
+    <h3>No room available</h3>
+    }
+    @else{
+    <mat-form-field appearance="outline" style="width: 100%; margin-top: 30px;">
+        <mat-label>Select room</mat-label>
+        <input type="text" matInput [formControl]="roomControl" [matAutocomplete]="roomAuto">
+        <mat-autocomplete #roomAuto="matAutocomplete" [displayWith]="displayRoom"
+            (optionSelected)="onSelectRoom($event.option.value)">
+            @for(room of filteredRooms; track room.id){
+            <mat-option [value]="room">{{room.houseNo}} ({{room.id}}) - {{room.location}}</mat-option>
+            }
+        </mat-autocomplete>
+    </mat-form-field>
+
+    <app-update [room]="selectedRoom"></app-update>
+
+    }
+    }
+
+    @case (actions[3].value) {
+    <app-seat></app-seat>
+    }
+
+    @default {
+
+    @if(rooms == null || rooms.length==0){
+    <h3>No room available</h3>
+    }
+    @else{
+
+    @for(room of rooms; track room.id){
+    <mat-accordion class="mat-accordion">
+        <mat-expansion-panel hideToggle>
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    {{room.houseNo}}
+                </mat-panel-title>
+                <mat-panel-description>
+                    {{room.status}}
+                </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <pre>{{room | json }}</pre>
+
+        </mat-expansion-panel>
+
+    </mat-accordion>
+
+    }
+    }
+
+    }
+    }
+</div>

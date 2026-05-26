@@ -31,6 +31,11 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Server,
   },
   {
+    // Dashboard likely requires auth — no point prerendering
+    path: ROUTES.ROOM.slice(1),
+    renderMode: RenderMode.Server,
+  },
+  {
     // Catch-all — server-render anything else
     path: '**',
     renderMode: RenderMode.Server,

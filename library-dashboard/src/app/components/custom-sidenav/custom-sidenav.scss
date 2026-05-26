@@ -42,7 +42,7 @@ mat-nav-list {
 
 // /* Each menu item: icon + text aligned */
 .list-item {
-   margin-top: 5px;
+  margin-top: 5px;
   position: relative;          /* allows absolute positioning */
   display: flex;
   align-items: center;         /* vertical alignment */
@@ -60,7 +60,8 @@ mat-nav-list {
   font-size: 1rem;
   line-height: 1.5rem;
   position: absolute;          /* take text out of flex flow */
-  left: 25%;                 /* move to middle */
+  left: 25%;   
+  color: var(--light-black);              /* move to middle */
 //   transform: translateX(-50%); /* center horizontally */
 //   text-align: left;
 }

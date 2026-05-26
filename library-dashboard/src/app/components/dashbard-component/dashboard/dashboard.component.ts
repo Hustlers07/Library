@@ -8,10 +8,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { SeatsView } from "../seats-view/seats-view";
-import { PaymentsView } from "../payments-view/payments-view";
+import { PaymentsView } from "../../payments-view/payments-view";
 import { RoomsView } from "../rooms-view/rooms-view";
-import { MembersViewComponent } from "../members-view/members-view.component";
-import { UserService } from '../../services/user-service';
+import { MembersViewComponent } from "../../members-view/members-view.component";
+import { UserService } from '../../../services/user-service';
 
 export type Card = {
   title: string;
