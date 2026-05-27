@@ -1,4 +1,4 @@
-<section class="seats-view">
+<!-- <section class="seats-view">
   <h2>Seat availability</h2>
   <div class="seats-grid-wrapper">
     <div class="seats-grid">
@@ -18,7 +18,7 @@
           <div class="seat-meta">Room: {{ seat.roomHouse }} • {{ seat.roomLocation }}</div>
           <div class="seat-meta">Seat numeric ID: {{ seat.id }}</div>
           <div class="seat-meta">Price/hr: {{ seat.pricePerHour }}</div>
-          <div class="seat-meta">User: {{ seat.users ?? 'None' }}</div>
+          <div class="seat-meta">User: {{ seat.users || seat.user || 'None' }}</div>
           <div class="seat-meta">Active: {{ seat.active }}</div>
         </article>
       </ng-container>
@@ -27,4 +27,22 @@
       </ng-template>
     </div>
   </div>
+</section> -->
+<section class="seats-view">
+  <mat-grid-list [cols]="gridCols" [rowHeight]="rowHeight">
+
+    @for(seat of seats; track seat.seatId){
+    <mat-grid-tile>
+      <div class="seat-card-header">
+        <mat-icon aria-hidden="false" aria-label="Example home icon" fontIcon="chair"
+          [style.color]="isAvailable(seat) ? 'green' : 'red'"></mat-icon>
+        <h6 class="seat-id">{{ seat.roomHouse }} {{ seat.seatId }}</h6>
+      </div>
+    </mat-grid-tile>
+
+    }
+    @empty {
+      <span>No seat avaialable</span>
+    }
+  </mat-grid-list>
 </section>
