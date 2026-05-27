@@ -1,7 +1,50 @@
-    <mat-button-toggle-group name="fontStyle" aria-label="Font Style" (change)="onActionChange($event)"
-        [value]="actions[0].value">
-        @for (action of actions; track action.value) {
-        <mat-button-toggle [value]="action.value">{{action.key}}</mat-button-toggle>
-        }
+<div class="coupon-page">
+  <section class="coupon-header">
+    <div>
+      <h1>Coupons</h1>
+      <p>View available coupon offers and details.</p>
+    </div>
 
+    <mat-button-toggle-group aria-label="Coupon action" (change)="onActionChange($event)" [value]="selectedAction">
+      @for (action of actions; track action.value) {
+        <mat-button-toggle [value]="action.value">{{action.key}}</mat-button-toggle>
+      }
     </mat-button-toggle-group>
+  </section>
+
+  <section class="coupon-content">
+    <div *ngIf="loading()" class="coupon-loading">Loading coupons...</div>
+    <div *ngIf="!loading() && coupons().length === 0" class="coupon-empty">No coupons available.</div>
+
+    <table *ngIf="!loading() && coupons().length > 0" class="coupon-table">
+      <thead>
+        <tr>
+          <th>Coupon Code</th>
+          <th>Description</th>
+          <th>Discount</th>
+          <th>Min Booking</th>
+          <th>Max Discount</th>
+          <th>Usage</th>
+          <th>Valid</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let coupon of coupons()">
+          <td>{{ coupon.couponCode }}</td>
+          <td>{{ coupon.description }}</td>
+          <td>
+            <span *ngIf="coupon.discountPercentage">{{ coupon.discountPercentage }}% off</span>
+            <span *ngIf="coupon.discountAmount">{{ coupon.discountAmount | currency:'INR':'symbol' }}</span>
+            <span *ngIf="!coupon.discountPercentage && !coupon.discountAmount">No discount</span>
+          </td>
+          <td>{{ coupon.minimumBookingAmount | currency:'INR':'symbol' }}</td>
+          <td>{{ coupon.maximumDiscountAmount | currency:'INR':'symbol' }}</td>
+          <td>{{ coupon.usedCount }} / {{ coupon.usageLimit }}</td>
+          <td>{{ coupon.validFrom | date:'short' }} - {{ coupon.validTill | date:'short' }}</td>
+          <td>{{ coupon.isActive ? 'Active' : 'Inactive' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>

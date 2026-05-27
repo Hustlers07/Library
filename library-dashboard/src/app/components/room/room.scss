@@ -1,33 +1,104 @@
-// .room-wrapper {
-//   display: flex;
-//   justify-content: space-evenly;   // center horizontally
-// //   align-items: center;       // center vertically
-//   min-height: 100vh;         // full viewport height
-//   background: #eff0f3;       // optional: light background
-  
-// }
-
-.form-header[_ngcontent-ng-c1644512956] {
-  background-color: aquamarine;
-  height: 10vh;
-  justify-content: space-between;
-  display: flex;
-}
-
-.form-content[_ngcontent-ng-c1644512956] {
-  background-color: green;
-  height: 90vh;
-  justify-content: center;
+.room-page {
+  padding: 1.25rem;
   display: grid;
-  padding: 10px;
-  align-content: center;
+  gap: 1.5rem;
 }
 
-.mat-accordion .mat-expansion-panel{
-
-  justify-content: space-between;
+.form-header {
+  display: flex;
   align-items: center;
-  margin-top: 10px;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.form-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.form-content {
+  display: grid;
+  gap: 1.5rem;
+  padding: 0.5rem 0;
+}
+
+.room-filters {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.mat-form-field {
+  width: 100%;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.room-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.room-table th,
+.room-table td {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 0.85rem 1rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.room-table th {
+  background-color: #f8f8f8;
+  font-weight: 700;
+}
+
+.room-table tr:nth-child(even) {
+  background-color: #fbfbfb;
+}
+
+.room-row {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.room-row:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.mat-accordion {
+  width: 100%;
+}
+
+.mat-expansion-panel {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  margin-top: 0.75rem;
+}
+
+.mat-expansion-panel-header {
+  min-height: 64px;
+  align-items: center;
+}
+
+.mat-expansion-panel-header .mat-panel-title,
+.mat-expansion-panel-header .mat-panel-description {
+  color: rgba(0, 0, 0, 0.87);
+}
+
+pre {
+  background-color: #f7f7f7;
+  border-radius: 10px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 0;
+  color: #2f2f2f;
 }
 
 

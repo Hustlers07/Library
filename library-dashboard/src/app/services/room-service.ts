@@ -4,13 +4,24 @@ import { API_ENDPOINTS } from '../constants/api.constants';
 import { catchError, map } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 
+export interface SeatObj {
+  id: number;
+  seatId: string;
+  users?: any;
+  pricePerHour?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  active?: boolean;
+}
+
 export interface RoomObj {
-  id: number,
-  status: string,
-  houseNo: string,
-  floor: string,
-  location: string,
-  description: string
+  id: number;
+  status: string;
+  houseNo: string;
+  floor: string;
+  location: string;
+  description: string;
+  seats?: SeatObj[];
 }
 
 @Injectable({
