@@ -40,7 +40,7 @@ export class App {
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
         const path = event.urlAfterRedirects; // full path
-        console.log('Active path:', path);
+        // console.log('Active path:', path);
 
         if ( path === "/" || path === ROUTES.REGISTER || path === ROUTES.LOGIN
         ) {

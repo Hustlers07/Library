@@ -1,0 +1,85 @@
+.seats-view {
+  padding: 16px;
+}
+
+.seats-grid-wrapper {
+  width: 100%;
+  resize: horizontal;
+  overflow: auto;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  padding: 12px;
+  min-width: 320px;
+}
+
+.seats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.seat-card {
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #ffffff;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.seat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+.seat-card.available {
+  border-color: #43a047;
+  background: #ebf6ec;
+}
+
+.seat-card.unavailable {
+  border-color: #e53935;
+  background: #f9ecec;
+}
+
+.seat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.seat-id {
+  font-size: 1.05rem;
+}
+
+.seat-status {
+  font-size: 0.9rem;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.seat-card.available .seat-status {
+  color: #2e7d32;
+}
+
+.seat-card.unavailable .seat-status {
+  color: #b71c1c;
+}
+
+.seat-meta {
+  font-size: 0.95rem;
+  color: #444;
+}
+
+.empty-state {
+  padding: 32px;
+  text-align: center;
+  color: #666;
+  font-size: 1rem;
+}

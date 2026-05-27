@@ -1,1 +1,30 @@
-<p>seats-view works!</p>
+<section class="seats-view">
+  <h2>Seat availability</h2>
+  <div class="seats-grid-wrapper">
+    <div class="seats-grid">
+      <ng-container *ngIf="seatCards.length; else noSeats">
+        <article
+          *ngFor="let seat of seatCards"
+          class="seat-card"
+          [class.available]="isAvailable(seat)"
+          [class.unavailable]="!isAvailable(seat)"
+        >
+          <div class="seat-card-header">
+            <span class="seat-id">{{ seat.seatId }}</span>
+            <span class="seat-status">
+              {{ isAvailable(seat) ? 'Available' : 'Not available' }}
+            </span>
+          </div>
+          <div class="seat-meta">Room: {{ seat.roomHouse }} • {{ seat.roomLocation }}</div>
+          <div class="seat-meta">Seat numeric ID: {{ seat.id }}</div>
+          <div class="seat-meta">Price/hr: {{ seat.pricePerHour }}</div>
+          <div class="seat-meta">User: {{ seat.users ?? 'None' }}</div>
+          <div class="seat-meta">Active: {{ seat.active }}</div>
+        </article>
+      </ng-container>
+      <ng-template #noSeats>
+        <div class="empty-state">No seats found to display.</div>
+      </ng-template>
+    </div>
+  </div>
+</section>

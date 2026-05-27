@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { API_ENDPOINTS } from '../constants/api.constants';
 import { catchError, map } from 'rxjs/operators';
-import { Observable, throwError } from 'rxjs';
+import { Observable, of } from 'rxjs';
 
 export interface RoomObj {
   id: number,
@@ -30,7 +30,7 @@ export class RoomService {
       })),
       catchError(error => {
         console.error('Error while fetching all rooms, error: ', error);
-        return throwError(()=> new Error('Failed to load rooms details.'));
+        return of([] as RoomObj[]);
       })
     );
   }
