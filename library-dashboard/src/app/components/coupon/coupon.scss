@@ -10,6 +10,7 @@
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .coupon-header h1 {
@@ -45,4 +46,37 @@
 
 .coupon-table tr:nth-child(even) {
   background-color: #fafafa;
+}
+
+.coupon-create-form {
+  padding: 1rem 0;
+}
+
+.coupon-form {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.coupon-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.coupon-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.coupon-message {
+  color: #256029;
+  font-weight: 600;
+}
+
+@media (max-width: 780px) {
+  .coupon-form-grid {
+    grid-template-columns: 1fr;
+  }
 }

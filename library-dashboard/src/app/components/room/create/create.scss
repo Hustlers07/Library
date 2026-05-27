@@ -1,18 +1,48 @@
 .form-wrapper {
-    // align-items: center;
-    // align-content: center;
-    // justify-content: center;
-    // height: 80vh;
-    margin-top: 2rem;
+    margin-top: 0;
     display: flex;
+    justify-content: center;
 }
 
-.form-card {
+.form-panel {
   width: 100%;
-  padding: 30px;
-  text-align: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  border-radius: 8px; 
+  max-width: 100%;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.panel-header {
+  margin-bottom: 1rem;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.panel-content {
+  margin-top: 0;
+}
+
+.create-form .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.create-form .form-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.create-form mat-form-field {
+  width: 100%;
+}
+
+.uppercase-input {
+  text-transform: uppercase;
 }
 
 .create-form {

@@ -21,6 +21,18 @@ export interface Coupon {
   updatedAt: string;
 }
 
+export interface CouponCreatePayload {
+  couponCode: string;
+  description: string;
+  discountPercentage: number;
+  discountAmount: number;
+  minimumBookingAmount: number;
+  maximumDiscountAmount: number;
+  usageLimit: number;
+  validFrom: string;
+  validTill: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -31,5 +43,9 @@ export class CouponService {
     return this.http.get<Coupon | Coupon[]>(API_ENDPOINTS.COUPON()).pipe(
       map((response) => Array.isArray(response) ? response : [response])
     );
+  }
+
+  createCoupon(payload: CouponCreatePayload): Observable<Coupon> {
+    return this.http.post<Coupon>(API_ENDPOINTS.COUPON(), payload);
   }
 }

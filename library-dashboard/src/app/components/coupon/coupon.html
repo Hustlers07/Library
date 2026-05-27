@@ -2,7 +2,6 @@
   <section class="coupon-header">
     <div>
       <h1>Coupons</h1>
-      <p>View available coupon offers and details.</p>
     </div>
 
     <mat-button-toggle-group aria-label="Coupon action" (change)="onActionChange($event)" [value]="selectedAction">
@@ -13,38 +12,104 @@
   </section>
 
   <section class="coupon-content">
-    <div *ngIf="loading()" class="coupon-loading">Loading coupons...</div>
-    <div *ngIf="!loading() && coupons().length === 0" class="coupon-empty">No coupons available.</div>
+    <div *ngIf="selectedAction === 'create'" class="coupon-create-form">
+      <h2>Create Coupon</h2>
 
-    <table *ngIf="!loading() && coupons().length > 0" class="coupon-table">
-      <thead>
-        <tr>
-          <th>Coupon Code</th>
-          <th>Description</th>
-          <th>Discount</th>
-          <th>Min Booking</th>
-          <th>Max Discount</th>
-          <th>Usage</th>
-          <th>Valid</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let coupon of coupons()">
-          <td>{{ coupon.couponCode }}</td>
-          <td>{{ coupon.description }}</td>
-          <td>
-            <span *ngIf="coupon.discountPercentage">{{ coupon.discountPercentage }}% off</span>
-            <span *ngIf="coupon.discountAmount">{{ coupon.discountAmount | currency:'INR':'symbol' }}</span>
-            <span *ngIf="!coupon.discountPercentage && !coupon.discountAmount">No discount</span>
-          </td>
-          <td>{{ coupon.minimumBookingAmount | currency:'INR':'symbol' }}</td>
-          <td>{{ coupon.maximumDiscountAmount | currency:'INR':'symbol' }}</td>
-          <td>{{ coupon.usedCount }} / {{ coupon.usageLimit }}</td>
-          <td>{{ coupon.validFrom | date:'short' }} - {{ coupon.validTill | date:'short' }}</td>
-          <td>{{ coupon.isActive ? 'Active' : 'Inactive' }}</td>
-        </tr>
-      </tbody>
-    </table>
+      <form [formGroup]="couponForm" class="coupon-form" (ngSubmit)="onCreateCoupon()">
+        <div class="coupon-form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Coupon Code</mat-label>
+            <input matInput formControlName="couponCode" placeholder="TEST" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Description</mat-label>
+            <input matInput formControlName="description" placeholder="Coupon details" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Discount %</mat-label>
+            <input matInput type="number" formControlName="discountPercentage" min="0" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Discount Amount</mat-label>
+            <input matInput type="number" formControlName="discountAmount" min="0" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Min Booking Amount</mat-label>
+            <input matInput type="number" formControlName="minimumBookingAmount" min="0" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Max Discount Amount</mat-label>
+            <input matInput type="number" formControlName="maximumDiscountAmount" min="0" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Usage Limit</mat-label>
+            <input matInput type="number" formControlName="usageLimit" min="1" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Valid From</mat-label>
+            <input matInput type="datetime-local" formControlName="validFrom" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Valid Till</mat-label>
+            <input matInput type="datetime-local" formControlName="validTill" />
+          </mat-form-field>
+        </div>
+
+        <div class="coupon-form-actions">
+          <button mat-raised-button color="primary" type="submit" [disabled]="couponForm.invalid || isSubmitting()">
+            {{ isSubmitting() ? 'Creating...' : 'Create Coupon' }}
+          </button>
+          <span class="coupon-message" *ngIf="submissionMessage()">{{ submissionMessage() }}</span>
+        </div>
+      </form>
+    </div>
+
+    <div *ngIf="selectedAction === 'view'">
+      <div *ngIf="loading()" class="coupon-loading">Loading coupons...</div>
+      <div *ngIf="!loading() && coupons().length === 0" class="coupon-empty">No coupons available.</div>
+
+      <table *ngIf="!loading() && coupons().length > 0" class="coupon-table">
+        <thead>
+          <tr>
+            <th>Coupon Code</th>
+            <th>Description</th>
+            <th>Discount</th>
+            <th>Min Booking</th>
+            <th>Max Discount</th>
+            <th>Usage</th>
+            <th>Valid</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let coupon of coupons()">
+            <td>{{ coupon.couponCode }}</td>
+            <td>{{ coupon.description }}</td>
+            <td>
+              <span *ngIf="coupon.discountPercentage">{{ coupon.discountPercentage }}% off</span>
+              <span *ngIf="coupon.discountAmount">{{ coupon.discountAmount | currency:'INR':'symbol' }}</span>
+              <span *ngIf="!coupon.discountPercentage && !coupon.discountAmount">No discount</span>
+            </td>
+            <td>{{ coupon.minimumBookingAmount | currency:'INR':'symbol' }}</td>
+            <td>{{ coupon.maximumDiscountAmount | currency:'INR':'symbol' }}</td>
+            <td>{{ coupon.usedCount }} / {{ coupon.usageLimit }}</td>
+            <td>{{ coupon.validFrom | date:'short' }} - {{ coupon.validTill | date:'short' }}</td>
+            <td>{{ coupon.isActive ? 'Active' : 'Inactive' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="selectedAction === 'update'" class="coupon-update-placeholder">
+      <p>Update coupon functionality is not implemented yet.</p>
+    </div>
   </section>
 </div>
