@@ -49,9 +49,4 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-
-    >h4{
-        border: 1px solid var(--mat-divider-color, var(--mat-sys-outline-variant));
-        margin: 0;
-    }
 }
