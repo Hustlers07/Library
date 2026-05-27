@@ -19,9 +19,15 @@ export class Coupon implements OnInit {
   coupons = signal<CouponModel[]>([]);
   selectedAction = 'view';
   isSubmitting = signal(false);
+  isUpdateLoading = signal(false);
   submissionMessage = signal<string | null>(null);
+  updateMessage = signal<string | null>(null);
+  searchError = signal<string | null>(null);
+  selectedCoupon = signal<CouponModel | null>(null);
 
   couponForm = null as any;
+  searchCouponForm = null as any;
+  updateForm = null as any;
 
   actions = [
     { key: 'View', value: 'view' },
@@ -66,6 +72,14 @@ export class Coupon implements OnInit {
   onActionChange(event: MatButtonToggleChange) {
     this.selectedAction = event.value;
     this.submissionMessage.set(null);
+    this.updateMessage.set(null);
+    this.searchError.set(null);
+    this.selectedCoupon.set(null);
+    this.searchCouponForm.reset({ couponCode: '' });
+  }
+
+  private extractDateOnly(dateTime: string): string {
+    return dateTime?.split('T')[0] ?? '';
   }
 
   private buildIstIso(dateString: string, endOfDay = false): string {
@@ -89,6 +103,88 @@ export class Coupon implements OnInit {
 
     return validTill <= validFrom ? { validTillBeforeValidFrom: true } : null;
   };
+
+  searchCouponByCode() {
+    if (this.searchCouponForm.invalid) {
+      this.searchCouponForm.markAllAsTouched();
+      return;
+    }
+
+    this.isUpdateLoading.set(true);
+    this.searchError.set(null);
+    this.updateMessage.set(null);
+    this.selectedCoupon.set(null);
+
+    const couponCode = this.searchCouponForm.value.couponCode.trim();
+    this.couponService.fetchCouponByCode(couponCode).subscribe({
+      next: coupon => {
+        this.selectedCoupon.set(coupon);
+        this.updateForm.reset({
+          couponCode: coupon.couponCode,
+          description: coupon.description,
+          discountPercentage: coupon.discountPercentage,
+          discountAmount: coupon.discountAmount,
+          minimumBookingAmount: coupon.minimumBookingAmount,
+          maximumDiscountAmount: coupon.maximumDiscountAmount,
+          usageLimit: coupon.usageLimit,
+          validFrom: this.extractDateOnly(coupon.validFrom),
+          validTill: this.extractDateOnly(coupon.validTill),
+        });
+      },
+      error: err => {
+        console.error('Failed to find coupon by code', err);
+        this.searchError.set('Coupon not found. Please verify the code and try again.');
+      },
+      complete: () => {
+        this.isUpdateLoading.set(false);
+      }
+    });
+  }
+
+  onUpdateCoupon() {
+    if (this.updateForm.invalid) {
+      this.updateForm.markAllAsTouched();
+      return;
+    }
+
+    const selected = this.selectedCoupon();
+    if (!selected) {
+      this.searchError.set('Please search for a coupon before updating.');
+      return;
+    }
+
+    this.isUpdateLoading.set(true);
+    this.updateMessage.set(null);
+
+    const raw = this.updateForm.value;
+    const payload: CouponCreatePayload = {
+      couponCode: raw.couponCode,
+      description: raw.description,
+      discountPercentage: Number(raw.discountPercentage),
+      discountAmount: Number(raw.discountAmount),
+      minimumBookingAmount: Number(raw.minimumBookingAmount),
+      maximumDiscountAmount: Number(raw.maximumDiscountAmount),
+      usageLimit: Number(raw.usageLimit),
+      validFrom: this.buildIstIso(raw.validFrom),
+      validTill: this.buildIstIso(raw.validTill, true),
+    };
+
+    this.couponService.updateCoupon(selected.id, payload).subscribe({
+      next: updated => {
+        this.selectedCoupon.set(updated);
+        this.updateMessage.set('Coupon updated successfully.');
+        const current = this.coupons();
+        this.coupons.set(current.map(item => item.id === updated.id ? updated : item));
+      },
+      error: err => {
+        console.error('Failed to update coupon', err);
+        this.updateMessage.set('Failed to update coupon. Please try again.');
+      },
+      complete: () => {
+        this.isUpdateLoading.set(false);
+      }
+    });
+  }
 
   onCreateCoupon() {
     if (this.couponForm.invalid) {

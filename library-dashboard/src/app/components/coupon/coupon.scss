@@ -48,8 +48,60 @@
   background-color: #fafafa;
 }
 
-.coupon-create-form {
+.coupon-create-form,
+.coupon-update {
   padding: 1rem 0;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.coupon-update h2,
+.coupon-create-form h2 {
+  margin: 0 0 0.75rem;
+}
+
+.coupon-update-form {
+  display: grid;
+  gap: 1.25rem;
+  padding-top: 1rem;
+}
+
+.coupon-update-form h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.coupon-search-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.coupon-search-form .full-width {
+  flex: 1 1 420px;
+  min-width: 260px;
+  width: 100%;
+}
+
+.coupon-search-form button {
+  flex: 0 0 auto;
+  min-height: 48px;
+  align-self: flex-end;
+  white-space: nowrap;
+}
+
+@media (max-width: 780px) {
+  .coupon-search-form {
+    align-items: stretch;
+  }
+
+  .coupon-search-form .full-width,
+  .coupon-search-form button {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
 }
 
 .coupon-form {
@@ -73,6 +125,10 @@
 .coupon-message {
   color: #256029;
   font-weight: 600;
+}
+
+.coupon-message.error {
+  color: #b00020;
 }
 
 @media (max-width: 780px) {

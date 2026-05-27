@@ -48,4 +48,16 @@ export class CouponService {
   createCoupon(payload: CouponCreatePayload): Observable<Coupon> {
     return this.http.post<Coupon>(API_ENDPOINTS.COUPON(), payload);
   }
+
+  fetchCouponByCode(code: string): Observable<Coupon> {
+    return this.http.get<Coupon>(API_ENDPOINTS.COUPON_BY_CODE(code));
+  }
+
+  fetchCouponById(id: number): Observable<Coupon> {
+    return this.http.get<Coupon>(API_ENDPOINTS.COUPON_BY_ID(id));
+  }
+
+  updateCoupon(id: number, payload: CouponCreatePayload): Observable<Coupon> {
+    return this.http.put<Coupon>(API_ENDPOINTS.COUPON_BY_ID(id), payload);
+  }
 }

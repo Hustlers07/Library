@@ -119,8 +119,91 @@
       </table>
     </div>
 
-    <div *ngIf="selectedAction === 'update'" class="coupon-update-placeholder">
-      <p>Update coupon functionality is not implemented yet.</p>
+    <div *ngIf="selectedAction === 'update'" class="coupon-update">
+      <h2>Search coupon for update</h2>
+
+      <form [formGroup]="searchCouponForm" class="coupon-search-form" (ngSubmit)="searchCouponByCode()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Coupon Code</mat-label>
+          <input matInput formControlName="couponCode" placeholder="TEST" />
+        </mat-form-field>
+        <button mat-raised-button color="primary" type="submit" [disabled]="searchCouponForm.invalid || isUpdateLoading()">
+          {{ isUpdateLoading() ? 'Searching...' : 'Search Coupon' }}
+        </button>
+      </form>
+
+      <div class="coupon-message error" *ngIf="searchError()">{{ searchError() }}</div>
+
+      <div *ngIf="selectedCoupon()" class="coupon-update-form">
+        <h3>Update coupon #{{ selectedCoupon()?.id }}</h3>
+
+        <form [formGroup]="updateForm" class="coupon-form" (ngSubmit)="onUpdateCoupon()">
+          <div class="coupon-form-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Coupon Code</mat-label>
+              <input matInput formControlName="couponCode" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Description</mat-label>
+              <input matInput formControlName="description" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Discount %</mat-label>
+              <input matInput type="number" formControlName="discountPercentage" min="0" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Discount Amount</mat-label>
+              <input matInput type="number" formControlName="discountAmount" min="0" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Min Booking Amount</mat-label>
+              <input matInput type="number" formControlName="minimumBookingAmount" min="0" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Max Discount Amount</mat-label>
+              <input matInput type="number" formControlName="maximumDiscountAmount" min="0" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Usage Limit</mat-label>
+              <input matInput type="number" formControlName="usageLimit" min="1" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Valid From</mat-label>
+              <input matInput type="date" formControlName="validFrom" />
+              <mat-hint>Valid from start of day in IST.</mat-hint>
+              <mat-error *ngIf="updateForm.get('validFrom')?.hasError('pattern')">
+                Valid From must be a date in YYYY-MM-DD format.
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Valid Till</mat-label>
+              <input matInput type="date" formControlName="validTill" />
+              <mat-hint>Valid till end of day in IST.</mat-hint>
+              <mat-error *ngIf="updateForm.get('validTill')?.hasError('pattern')">
+                Valid Till must be a date in YYYY-MM-DD format.
+              </mat-error>
+              <mat-error *ngIf="updateForm.hasError('validTillBeforeValidFrom') && updateForm.get('validTill')?.touched">
+                Valid Till must be later than Valid From.
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="coupon-form-actions">
+            <button mat-raised-button color="primary" type="submit" [disabled]="updateForm.invalid || isUpdateLoading()">
+              {{ isUpdateLoading() ? 'Updating...' : 'Update Coupon' }}
+            </button>
+            <span class="coupon-message" *ngIf="updateMessage()">{{ updateMessage() }}</span>
+          </div>
+        </form>
+      </div>
     </div>
   </section>
 </div>
