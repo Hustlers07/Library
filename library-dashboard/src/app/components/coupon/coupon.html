@@ -1,1 +1,7 @@
-<p>coupon works!</p>
+    <mat-button-toggle-group name="fontStyle" aria-label="Font Style" (change)="onActionChange($event)"
+        [value]="actions[0].value">
+        @for (action of actions; track action.value) {
+        <mat-button-toggle [value]="action.value">{{action.key}}</mat-button-toggle>
+        }
+
+    </mat-button-toggle-group>
