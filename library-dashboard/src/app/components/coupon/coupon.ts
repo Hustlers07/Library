@@ -30,6 +30,8 @@ export class Coupon implements OnInit {
   ];
 
   constructor(private couponService: CouponService, private fb: FormBuilder) {
+    const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+
     this.couponForm = this.fb.group({
       couponCode: ['', Validators.required],
       description: ['', Validators.required],
@@ -38,9 +40,9 @@ export class Coupon implements OnInit {
       minimumBookingAmount: [0, [Validators.required, Validators.min(0)]],
       maximumDiscountAmount: [0, [Validators.required, Validators.min(0)]],
       usageLimit: [1, [Validators.required, Validators.min(1)]],
-      validFrom: ['', Validators.required],
-      validTill: ['', Validators.required],
-    });
+      validFrom: ['', [Validators.required, Validators.pattern(datePattern)]],
+      validTill: ['', [Validators.required, Validators.pattern(datePattern)]],
+    }, { validators: [this.validDateRangeValidator] });
   }
 
   ngOnInit() {
@@ -66,6 +68,28 @@ export class Coupon implements OnInit {
     this.submissionMessage.set(null);
   }
 
+  private buildIstIso(dateString: string, endOfDay = false): string {
+    const [year, month, day] = dateString.split('-').map(Number);
+    const istOffsetMinutes = 5 * 60 + 30;
+    const hour = endOfDay ? 23 : 0;
+    const minute = endOfDay ? 59 : 0;
+    const second = endOfDay ? 59 : 0;
+    const millisecond = endOfDay ? 999 : 0;
+    const utcMillis = Date.UTC(year, month - 1, day, hour, minute, second, millisecond) - istOffsetMinutes * 60000;
+    return new Date(utcMillis).toISOString();
+  }
+
+  private validDateRangeValidator = (group: any) => {
+    const validFrom = group.get('validFrom')?.value;
+    const validTill = group.get('validTill')?.value;
+
+    if (!validFrom || !validTill) {
+      return null;
+    }
+
+    return validTill <= validFrom ? { validTillBeforeValidFrom: true } : null;
+  };
+
   onCreateCoupon() {
     if (this.couponForm.invalid) {
       this.couponForm.markAllAsTouched();
@@ -84,8 +108,8 @@ export class Coupon implements OnInit {
       minimumBookingAmount: Number(raw.minimumBookingAmount),
       maximumDiscountAmount: Number(raw.maximumDiscountAmount),
       usageLimit: Number(raw.usageLimit),
-      validFrom: new Date(raw.validFrom).toISOString(),
-      validTill: new Date(raw.validTill).toISOString(),
+      validFrom: this.buildIstIso(raw.validFrom),
+      validTill: this.buildIstIso(raw.validTill, true),
     };
 
     this.couponService.createCoupon(payload).subscribe({

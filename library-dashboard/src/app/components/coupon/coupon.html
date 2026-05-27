@@ -54,12 +54,23 @@
 
           <mat-form-field appearance="outline">
             <mat-label>Valid From</mat-label>
-            <input matInput type="datetime-local" formControlName="validFrom" />
+            <input matInput type="date" placeholder="YYYY-MM-DD" formControlName="validFrom" />
+            <mat-hint>Valid from start of day in IST.</mat-hint>
+            <mat-error *ngIf="couponForm.get('validFrom')?.hasError('pattern')">
+              Valid From must be a date in YYYY-MM-DD format.
+            </mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Valid Till</mat-label>
-            <input matInput type="datetime-local" formControlName="validTill" />
+            <input matInput type="date" placeholder="YYYY-MM-DD" formControlName="validTill" />
+            <mat-hint>Valid till end of day in IST.</mat-hint>
+            <mat-error *ngIf="couponForm.get('validTill')?.hasError('pattern')">
+              Valid Till must be a date in YYYY-MM-DD format.
+            </mat-error>
+            <mat-error *ngIf="couponForm.hasError('validTillBeforeValidFrom') && couponForm.get('validTill')?.touched">
+              Valid Till must be later than Valid From.
+            </mat-error>
           </mat-form-field>
         </div>
 
