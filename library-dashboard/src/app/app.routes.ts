@@ -6,6 +6,11 @@ import { ResetPassword } from './components/reset-password/reset-password';
 import { Dashboard } from './components/dashbard-component/dashboard/dashboard.component';
 import { Profile } from './components/profile/profile';
 import { Room } from './components/room/room';
+import { User } from './components/user/user';
+import { Plan } from './components/plan/plan';
+import { Coupon } from './components/coupon/coupon';
+import { Booking } from './components/booking/booking';
+import { Payment } from './components/payment/payment';
 
 export const routes: Routes = [
     {
@@ -28,6 +33,21 @@ export const routes: Routes = [
     },
     {
         path: ROUTES.ROOM.slice(1), component: Room
+    },
+    {
+        path: ROUTES.USER.slice(1), component: User
+    },
+    {
+        path: ROUTES.PLAN.slice(1), component: Plan
+    },
+    {
+        path: ROUTES.COUPON.slice(1), component: Coupon
+    },
+    {
+        path: ROUTES.BOOKING.slice(1), component: Booking
+    },
+     {
+        path: ROUTES.PAYMENT.slice(1), component: Payment
     },
     {
         path: '**', redirectTo: '', pathMatch: 'full'

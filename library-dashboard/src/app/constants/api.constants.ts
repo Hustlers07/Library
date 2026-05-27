@@ -18,13 +18,18 @@ export const API_ENDPOINTS = {
 export const UID = 'uid';
 
 export const ROUTES = {
+  USER: '/user',
   LOGIN: '/login',
   REGISTER: '/register',
   REGISTER_MEMEBER: '/register-member',
   DASHBOARD: '/dashboard',
   RESET_PASSWORD: '/reset-password',
   PROFILE:'/user/:'+UID,
-  ROOM:'/room'
+  ROOM:'/room',
+  PLAN:'/plan',
+  COUPON:'/coupon',
+  BOOKING:'/booking',
+  PAYMENT:'/payment',
 };
 
 
@@ -43,9 +48,13 @@ export type MenuItem = {
 
 export const MENU_ITEMS: MenuItem[] = [
   { label: 'Dashboard', icon: 'dashboard', route: ROUTES.DASHBOARD },
-  { label: 'Password', icon: 'key', route: ROUTES.RESET_PASSWORD },
-  { label: 'Register', icon: 'person_add', route: ROUTES.REGISTER_MEMEBER },
-  { label: 'Room', icon: 'room_preferences', route: ROUTES.ROOM }
+  { label: 'Account', icon: 'people', route: ROUTES.USER },
+  { label: 'Room', icon: 'room_preferences', route: ROUTES.ROOM },
+  { label: 'Payments', icon: 'currency_rupee', route: ROUTES.PAYMENT },
+  { label: 'Plan', icon: 'sell', route: ROUTES.PLAN },
+  { label: 'Coupon', icon: 'local_activity', route: ROUTES.COUPON },
+  { label: 'Booking', icon: 'event', route: ROUTES.BOOKING },
+
 
   // ,
   // { label: 'Authors', icon: 'people', route: ROUTES.AUTHORS },

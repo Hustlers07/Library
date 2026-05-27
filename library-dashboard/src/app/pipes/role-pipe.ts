@@ -10,7 +10,7 @@ export class RolePipe implements PipeTransform {
       return '';
     }
     
-    value = (value as string).split('_')[1].toUpperCase();
+    value = (value as string).split('_')[1].toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
     
     return value;
   }
