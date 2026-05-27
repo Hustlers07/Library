@@ -93,6 +93,6 @@ export class SeatsView implements OnInit {
         : seat.users;
 
     const hasNoUsers = seatUsers == null || (Array.isArray(seatUsers) && seatUsers.length === 0);
-    return hasNoUsers && seat.active === false;
+    return hasNoUsers && seat.active !== false;
   }
 }
