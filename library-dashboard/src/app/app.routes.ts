@@ -11,6 +11,7 @@ import { Plan } from './components/plan/plan';
 import { Coupon } from './components/coupon/coupon';
 import { Booking } from './components/booking/booking';
 import { Payment } from './components/payment/payment';
+import { Seat } from './components/seat/seat';
 
 export const routes: Routes = [
     {
@@ -48,6 +49,9 @@ export const routes: Routes = [
     },
      {
         path: ROUTES.PAYMENT.slice(1), component: Payment
+    },
+    {
+        path: ROUTES.SEAT.slice(1), component: Seat
     },
     {
         path: '**', redirectTo: '', pathMatch: 'full'

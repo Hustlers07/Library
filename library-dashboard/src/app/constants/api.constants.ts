@@ -30,6 +30,7 @@ export const ROUTES = {
   COUPON:'/coupon',
   BOOKING:'/booking',
   PAYMENT:'/payment',
+  SEAT:'/seat',
 };
 
 
@@ -48,12 +49,14 @@ export type MenuItem = {
 
 export const MENU_ITEMS: MenuItem[] = [
   { label: 'Dashboard', icon: 'dashboard', route: ROUTES.DASHBOARD },
-  { label: 'Account', icon: 'people', route: ROUTES.USER },
-  { label: 'Room', icon: 'room_preferences', route: ROUTES.ROOM },
+  { label: 'Accounts', icon: 'people', route: ROUTES.USER },
+    { label: 'Seats', icon: 'event_seat', route: ROUTES.SEAT },
+  { label: 'Rooms', icon: 'room_preferences', route: ROUTES.ROOM },
   { label: 'Payments', icon: 'currency_rupee', route: ROUTES.PAYMENT },
-  { label: 'Plan', icon: 'sell', route: ROUTES.PLAN },
-  { label: 'Coupon', icon: 'local_activity', route: ROUTES.COUPON },
-  { label: 'Booking', icon: 'event', route: ROUTES.BOOKING },
+  { label: 'Plans', icon: 'sell', route: ROUTES.PLAN },
+  { label: 'Coupons', icon: 'local_activity', route: ROUTES.COUPON },
+  { label: 'Bookings', icon: 'event', route: ROUTES.BOOKING },
+  
 
 
   // ,
