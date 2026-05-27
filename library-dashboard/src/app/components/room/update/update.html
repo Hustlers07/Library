@@ -1,6 +1,6 @@
 <div class="form-wrapper">
     <mat-card class="form-card">
-            <mat-card-header>
+        <mat-card-header>
             <mat-card-title>Update Room</mat-card-title>
             <mat-card-subtitle>Room ID: {{ activeRoom.id }}</mat-card-subtitle>
         </mat-card-header>
@@ -9,7 +9,8 @@
             <form [formGroup]="updateForm" class="update-form" (ngSubmit)="onSubmit()">
                 <mat-form-field appearance="outline">
                     <mat-label>Status</mat-label>
-                    <input matInput formControlName="status" [matAutocomplete]="statusAuto" style="text-transform: uppercase;">
+                    <input matInput formControlName="status" [matAutocomplete]="statusAuto"
+                        style="text-transform: uppercase;">
                     <mat-autocomplete #statusAuto="matAutocomplete">
                         @for(status of statuses; track $index){
                         <mat-option [value]="status">{{ status }}</mat-option>
@@ -24,7 +25,8 @@
 
                 <mat-form-field appearance="outline">
                     <mat-label>Floor</mat-label>
-                    <input matInput formControlName="floor" [matAutocomplete]="floorAuto" style="text-transform: uppercase;">
+                    <input matInput formControlName="floor" [matAutocomplete]="floorAuto"
+                        style="text-transform: uppercase;">
                     <mat-autocomplete #floorAuto="matAutocomplete">
                         @for(floor of floors; track $index){
                         <mat-option [value]="floor">{{ floor }}</mat-option>
@@ -54,7 +56,8 @@
                         <mat-label>Username</mat-label>
                         <input matInput formControlName="username" placeholder="test_34d42428" />
                     </mat-form-field>
-                    <button mat-raised-button color="primary" type="submit" [disabled]="addUserForm.invalid">Add User</button>
+                    <button mat-raised-button color="primary" type="submit" [disabled]="addUserForm.invalid">Add
+                        User</button>
                 </form>
 
                 <h3>Add seats to room</h3>
@@ -63,17 +66,30 @@
                         <mat-label>Seat count</mat-label>
                         <input matInput type="number" formControlName="seatCount" min="1" />
                     </mat-form-field>
-                    <button mat-raised-button color="primary" type="submit" [disabled]="addSeatForm.invalid">Add Seats</button>
+                    <button mat-raised-button color="primary" type="submit" [disabled]="addSeatForm.invalid">Add
+                        Seats</button>
                 </form>
 
+                @if(availableSeats.length > 0){
                 <h3>Disable seat</h3>
                 <form [formGroup]="disableSeatForm" class="sub-form" (ngSubmit)="onDisableSeat()">
                     <mat-form-field appearance="outline">
                         <mat-label>Seat ID</mat-label>
-                        <input matInput type="number" formControlName="seatId" min="1" />
+
+                        <mat-select *ngIf="availableSeats.length > 0" formControlName="seatId">
+                            @for(seatId of availableSeats; track seatId){
+                            <mat-option [value]="seatId">{{ seatId }}</mat-option>
+                            }
+                        </mat-select>
+                        <input matInput *ngIf="availableSeats.length === 0" type="number" formControlName="seatId"
+                            min="1" />
+                        <mat-hint *ngIf="availableSeats.length > 0">Select a seat from the room's available
+                            seats.</mat-hint>
                     </mat-form-field>
-                    <button mat-raised-button color="warn" type="submit" [disabled]="disableSeatForm.invalid">Disable Seat</button>
+                    <button mat-raised-button color="warn" type="submit" [disabled]="disableSeatForm.invalid">Disable
+                        Seat</button>
                 </form>
+                }
             </section>
 
             <div class="metadata">
@@ -83,4 +99,3 @@
         </mat-card-content>
     </mat-card>
 </div>
-

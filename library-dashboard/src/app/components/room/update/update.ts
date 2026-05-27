@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -6,9 +6,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { RoomService } from '../../../services/room-service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-update',
@@ -20,7 +22,9 @@ import { HttpErrorResponse } from '@angular/common/http';
     MatButtonModule,
     MatAutocompleteModule,
     MatDividerModule,
+    MatSelectModule,
     MatSnackBarModule,
+    CommonModule
   ],
   templateUrl: './update.html',
   styleUrl: './update.scss',
@@ -76,8 +80,11 @@ export class Update {
     });
   }
 
+  availableSeats: string[] = [];
+
   ngOnChanges(changes: SimpleChanges) {
     if (changes['room'] && this.room) {
+      this.loadAvailableSeats();
       // patch form values when input room changes
       this.updateForm.patchValue({
         status: this.room.status ?? this.updateForm.value.status,
@@ -150,6 +157,17 @@ export class Update {
         this.snackBar.open(`Failed to add seats: ${errorMsg}`, 'Close', { duration: 4000 });
       },
     });
+  }
+
+  private loadAvailableSeats() {
+    const seats = this.room?.seats ?? this.room?.availableSeats ?? this.room?.seatIds ?? [];
+    if (Array.isArray(seats)) {
+      this.availableSeats = seats
+        .map((seat: any) => typeof seat === 'string' ? seat : seat?.seatId ?? seat?.seatId ?? null)
+        .filter((id: any): id is string => typeof id === 'string');
+    } else {
+      this.availableSeats = [];
+    }
   }
 
   onDisableSeat() {
