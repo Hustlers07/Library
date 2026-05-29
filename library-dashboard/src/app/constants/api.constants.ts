@@ -15,6 +15,8 @@ export const API_ENDPOINTS = {
   COUPON: () => `${environment.apiUrl}/${environment.basePath}/api/coupons`,
   COUPON_BY_ID: (id: number) => `${environment.apiUrl}/${environment.basePath}/api/coupons/${id}`,
   COUPON_BY_CODE: (code: string) => `${environment.apiUrl}/${environment.basePath}/api/coupons/code/${code}`,
+  PLANS: () => `${environment.apiUrl}/${environment.basePath}/api/plans`,
+  PLAN_BY_ID: (id: number) => `${environment.apiUrl}/${environment.basePath}/api/plans/${id}`,
 };
 
 
