@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleChange, MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -39,6 +40,22 @@ export class Coupon implements OnInit {
     const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 
     this.couponForm = this.fb.group({
+      couponCode: ['', Validators.required],
+      description: ['', Validators.required],
+      discountPercentage: [0, [Validators.required, Validators.min(0)]],
+      discountAmount: [0, [Validators.required, Validators.min(0)]],
+      minimumBookingAmount: [0, [Validators.required, Validators.min(0)]],
+      maximumDiscountAmount: [0, [Validators.required, Validators.min(0)]],
+      usageLimit: [1, [Validators.required, Validators.min(1)]],
+      validFrom: ['', [Validators.required, Validators.pattern(datePattern)]],
+      validTill: ['', [Validators.required, Validators.pattern(datePattern)]],
+    }, { validators: [this.validDateRangeValidator] });
+
+    this.searchCouponForm = this.fb.group({
+      couponCode: ['', Validators.required]
+    });
+
+    this.updateForm = this.fb.group({
       couponCode: ['', Validators.required],
       description: ['', Validators.required],
       discountPercentage: [0, [Validators.required, Validators.min(0)]],
@@ -116,29 +133,28 @@ export class Coupon implements OnInit {
     this.selectedCoupon.set(null);
 
     const couponCode = this.searchCouponForm.value.couponCode.trim();
-    this.couponService.fetchCouponByCode(couponCode).subscribe({
-      next: coupon => {
-        this.selectedCoupon.set(coupon);
-        this.updateForm.reset({
-          couponCode: coupon.couponCode,
-          description: coupon.description,
-          discountPercentage: coupon.discountPercentage,
-          discountAmount: coupon.discountAmount,
-          minimumBookingAmount: coupon.minimumBookingAmount,
-          maximumDiscountAmount: coupon.maximumDiscountAmount,
-          usageLimit: coupon.usageLimit,
-          validFrom: this.extractDateOnly(coupon.validFrom),
-          validTill: this.extractDateOnly(coupon.validTill),
-        });
-      },
-      error: err => {
-        console.error('Failed to find coupon by code', err);
-        this.searchError.set('Coupon not found. Please verify the code and try again.');
-      },
-      complete: () => {
-        this.isUpdateLoading.set(false);
-      }
-    });
+    this.couponService.fetchCouponByCode(couponCode)
+      .pipe(finalize(() => this.isUpdateLoading.set(false)))
+      .subscribe({
+        next: coupon => {
+          this.selectedCoupon.set(coupon);
+          this.updateForm.reset({
+            couponCode: coupon.couponCode,
+            description: coupon.description,
+            discountPercentage: coupon.discountPercentage,
+            discountAmount: coupon.discountAmount,
+            minimumBookingAmount: coupon.minimumBookingAmount,
+            maximumDiscountAmount: coupon.maximumDiscountAmount,
+            usageLimit: coupon.usageLimit,
+            validFrom: this.extractDateOnly(coupon.validFrom),
+            validTill: this.extractDateOnly(coupon.validTill),
+          });
+        },
+        error: err => {
+          console.error('Failed to find coupon by code', err);
+          this.searchError.set('Coupon not found. Please verify the code and try again.');
+        }
+      });
   }
 
   onUpdateCoupon() {
@@ -169,21 +185,20 @@ export class Coupon implements OnInit {
       validTill: this.buildIstIso(raw.validTill, true),
     };
 
-    this.couponService.updateCoupon(selected.id, payload).subscribe({
-      next: updated => {
-        this.selectedCoupon.set(updated);
-        this.updateMessage.set('Coupon updated successfully.');
-        const current = this.coupons();
-        this.coupons.set(current.map(item => item.id === updated.id ? updated : item));
-      },
-      error: err => {
-        console.error('Failed to update coupon', err);
-        this.updateMessage.set('Failed to update coupon. Please try again.');
-      },
-      complete: () => {
-        this.isUpdateLoading.set(false);
-      }
-    });
+    this.couponService.updateCoupon(selected.id, payload)
+      .pipe(finalize(() => this.isUpdateLoading.set(false)))
+      .subscribe({
+        next: updated => {
+          this.selectedCoupon.set(updated);
+          this.updateMessage.set('Coupon updated successfully.');
+          const current = this.coupons();
+          this.coupons.set(current.map(item => item.id === updated.id ? updated : item));
+        },
+        error: err => {
+          console.error('Failed to update coupon', err);
+          this.updateMessage.set('Failed to update coupon. Please try again.');
+        }
+      });
   }
 
   onCreateCoupon() {
@@ -208,32 +223,31 @@ export class Coupon implements OnInit {
       validTill: this.buildIstIso(raw.validTill, true),
     };
 
-    this.couponService.createCoupon(payload).subscribe({
-      next: created => {
-        const current = this.coupons();
-        this.coupons.set([created, ...current]);
-        this.submissionMessage.set('Coupon created successfully.');
-        this.couponForm.reset({
-          couponCode: '',
-          description: '',
-          discountPercentage: 0,
-          discountAmount: 0,
-          minimumBookingAmount: 0,
-          maximumDiscountAmount: 0,
-          usageLimit: 1,
-          validFrom: '',
-          validTill: ''
-        });
-        this.selectedAction = 'view';
-      },
-      error: err => {
-        console.error('Failed to create coupon', err);
-        this.submissionMessage.set('Failed to create coupon. Please check the values and try again.');
-      },
-      complete: () => {
-        this.isSubmitting.set(false);
-      }
-    });
+    this.couponService.createCoupon(payload)
+      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .subscribe({
+        next: created => {
+          const current = this.coupons();
+          this.coupons.set([created, ...current]);
+          this.submissionMessage.set('Coupon created successfully.');
+          this.couponForm.reset({
+            couponCode: '',
+            description: '',
+            discountPercentage: 0,
+            discountAmount: 0,
+            minimumBookingAmount: 0,
+            maximumDiscountAmount: 0,
+            usageLimit: 1,
+            validFrom: '',
+            validTill: ''
+          });
+          this.selectedAction = 'view';
+        },
+        error: err => {
+          console.error('Failed to create coupon', err);
+          this.submissionMessage.set('Failed to create coupon. Please check the values and try again.');
+        }
+      });
   }
 }
 
