@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
@@ -25,6 +25,10 @@ export class Coupon implements OnInit {
   updateMessage = signal<string | null>(null);
   searchError = signal<string | null>(null);
   selectedCoupon = signal<CouponModel | null>(null);
+
+  selectedSortField = signal<string>('couponCode');
+  sortDirection = signal<'asc' | 'desc'>('asc');
+  sortedCoupons = computed(() => this.sortCoupons(this.coupons()));
 
   couponForm = null as any;
   searchCouponForm = null as any;
@@ -108,6 +112,63 @@ export class Coupon implements OnInit {
     const millisecond = endOfDay ? 999 : 0;
     const utcMillis = Date.UTC(year, month - 1, day, hour, minute, second, millisecond) - istOffsetMinutes * 60000;
     return new Date(utcMillis).toISOString();
+  }
+
+  private isExpired(coupon: CouponModel): boolean {
+    if (!coupon?.validTill) {
+      return false;
+    }
+
+    const validTillDate = new Date(coupon.validTill).getTime();
+    return !Number.isNaN(validTillDate) && Date.now() > validTillDate;
+  }
+
+  getCouponStatus(coupon: CouponModel): string {
+    if (this.isExpired(coupon)) {
+      return 'Expired';
+    }
+
+    return coupon.isActive ? 'Active' : 'Inactive';
+  }
+
+  toggleSortDirection() {
+    this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+  }
+
+  private sortCoupons(coupons: CouponModel[]): CouponModel[] {
+    const field = this.selectedSortField();
+    const direction = this.sortDirection() === 'desc' ? -1 : 1;
+
+    return [...coupons].sort((a, b) => {
+      let aValue: string | number = '';
+      let bValue: string | number = '';
+
+      switch (field) {
+        case 'status':
+          aValue = this.getCouponStatus(a);
+          bValue = this.getCouponStatus(b);
+          break;
+        case 'validTill':
+          aValue = new Date(a.validTill).getTime();
+          bValue = new Date(b.validTill).getTime();
+          break;
+        case 'discountPercentage':
+          aValue = a.discountPercentage ?? 0;
+          bValue = b.discountPercentage ?? 0;
+          break;
+        case 'couponCode':
+        default:
+          aValue = a.couponCode ?? '';
+          bValue = b.couponCode ?? '';
+          break;
+      }
+
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return (aValue - bValue) * direction;
+      }
+
+      return aValue.toString().localeCompare(bValue.toString()) * direction;
+    });
   }
 
   private validDateRangeValidator = (group: any) => {
