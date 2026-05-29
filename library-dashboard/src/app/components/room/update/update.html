@@ -1,50 +1,55 @@
 <div class="form-wrapper">
-    <mat-card class="form-card">
-        <mat-card-header>
-            <mat-card-title>Update Room</mat-card-title>
-            <mat-card-subtitle>Room ID: {{ activeRoom.id }}</mat-card-subtitle>
-        </mat-card-header>
+    <div class="form-panel">
+        <div class="panel-header">
+            <div>
+                <h2>Update Room</h2>
+                <p>Room ID: {{ activeRoom.id }}</p>
+            </div>
+        </div>
 
-        <mat-card-content>
+        <div class="panel-content">
             <form [formGroup]="updateForm" class="update-form" (ngSubmit)="onSubmit()">
-                <mat-form-field appearance="outline">
-                    <mat-label>Status</mat-label>
-                    <input matInput formControlName="status" [matAutocomplete]="statusAuto"
-                        style="text-transform: uppercase;">
-                    <mat-autocomplete #statusAuto="matAutocomplete">
-                        @for(status of statuses; track $index){
-                        <mat-option [value]="status">{{ status }}</mat-option>
-                        }
-                    </mat-autocomplete>
-                </mat-form-field>
+                <div class="form-grid">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Status</mat-label>
+                        <input matInput formControlName="status" [matAutocomplete]="statusAuto" class="uppercase-input">
+                        <mat-autocomplete #statusAuto="matAutocomplete">
+                            @for(status of statuses; track $index){
+                            <mat-option [value]="status">{{ status }}</mat-option>
+                            }
+                        </mat-autocomplete>
+                    </mat-form-field>
 
-                <mat-form-field appearance="outline">
-                    <mat-label>House No.</mat-label>
-                    <input matInput formControlName="houseNo" style="text-transform: uppercase;">
-                </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>House No.</mat-label>
+                        <input matInput formControlName="houseNo" class="uppercase-input">
+                    </mat-form-field>
 
-                <mat-form-field appearance="outline">
-                    <mat-label>Floor</mat-label>
-                    <input matInput formControlName="floor" [matAutocomplete]="floorAuto"
-                        style="text-transform: uppercase;">
-                    <mat-autocomplete #floorAuto="matAutocomplete">
-                        @for(floor of floors; track $index){
-                        <mat-option [value]="floor">{{ floor }}</mat-option>
-                        }
-                    </mat-autocomplete>
-                </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Floor</mat-label>
+                        <input matInput formControlName="floor" [matAutocomplete]="floorAuto" class="uppercase-input">
+                        <mat-autocomplete #floorAuto="matAutocomplete">
+                            @for(floor of floors; track $index){
+                            <mat-option [value]="floor">{{ floor }}</mat-option>
+                            }
+                        </mat-autocomplete>
+                    </mat-form-field>
 
-                <mat-form-field appearance="outline">
-                    <mat-label>Location</mat-label>
-                    <input matInput formControlName="location">
-                </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Location</mat-label>
+                        <input matInput formControlName="location">
+                    </mat-form-field>
 
-                <mat-form-field appearance="outline">
-                    <mat-label>Description</mat-label>
-                    <input matInput formControlName="description">
-                </mat-form-field>
+                    <mat-form-field appearance="outline">
+                        <mat-label>Description</mat-label>
+                        <input matInput formControlName="description">
+                    </mat-form-field>
+                </div>
 
-                <button mat-raised-button color="primary" type="submit" [disabled]="updateForm.invalid">Update</button>
+                <div class="form-actions">
+                    <button mat-raised-button color="primary" type="submit"
+                        [disabled]="updateForm.invalid">Update</button>
+                </div>
             </form>
 
             <mat-divider></mat-divider>
@@ -96,6 +101,4 @@
                 <h4>Created at: {{ activeRoom.createdAt }}</h4>
                 <h4>Last updated: {{ activeRoom.updatedAt }}</h4>
             </div>
-        </mat-card-content>
-    </mat-card>
-</div>
+        </div>

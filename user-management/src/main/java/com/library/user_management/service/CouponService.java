@@ -92,7 +92,7 @@ public class CouponService {
     public CouponResponse getCouponByCode(String couponCode) {
         log.info("Fetching coupon by code: {}", couponCode);
         Coupon coupon = couponRepository.findValidCoupon(couponCode.toUpperCase(), LocalDateTime.now())
-                .orElseThrow(() -> new IllegalArgumentException("Coupon not found or expired"));
+                .orElseThrow(() -> new IllegalArgumentException("Active coupon not found or expired"));
         return mapToResponse(coupon);
     }
 

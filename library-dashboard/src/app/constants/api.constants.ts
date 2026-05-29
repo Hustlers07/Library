@@ -12,6 +12,9 @@ export const API_ENDPOINTS = {
   USERS: () => `${environment.apiUrl}/${environment.basePath}/api/users`,
   ROOM: () => `${environment.apiUrl}/${environment.basePath}/api/room`,
   SEAT: () => `${environment.apiUrl}/${environment.basePath}/api/seat`,
+  COUPON: () => `${environment.apiUrl}/${environment.basePath}/api/coupons`,
+  COUPON_BY_ID: (id: number) => `${environment.apiUrl}/${environment.basePath}/api/coupons/${id}`,
+  COUPON_BY_CODE: (code: string) => `${environment.apiUrl}/${environment.basePath}/api/coupons/code/${code}`,
 };
 
 
