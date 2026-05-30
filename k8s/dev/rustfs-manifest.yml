@@ -10,7 +10,7 @@ metadata:
   namespace: library-dev
 type: Opaque
 stringData:
-  RUSTFS_ACCESS_KEY: "${RUSTFS_ACCESS_KEY"
+  RUSTFS_ACCESS_KEY: "${RUSTFS_ACCESS_KEY}"
   RUSTFS_SECRET_KEY: "${RUSTFS_SECRET_KEY}"
 ---
 apiVersion: v1
@@ -112,6 +112,12 @@ spec:
             secretKeyRef:
               name: rustfs-credentials
               key: RUSTFS_SECRET_KEY
+        - name: RUSTFS_DRIVE_METADATA_TIMEOUT_SECS
+          value: "15000"
+        - name: RUSTFS_DRIVE_LIST_DIR_TIMEOUT_SECS
+          value: "20000"
+        - name: RUSTFS_DRIVE_WALKDIR_TIMEOUT_SECS
+          value: "30000"
         volumeMounts:
         - name: rustfs-data
           mountPath: /data
