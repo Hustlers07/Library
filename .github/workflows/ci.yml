@@ -85,7 +85,7 @@ jobs:
         working-directory: ./library-dashboard
 
       - name: Build Angular application
-        run: npm run build -- --configuration production
+        run: npm run build -- --configuration production --base-href /dashboard/
         working-directory: ./library-dashboard
 
       - name: Log in to Docker Hub
