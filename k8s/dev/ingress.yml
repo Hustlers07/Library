@@ -1,3 +1,7 @@
+
+# ─────────────────────────────────────────────
+# Middleware: strip /phpmyadmin prefix
+# ─────────────────────────────────────────────
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -7,8 +11,11 @@ spec:
   stripPrefix:
     prefixes:
       - /phpmyadmin
+ 
 ---
-# Ingress for user-management (no middleware)
+# ─────────────────────────────────────────────
+# Ingress: user-management
+# ─────────────────────────────────────────────
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -17,6 +24,7 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
+  ingressClassName: traefik            # FIX: added to all ingresses for consistency
   rules:
     - host: cotton-overripe-skyrocket.ngrok-free.dev
       http:
@@ -28,8 +36,11 @@ spec:
                 name: user-management-service
                 port:
                   number: 8080
+ 
 ---
-# Ingress for dashboard (no middleware)
+# ─────────────────────────────────────────────
+# Ingress: dashboard
+# ─────────────────────────────────────────────
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -38,19 +49,23 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
+  ingressClassName: traefik            # FIX: added to all ingresses for consistency
   rules:
     - host: cotton-overripe-skyrocket.ngrok-free.dev
       http:
         paths:
-          - path: /
+          - path: /dashboard
             pathType: Prefix
             backend:
               service:
                 name: dashboard-service
                 port:
                   number: 80
+ 
 ---
-# Ingress for phpMyAdmin (strip-prefix middleware applied here only)
+# ─────────────────────────────────────────────
+# Ingress: phpMyAdmin (strip-prefix middleware)
+# ─────────────────────────────────────────────
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -60,6 +75,7 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: web
     traefik.ingress.kubernetes.io/router.middlewares: library-dev-strip-phpmyadmin-prefix@kubernetescrd
 spec:
+  ingressClassName: traefik            # FIX: added to all ingresses for consistency
   rules:
     - host: cotton-overripe-skyrocket.ngrok-free.dev
       http:
@@ -71,53 +87,30 @@ spec:
                 name: phpmyadmin-service
                 port:
                   number: 80
-
-
-# # Traefik strip-prefix middleware for RustFS
-# apiVersion: traefik.io/v1alpha1
-# kind: Middleware
-# metadata:
-#   name: rustfs-strip-prefix
-#   namespace: library-dev
-# spec:
-#   stripPrefix:
-#     prefixes:
-#       - /rustfs
-# ---
-# # Traefik forwarded-prefix middleware for RustFS
-# apiVersion: traefik.io/v1alpha1
-# kind: Middleware
-# metadata:
-#   name: rustfs-forwarded-prefix
-#   namespace: library-dev
-# spec:
-#   headers:
-#     customRequestHeaders:
-#       X-Forwarded-Prefix: /rustfs
-# ---
-# # Ingress for rustfs
-# apiVersion: networking.k8s.io/v1
-# kind: Ingress
-# metadata:
-#   name: rustfs-ingress
-#   namespace: library-dev
-#   annotations:
-#     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-#     traefik.ingress.kubernetes.io/router.tls: "true"
-#     traefik.ingress.kubernetes.io/router.middlewares: library-dev-rustfs-strip-prefix@kubernetescrd,library-dev-rustfs-forwarded-prefix@kubernetescrd
-# spec:
-#   tls:
-#     - hosts:
-#         - cotton-overripe-skyrocket.ngrok-free.dev
-#       secretName: rustfs-tls
-#   rules:
-#     - host: cotton-overripe-skyrocket.ngrok-free.dev
-#       http:
-#         paths:
-#           - path: /rustfs
-#             pathType: Prefix
-#             backend:
-#               service:
-#                 name: rustfs-service
-#                 port:
-#                   number: 9003
+ 
+---
+# ─────────────────────────────────────────────
+# Ingress: RustFS console  (catch-all /)
+# ─────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rustfs-ingress
+  namespace: library-dev
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: cotton-overripe-skyrocket.ngrok-free.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rustfs-service
+                port:
+                  name: console
+ 
+---
