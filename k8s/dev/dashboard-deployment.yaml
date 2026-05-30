@@ -44,7 +44,7 @@ metadata:
   name: dashboard-service
   namespace: library-dev
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: library-dashboard
   ports:
