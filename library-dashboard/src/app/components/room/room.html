@@ -1,0 +1,111 @@
+<div class="room-page">
+  <section class="form-header">
+    <h1>Rooms</h1>
+
+    <mat-button-toggle-group aria-label="Room action" (change)="onActionChange($event)" [value]="selectedChange()">
+      @for (action of actions; track action.value) {
+        <mat-button-toggle [value]="action.value">{{action.key}}</mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+  </section>
+
+  <section class="form-content">
+
+    @switch (selectedChange()) {
+
+    @case (actions[1].value) {
+      <div class="room-action-panel">
+        <app-create></app-create>
+      </div>
+    }
+
+    @case (actions[2].value) {
+      <div class="room-action-panel">
+        @if(rooms == null || rooms.length==0){
+          <h3>No room available</h3>
+        }
+        @else{
+          <mat-form-field appearance="outline" class="room-select-field">
+            <mat-label>Select room</mat-label>
+            <input type="text" matInput [formControl]="roomControl" [matAutocomplete]="roomAuto">
+            <mat-autocomplete #roomAuto="matAutocomplete" [displayWith]="displayRoom"
+                (optionSelected)="onSelectRoom($event.option.value)">
+                @for(room of filteredRooms; track room.id){
+                <mat-option [value]="room">{{room.houseNo}} ({{room.id}}) - {{room.location}}</mat-option>
+                }
+            </mat-autocomplete>
+          </mat-form-field>
+
+          <app-update [room]="selectedRoom"></app-update>
+        }
+      </div>
+    }
+
+    @case (actions[3].value) {
+      <div class="room-action-panel">
+        <app-seat></app-seat>
+      </div>
+    }
+
+    @default {
+
+    @if(rooms == null || rooms.length==0){
+      <h3>No room available</h3>
+    }
+    @else{
+      <div class="room-filters">
+        <mat-form-field appearance="outline">
+          <mat-label>Search rooms</mat-label>
+          <input matInput type="text" [formControl]="filterTextControl" placeholder="House, location, floor, description" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select [formControl]="statusFilterControl">
+            <mat-option value="">All</mat-option>
+            @for(status of statusOptions; track status){
+              <mat-option [value]="status">{{status}}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      @if(tableRooms == null || tableRooms.length==0){
+        <h3>No rooms match current filter</h3>
+      }
+      @else{
+        <div class="table-wrapper">
+          <table class="room-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>House No</th>
+                <th>Location</th>
+                <th>Floor</th>
+                <th>Status</th>
+                <th>Allocation</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for(room of tableRooms; track room.id){
+                <tr (click)="onSelectRoom(room)" class="room-row">
+                  <td>{{room.id}}</td>
+                  <td>{{room.houseNo}}</td>
+                  <td>{{room.location}}</td>
+                  <td>{{room.floor}}</td>
+                  <td>{{room.status}}</td>
+                  <td>{{ getAllocationLabel(room) }}</td>
+                  <td>{{room.description}}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    }
+    }
+  </section>
+</div>

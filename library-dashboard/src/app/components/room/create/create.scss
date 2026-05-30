@@ -1,0 +1,82 @@
+.form-wrapper {
+    margin-top: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.form-panel {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.panel-header {
+  margin-bottom: 1rem;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.panel-content {
+  margin-top: 0;
+}
+
+.create-form .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.create-form .form-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.create-form mat-form-field {
+  width: 100%;
+}
+
+.uppercase-input {
+  text-transform: uppercase;
+}
+
+.create-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px; // spacing between form fields
+    width: 100%;
+    padding-top: 2rem;
+    // max-width: 400px;
+    margin: 0 auto; // center horizontally
+
+    mat-form-field {
+        width: 100%;
+        > input {
+            width: 100%;
+            padding: 12px; // increase padding for better touch targets
+        }
+    }
+    
+}
+
+.card-footer {
+    display: flex;
+    justify-content: center;
+    padding-top: 1rem;
+    margin-top: 1rem;
+
+    mat-chip {
+        margin: 0 8px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+
+        &:hover {
+            background-color: #e0e0e0;
+        }
+    }
+}

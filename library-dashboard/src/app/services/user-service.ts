@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { User } from '../models/user/user-module';
 import { API_ENDPOINTS } from '../constants/api.constants';
-import { catchError, map, Observable, throwError } from 'rxjs';
+import { catchError, map, Observable, of, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -24,7 +24,11 @@ export class UserService {
   fetchUsers(): Observable<User[]>{
 
     return this.http.get<any[]>(API_ENDPOINTS.USERS()).pipe(
-      map((users:any[]) => users.map(user=> new User(user)))
+      map((users:any[]) => users.map(user=> new User(user))),
+      catchError(error => {
+        console.error('Error fetching users:', error);
+        return of([]);
+      })
     );
   }
 }

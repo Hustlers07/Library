@@ -1,0 +1,45 @@
+<div class="seat-form-wrapper">
+  <div class="form-panel">
+    <div class="panel-header">
+      <div>
+        <h2>Select room and available seat</h2>
+        <p>Choose a room, then pick an available seat for the provider</p>
+      </div>
+    </div>
+
+    <div class="panel-content">
+      <form [formGroup]="mapForm" class="seat-form" (ngSubmit)="onMapUser()">
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Room</mat-label>
+            <mat-select formControlName="roomId" (selectionChange)="onRoomChange($event.value)">
+              @for(room of rooms; track room.id){
+              <mat-option [value]="room.id">{{ room.houseNo }} - {{ room.location }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Available seat</mat-label>
+            <mat-select formControlName="seatId" [disabled]="availableSeats.length === 0">
+              @for(seat of availableSeats; track seat.seatId){
+              <mat-option [value]="seat.seatId">{{ seat.seatId }}</mat-option>
+              }
+            </mat-select>
+            <mat-hint *ngIf="selectedRoom && availableSeats.length === 0">No available active seats in this room.</mat-hint>
+            <mat-hint *ngIf="!selectedRoom">Select a room first to load seats.</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Provider username</mat-label>
+          <input matInput formControlName="username" placeholder="test" />
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-raised-button color="primary" type="submit" [disabled]="mapForm.invalid">Map Provider</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

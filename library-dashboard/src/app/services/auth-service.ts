@@ -11,17 +11,34 @@ import { isPlatformBrowser } from '@angular/common';
 })
 export class AuthService {
 
-
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private http: HttpClient,
-
   ) { }
 
-  login(credentials: { email: string; password: string }): Observable<string> {
-    return this.http.post<{ token: string }>(API_ENDPOINTS.LOGIN(), credentials).pipe(
+  private extractToken(response: any): string | null {
+    if (!response) {
+      return null;
+    }
+    if (typeof response.token === 'string' && response.token) {
+      return response.token;
+    }
+    if (typeof response.access_token === 'string' && response.access_token) {
+      return response.access_token;
+    }
+    if (typeof response.authToken === 'string' && response.authToken) {
+      return response.authToken;
+    }
+    if (typeof response.data?.token === 'string' && response.data.token) {
+      return response.data.token;
+    }
+    return null;
+  }
+
+  login(credentials: { email: string; password: string }): Observable<string | null> {
+    return this.http.post<any>(API_ENDPOINTS.LOGIN(), credentials).pipe(
       map(response => {
-        const token = response?.token;
+        const token = this.extractToken(response);
         if (token) {
           this.setToken(token);
         }
@@ -30,10 +47,10 @@ export class AuthService {
     );
   }
 
-  register(credentials: Object): Observable<string> {
-    return this.http.post<{ token: string }>(API_ENDPOINTS.REGISTER(), credentials).pipe(
+  register(credentials: Object): Observable<string | null> {
+    return this.http.post<any>(API_ENDPOINTS.REGISTER(), credentials).pipe(
       map(response => {
-        const token = response?.token;
+        const token = this.extractToken(response);
         if (token) {
           this.setToken(token);
         }

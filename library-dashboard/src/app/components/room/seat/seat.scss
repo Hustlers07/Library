@@ -1,0 +1,52 @@
+.seat-form-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.form-panel {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.panel-header {
+  margin-bottom: 1rem;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.panel-header p {
+  margin: 0.25rem 0 0;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.panel-content {
+  margin-top: 0;
+}
+
+.seat-form-wrapper form {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1rem 0;
+}
+
+.seat-form-wrapper .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.seat-form-wrapper mat-form-field {
+  width: 100%;
+}
+
+.seat-form-wrapper .form-actions {
+  display: flex;
+  justify-content: flex-end;
+}

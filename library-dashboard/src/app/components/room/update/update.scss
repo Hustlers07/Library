@@ -1,0 +1,90 @@
+.form-panel{
+    margin-top: 0;
+    width: 100%;
+    max-width: 920px;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.panel-header {
+  margin-bottom: 1rem;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.panel-header p {
+  margin: 0.25rem 0 0;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.panel-content {
+  margin-top: 0;
+}
+
+.sub-form{
+    display: grid;
+    gap: 1rem;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+}
+
+.update-form{
+    display: grid;
+    gap: 1.5rem;
+}
+
+.update-form .form-grid{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.update-form .form-actions{
+    display: flex;
+    justify-content: flex-end;
+}
+
+.update-form mat-form-field,
+.sub-form mat-form-field {
+    width: 100%;
+}
+
+.sub-forms{
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.sub-form{
+    display: grid;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 14px;
+    background: #fafafa;
+}
+
+.mat-divider {
+  display: block;
+  margin-top: 50px;
+  border-top-style: solid;
+  border-top-color: var(--mat-divider-color, var(--mat-sys-outline-variant));
+  border-top-width: 5px;
+}
+
+.metadata{
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.uppercase-input {
+  text-transform: uppercase;
+}

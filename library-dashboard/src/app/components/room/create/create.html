@@ -1,0 +1,42 @@
+<div class="form-wrapper">
+    <div class="form-panel">
+        <div class="panel-header">
+            <h2>Room Details</h2>
+        </div>
+
+        <div class="panel-content">
+            <form [formGroup]="createForm" class="create-form" (ngSubmit)="onSubmit()">
+                <div class="form-grid">
+                    <mat-form-field appearance="outline">
+                        <mat-label>House No.</mat-label>
+                        <input matInput formControlName="houseNo" class="uppercase-input">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Floor</mat-label>
+                        <input matInput formControlName="floor" [matAutocomplete]="auto" class="uppercase-input">
+                        <mat-autocomplete #auto="matAutocomplete">
+                            @for(floor of floors; track $index){
+                            <mat-option [value]="floor">{{floor}}</mat-option>
+                            }
+                        </mat-autocomplete>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Location</mat-label>
+                        <input matInput formControlName="location" class="uppercase-input">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Description</mat-label>
+                        <input matInput formControlName="description" class="uppercase-input">
+                    </mat-form-field>
+                </div>
+
+                <div class="form-actions">
+                    <button mat-raised-button color="primary" type="submit" [disabled]="createForm.invalid">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

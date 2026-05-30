@@ -5,23 +5,35 @@ import { environment } from '../../environments/environment';
 
 // api.constants.ts
 export const API_ENDPOINTS = {
-  LOGIN: () => `${environment.apiUrl}/api/auth/login`,
-  REGISTER: () => `${environment.apiUrl}/api/auth/register`,
-  PROFILE: () => `${environment.apiUrl}/api/users/profile`,
-  CHANGE_PASSWORD: () => `${environment.apiUrl}/api/auth/change-password`,
-  USERS: () => `${environment.apiUrl}/api/users`,
+  LOGIN: () => `${environment.apiUrl}/${environment.basePath}/api/auth/login`,
+  REGISTER: () => `${environment.apiUrl}/${environment.basePath}/api/auth/register`,
+  PROFILE: () => `${environment.apiUrl}/${environment.basePath}/api/users/profile`,
+  CHANGE_PASSWORD: () => `${environment.apiUrl}/${environment.basePath}/api/auth/change-password`,
+  USERS: () => `${environment.apiUrl}/${environment.basePath}/api/users`,
+  ROOM: () => `${environment.apiUrl}/${environment.basePath}/api/room`,
+  SEAT: () => `${environment.apiUrl}/${environment.basePath}/api/seat`,
+  COUPON: () => `${environment.apiUrl}/${environment.basePath}/api/coupons`,
+  COUPON_BY_ID: (id: number) => `${environment.apiUrl}/${environment.basePath}/api/coupons/${id}`,
+  COUPON_BY_CODE: (code: string) => `${environment.apiUrl}/${environment.basePath}/api/coupons/code/${code}`,
 };
 
 
 export const UID = 'uid';
 
 export const ROUTES = {
+  USER: '/user',
   LOGIN: '/login',
   REGISTER: '/register',
   REGISTER_MEMEBER: '/register-member',
   DASHBOARD: '/dashboard',
   RESET_PASSWORD: '/reset-password',
-  PROFILE:'/user/:'+UID
+  PROFILE:'/user/:'+UID,
+  ROOM:'/room',
+  PLAN:'/plan',
+  COUPON:'/coupon',
+  BOOKING:'/booking',
+  PAYMENT:'/payment',
+  SEAT:'/seat',
 };
 
 
@@ -40,8 +52,15 @@ export type MenuItem = {
 
 export const MENU_ITEMS: MenuItem[] = [
   { label: 'Dashboard', icon: 'dashboard', route: ROUTES.DASHBOARD },
-  { label: 'Password', icon: 'key', route: ROUTES.RESET_PASSWORD },
-  { label: 'Register', icon: 'person_add', route: ROUTES.REGISTER_MEMEBER }
+  { label: 'Accounts', icon: 'people', route: ROUTES.USER },
+    { label: 'Seats', icon: 'event_seat', route: ROUTES.SEAT },
+  { label: 'Rooms', icon: 'room_preferences', route: ROUTES.ROOM },
+  { label: 'Payments', icon: 'currency_rupee', route: ROUTES.PAYMENT },
+  { label: 'Plans', icon: 'sell', route: ROUTES.PLAN },
+  { label: 'Coupons', icon: 'local_activity', route: ROUTES.COUPON },
+  { label: 'Bookings', icon: 'event', route: ROUTES.BOOKING },
+  
+
 
   // ,
   // { label: 'Authors', icon: 'people', route: ROUTES.AUTHORS },

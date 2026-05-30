@@ -42,16 +42,19 @@ mat-nav-list {
 
 // /* Each menu item: icon + text aligned */
 .list-item {
-   margin-top: 5px;
+  margin-top: 15px;
   position: relative;          /* allows absolute positioning */
   display: flex;
   align-items: center;         /* vertical alignment */
-  width: 100%;                 /* full clickable width */
+  width: 100%;  
+  padding: 4px 10px;          /* padding for better click area */
+  border-radius: 4px;         /* rounded corners */
+  transition: background-color 0.3s; /* smooth hover effect */
 }
 
 .list-item mat-icon {
   margin-left: 12px;           /* keep icon padded from edge */
-  color: black;
+  color: var(--black-shade);             
   
 }
 
@@ -60,7 +63,8 @@ mat-nav-list {
   font-size: 1rem;
   line-height: 1.5rem;
   position: absolute;          /* take text out of flex flow */
-  left: 25%;                 /* move to middle */
+  left: 25%;   
+  color: var(--light-black);              /* move to middle */
 //   transform: translateX(-50%); /* center horizontally */
 //   text-align: left;
 }

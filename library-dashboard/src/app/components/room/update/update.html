@@ -1,0 +1,104 @@
+<div class="form-wrapper">
+    <div class="form-panel">
+        <div class="panel-header">
+            <div>
+                <h2>Update Room</h2>
+                <p>Room ID: {{ activeRoom.id }}</p>
+            </div>
+        </div>
+
+        <div class="panel-content">
+            <form [formGroup]="updateForm" class="update-form" (ngSubmit)="onSubmit()">
+                <div class="form-grid">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Status</mat-label>
+                        <input matInput formControlName="status" [matAutocomplete]="statusAuto" class="uppercase-input">
+                        <mat-autocomplete #statusAuto="matAutocomplete">
+                            @for(status of statuses; track $index){
+                            <mat-option [value]="status">{{ status }}</mat-option>
+                            }
+                        </mat-autocomplete>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>House No.</mat-label>
+                        <input matInput formControlName="houseNo" class="uppercase-input">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Floor</mat-label>
+                        <input matInput formControlName="floor" [matAutocomplete]="floorAuto" class="uppercase-input">
+                        <mat-autocomplete #floorAuto="matAutocomplete">
+                            @for(floor of floors; track $index){
+                            <mat-option [value]="floor">{{ floor }}</mat-option>
+                            }
+                        </mat-autocomplete>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Location</mat-label>
+                        <input matInput formControlName="location">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Description</mat-label>
+                        <input matInput formControlName="description">
+                    </mat-form-field>
+                </div>
+
+                <div class="form-actions">
+                    <button mat-raised-button color="primary" type="submit"
+                        [disabled]="updateForm.invalid">Update</button>
+                </div>
+            </form>
+
+            <mat-divider></mat-divider>
+
+            <section class="sub-forms">
+                <h3>Add user to room</h3>
+                <form [formGroup]="addUserForm" class="sub-form" (ngSubmit)="onAddUser()">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Username</mat-label>
+                        <input matInput formControlName="username" placeholder="test_34d42428" />
+                    </mat-form-field>
+                    <button mat-raised-button color="primary" type="submit" [disabled]="addUserForm.invalid">Add
+                        User</button>
+                </form>
+
+                <h3>Add seats to room</h3>
+                <form [formGroup]="addSeatForm" class="sub-form" (ngSubmit)="onAddSeats()">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Seat count</mat-label>
+                        <input matInput type="number" formControlName="seatCount" min="1" />
+                    </mat-form-field>
+                    <button mat-raised-button color="primary" type="submit" [disabled]="addSeatForm.invalid">Add
+                        Seats</button>
+                </form>
+
+                @if(availableSeats.length > 0){
+                <h3>Disable seat</h3>
+                <form [formGroup]="disableSeatForm" class="sub-form" (ngSubmit)="onDisableSeat()">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Seat ID</mat-label>
+
+                        <mat-select *ngIf="availableSeats.length > 0" formControlName="seatId">
+                            @for(seatId of availableSeats; track seatId){
+                            <mat-option [value]="seatId">{{ seatId }}</mat-option>
+                            }
+                        </mat-select>
+                        <input matInput *ngIf="availableSeats.length === 0" type="number" formControlName="seatId"
+                            min="1" />
+                        <mat-hint *ngIf="availableSeats.length > 0">Select a seat from the room's available
+                            seats.</mat-hint>
+                    </mat-form-field>
+                    <button mat-raised-button color="warn" type="submit" [disabled]="disableSeatForm.invalid">Disable
+                        Seat</button>
+                </form>
+                }
+            </section>
+
+            <div class="metadata">
+                <h4>Created at: {{ activeRoom.createdAt }}</h4>
+                <h4>Last updated: {{ activeRoom.updatedAt }}</h4>
+            </div>
+        </div>
