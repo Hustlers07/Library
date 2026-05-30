@@ -10,8 +10,8 @@ metadata:
   namespace: library-dev
 type: Opaque
 stringData:
-  RUSTFS_ACCESS_KEY: "${RUSTFS_ACCESS_KEY}"
-  RUSTFS_SECRET_KEY: "${RUSTFS_SECRET_KEY}"
+  RUSTFS_ACCESS_KEY: "test"
+  RUSTFS_SECRET_KEY: "test"
 ---
 apiVersion: v1
 kind: PersistentVolume
