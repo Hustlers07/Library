@@ -80,8 +80,13 @@ metadata:
   name: rustfs-ingress
   namespace: library-dev
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
 spec:
+  tls:
+    - hosts:
+        - cotton-overripe-skyrocket.ngrok-free.dev
+      secretName: rustfs-tls
   rules:
     - host: cotton-overripe-skyrocket.ngrok-free.dev
       http:
