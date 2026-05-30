@@ -2,7 +2,7 @@ name: Build and Publish Numeric Versioned Docker Images
 
 on:
   push:
-    branches: [ develop ]
+    branches: [develop]
 
 jobs:
   filter-changed:
@@ -61,6 +61,7 @@ jobs:
           tags: |
             hellisback/library-user-management:v${{ github.run_number }}
             hellisback/library-user-management:latest
+
       - name: Print image name
         run: |
           echo "Pushed: hellisback/library-user-management:v${{ github.run_number }}"
@@ -103,6 +104,7 @@ jobs:
           tags: |
             hellisback/library-dashboard:v${{ github.run_number }}
             hellisback/library-dashboard:latest
+
       - name: Print image name
         run: |
           echo "Pushed: hellisback/library-dashboard:v${{ github.run_number }}"
