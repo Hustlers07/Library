@@ -10,6 +10,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { UserService } from '../../services/user-service';
 import { User } from '../../models/user/user-module';
 import { progressLoading } from '../../constants/api.constants';
+import { AuthService } from '../../services/auth-service';
 
 @Component({
   selector: 'app-user',
@@ -19,6 +20,7 @@ import { progressLoading } from '../../constants/api.constants';
   styleUrls: ['./user.scss'],
 })
 export class UserComponent implements OnInit {
+
   selectedAction = 'view';
   actionOptions = [
     { key: 'View', value: 'view' },
@@ -40,7 +42,15 @@ export class UserComponent implements OnInit {
   updateForm = null as any;
   passwordForm = null as any;
 
-  constructor(private fb: FormBuilder, private userService: UserService) {
+  currentUsername: string = '';
+
+  constructor(private fb: FormBuilder, private userService: UserService, private authService: AuthService) {
+
+    this.authService.getCachedProfile().subscribe({
+      next: user => this.currentUsername = user.username,
+      error: () => this.currentUsername = this.authService.getCurrentUsername() // fallback to JWT
+    });
+
     this.registerForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(8)]],

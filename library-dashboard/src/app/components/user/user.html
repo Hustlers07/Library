@@ -36,7 +36,10 @@
             <td>{{ user.lastLogin | date:'short' }}</td>
             <td class="actions-cell">
               <button mat-stroked-button color="primary" type="button" (click)="selectUserForUpdate(user)">Edit</button>
-              <button mat-stroked-button color="warn" type="button" (click)="toggleActive(user)">{{ user.isActive ? 'Deactivate' : 'Activate' }}</button>
+
+              @if(user.username !== currentUsername){
+                <button mat-stroked-button color="warn" type="button" (click)="toggleActive(user)">{{ user.isActive ? 'Deactivate' : 'Activate' }}</button>
+              }
             </td>
           </tr>
         </tbody>
