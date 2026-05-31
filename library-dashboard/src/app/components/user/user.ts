@@ -198,7 +198,7 @@ export class UserComponent implements OnInit {
   toggleActive(user: User) {
     this.isUpdateLoading.set(true);
     this.actionMessage.set(null);
-    this.userService.setUserActive(user.id, !user.isActive).pipe(finalize(() => this.isUpdateLoading.set(false))).subscribe({
+    this.userService.setUserActive(user.username, !user.isActive).pipe(finalize(() => this.isUpdateLoading.set(false))).subscribe({
       next: updated => {
         this.actionMessage.set(updated.isActive ? 'Member activated.' : 'Member deactivated.');
         this.users.set(this.users().map(item => item.id === updated.id ? updated : item));

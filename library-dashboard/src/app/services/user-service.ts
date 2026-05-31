@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { User } from '../models/user/user-module';
 import { API_ENDPOINTS } from '../constants/api.constants';
@@ -62,8 +62,13 @@ export class UserService {
     );
   }
 
-  setUserActive(id: number, isActive: boolean): Observable<User> {
-    return this.http.patch(API_ENDPOINTS.USERS() + '/' + id, { isActive }).pipe(
+  setUserActive(username: string, isActive: boolean): Observable<User> {
+
+    const params = new HttpParams()
+    .set('targetUsername', username)
+    .set('active', isActive.toString());
+    
+    return this.http.patch(API_ENDPOINTS.AUTH() + '/status', null, {params}).pipe(
       map(profile => new User(profile)),
       catchError(error => {
         console.error('Error updating user status:', error);
