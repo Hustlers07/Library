@@ -9,6 +9,7 @@ public class ApiRuleDefiner {
 
 
     private final List<SecurityRule> rules = List.of(
+         new SecurityRule("/api/auth/status", "hasRole(ADMIN)"),
         new SecurityRule("/api/auth/**", "permitAll"),
         new SecurityRule("/api/public/**", "permitAll"),
         new SecurityRule("/api/booking/**", "hasAnyRole(ADMIN,MEMBER,LIBRARIAN)"),
