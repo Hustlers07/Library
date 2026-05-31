@@ -1,5 +1,6 @@
 package com.library.user_management.service;
 
+import com.library.user_management.dto.UpdateUserRequest;
 import com.library.user_management.dto.UserResponse;
 import com.library.user_management.entity.Role;
 import com.library.user_management.entity.User;
@@ -148,5 +149,18 @@ public class UserDetailsServiceImpl implements UserDetailsService, UserProfileDe
                 .updatedAt(user.getUpdatedAt())
                 .lastLogin(user.getLastLogin())
                 .build();
+    }
+
+    public UserResponse updateUser(String userName, UpdateUserRequest request) {
+        User user = userRepository.findByUsername(userName)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + userName));
+
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setPhoneNumber(request.getPhoneNumber());
+        user.setRole(request.getRole());
+
+        User updatedUser = userRepository.save(user);
+        return mapToUserResponse(updatedUser);
     }
 }

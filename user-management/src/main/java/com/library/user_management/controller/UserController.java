@@ -111,14 +111,13 @@ public class UserController {
     @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'LIBRARIAN')")
     public ResponseEntity<?> changePassword(
-            @RequestBody Map<String, String> request,
+            @RequestBody ChangePasswordRequest request,
             Authentication authentication) {
-        log.info("Password change request for user: {}", authentication.getName());
         try {
-            
+            log.info("Changing password for user: {}", request.getUsername());
             authenticationService.changePassword(
-                    request.get("username"),
-                    request.get("newPassword")
+                    request.getUsername(),
+                    request.getNewPassword()
             );
             return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
         } catch (IllegalArgumentException ex) {
@@ -133,11 +132,17 @@ public class UserController {
     @PostMapping("/auth/deactivate")
     @Operation(summary = "Deactivate account", description = "Deactivate user account")
     @SecurityRequirement(name = "Bearer Authentication")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> deactivateAccount(Authentication authentication) {
-        log.info("Account deactivation request for user: {}", authentication.getName());
+    @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
+    public ResponseEntity<?> deactivateAccount(Authentication authentication, @RequestParam(required = true) String targetUsername) {
+
+        log.info("Request for account deactivation for user: {}", targetUsername);
         try {
-            authenticationService.deactivateAccount(authentication.getName());
+
+            if(targetUsername == null || targetUsername.isEmpty()) {
+                throw new IllegalArgumentException("Target username must be provided for account deactivation");
+            }
+
+            authenticationService.deactivateAccount(targetUsername);
             return ResponseEntity.ok(Map.of("message", "Account deactivated successfully"));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
@@ -183,6 +188,30 @@ public class UserController {
     }
 
     // ==================== USER MANAGEMENT ENDPOINTS ====================
+
+    /** 
+     * Update user details
+     * PUT /api/users/{userId}  
+     * Admin can update any user, Librarian can update only their own profile
+    */
+    @PutMapping("/users/{userName}")
+    @Operation(summary = "Update user details", description = "Update user information (Admin can update any user, Librarian can update only their own profile)")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or (hasRole('LIBRARIAN') and #userName == authentication.name))")
+    public ResponseEntity<?> updateUser(
+            @PathVariable String userName,
+            @RequestBody UpdateUserRequest request) {
+        log.info("Update request for user: {}", userName);
+        try {
+            UserResponse updatedUser = userDetailsService.updateUser(userName, request);
+            return ResponseEntity.ok(updatedUser);
+        } catch (IllegalArgumentException ex) { 
+            return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error updating user"));
+        }
+    }
 
     /**
      * Get all active users
