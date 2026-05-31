@@ -127,23 +127,24 @@ public class UserController {
 
     /**
      * Deactivate account
-     * POST /api/auth/deactivate
+     * POST /api/auth/status
      */
-    @PostMapping("/auth/deactivate")
-    @Operation(summary = "Deactivate account", description = "Deactivate user account")
+    @PostMapping("/auth/status")
+    @Operation(summary = "Update user status", description = "Update user account status")
     @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
-    public ResponseEntity<?> deactivateAccount(Authentication authentication, @RequestParam(required = true) String targetUsername) {
+    public ResponseEntity<?> deactivateAccount(Authentication authentication, @RequestParam(required = true) String targetUsername, @RequestParam(required = false) Boolean active) {
 
-        log.info("Request for account deactivation for user: {}", targetUsername);
+        log.info("Request for account status update for user: {}", targetUsername);
         try {
 
-            if(targetUsername == null || targetUsername.isEmpty()) {
-                throw new IllegalArgumentException("Target username must be provided for account deactivation");
+            if(targetUsername == null || targetUsername.isEmpty() || active == null) {
+                throw new IllegalArgumentException("Target username and active status must be provided for account status update");
             }
-
-            authenticationService.deactivateAccount(targetUsername);
-            return ResponseEntity.ok(Map.of("message", "Account deactivated successfully"));
+   
+            authenticationService.updateUserStatus(targetUsername, active);
+            
+            return ResponseEntity.ok(Map.of("message", "Account status updated successfully"));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
         }
