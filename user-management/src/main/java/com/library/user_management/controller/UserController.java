@@ -125,31 +125,7 @@ public class UserController {
         }
     }
 
-    /**
-     * Deactivate account
-     * PATCH /api/auth/status
-     */
-    @PatchMapping("/auth/status")
-    @Operation(summary = "Update user status", description = "Update user account status")
-    @SecurityRequirement(name = "Bearer Authentication")
-    @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
-    public ResponseEntity<?> deactivateAccount(Authentication authentication, @RequestParam(required = true) String targetUsername, @RequestParam(required = false) Boolean active) {
-
-        log.info("Request for account status update for user: {}", targetUsername);
-        try {
-
-            if(targetUsername == null || targetUsername.isEmpty() || active == null) {
-                throw new IllegalArgumentException("Target username and active status must be provided for account status update");
-            }
    
-            authenticationService.updateUserStatus(targetUsername, active);
-            
-            return ResponseEntity.ok(Map.of("message", "Account status updated successfully"));
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
-        }
-    }
-
     // ==================== USER PROFILE ENDPOINTS ====================
 
     /**
@@ -169,6 +145,32 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
     }
+
+     /**
+     * Deactivate user
+     * PATCH /api/users/role
+     */
+    @PatchMapping("/api/users/role")
+    @Operation(summary = "Update user role", description = "Update user user role")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
+    public ResponseEntity<?> updateUserRole(@RequestParam(required = true) String targetUsername, @RequestParam(required = false) Boolean active) {
+
+        log.info("Request for user role update for user: {}", targetUsername);
+        try {
+
+            if(targetUsername == null || targetUsername.isEmpty() || active == null) {
+                throw new IllegalArgumentException("Target username and active status must be provided for user role update");
+            }
+   
+            userDetailsService.updateUserRole(targetUsername, active);
+            
+            return ResponseEntity.ok(Map.of("message", "user role updated successfully"));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+        }
+    }
+
 
     /**
      * Get user by ID

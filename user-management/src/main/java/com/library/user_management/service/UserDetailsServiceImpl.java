@@ -163,4 +163,17 @@ public class UserDetailsServiceImpl implements UserDetailsService, UserProfileDe
         User updatedUser = userRepository.save(user);
         return mapToUserResponse(updatedUser);
     }
+
+      public void updateUserRole(String targetUsername, Boolean active) {
+        
+        if (active == null) {
+            throw new IllegalArgumentException("Active status must be provided");
+        }
+        User user = userRepository.findByUsername(targetUsername)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        user.setIsActive(active);
+        userRepository.save(user);
+        log.info("Updated account status for user: {} to active: {}", targetUsername, active);
+    }
 }
