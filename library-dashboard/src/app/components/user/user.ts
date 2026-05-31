@@ -205,6 +205,7 @@ export class UserComponent implements OnInit {
         if (this.selectedUser()?.id === updated.id) {
           this.selectedUser.set(updated);
           this.updateForm.patchValue({ isActive: updated.isActive });
+          this.fetchUsers();
         }
       },
       error: err => {
