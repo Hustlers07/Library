@@ -19,33 +19,43 @@ import java.util.Arrays;
 @Configuration
 public class OpenAPIConfig {
 
-    @Value("${USER_SERVICE_SWAGGER_LOCAL_SERVER_URL:http://localhost:8080}")
-    private String localServerUrl;
+        @Value("${USER_SERVICE_SWAGGER_LOCAL_SERVER_URL:http://localhost:8080}")
+        private String localServerUrl;
 
-    @Bean
-    public OpenAPI customOpenAPI() {
-        return new OpenAPI()
-                .info(new Info()
-                        .title("User Management API")
-                        .version("1.0.0")
-                        .description("REST API for user management and authentication with JWT Bearer token support")
-                        .contact(new Contact()
-                                .name("Library Team")
-                                .email("support@library.com")
-                        )
-                )
-                .servers(Arrays.asList(
-                        new Server().url(localServerUrl+"/user-management/").description("Local Development Server"),
-                        new Server().url(localServerUrl+"/user-management").description("Current Server")
-                ))
-                // .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
-                .components(new io.swagger.v3.oas.models.Components()
-                        .addSecuritySchemes("Bearer Authentication", new SecurityScheme()
-                                .type(SecurityScheme.Type.HTTP)
-                                .scheme("bearer")
-                                .bearerFormat("JWT")
-                                .description("Enter your JWT token in the format: Bearer <your-jwt-token>")
-                        )
-                );
-    }
+        @Bean
+        public OpenAPI customOpenAPI() {
+                return new OpenAPI()
+                                .info(new Info()
+                                                .title("User Management API")
+                                                .version("1.0.0")
+                                                .description("REST API for user management and authentication with JWT Bearer token support")
+                                                .contact(new Contact()
+                                                                .name("Library Team")
+                                                                .email("support@library.com")))
+                                .servers(Arrays.asList(
+                                                new Server().url(localServerUrl + "/user-management/")
+                                                                .description("Local Development Server"),
+                                                new Server().url(localServerUrl + "/user-management")
+                                                                .description("Current Server")))
+                                // .addSecurityItem(new SecurityRequirement().addList("Bearer Authentication"))
+                                .components(new io.swagger.v3.oas.models.Components()
+                                                .addSecuritySchemes("Bearer Authentication", new SecurityScheme()
+                                                                .type(SecurityScheme.Type.HTTP)
+                                                                .scheme("bearer")
+                                                                .bearerFormat("JWT")
+                                                                .description("Enter your JWT token in the format: Bearer <your-jwt-token>")));
+        }
+
+        @Bean
+        public OperationCustomizer globalHeaderCustomizer() {
+                return (operation, handlerMethod) -> {
+                        operation.addParametersItem(
+                                        new HeaderParameter()
+                                                        .name("ngrok-skip-browser-warning")
+                                                        .description("Skip ngrok browser warning")
+                                                        .required(false)
+                                                        .schema(new StringSchema()._default("true")));
+                        return operation;
+                };
+        }
 }
