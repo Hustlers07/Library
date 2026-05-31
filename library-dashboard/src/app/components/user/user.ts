@@ -9,6 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { UserService } from '../../services/user-service';
 import { User } from '../../models/user/user-module';
+import { progressLoading } from '../../constants/api.constants';
 
 @Component({
   selector: 'app-user',
@@ -196,6 +197,7 @@ export class UserComponent implements OnInit {
   }
 
   toggleActive(user: User) {
+    progressLoading.set(true);
     this.isUpdateLoading.set(true);
     this.actionMessage.set(null);
     this.userService.setUserActive(user.username, !user.isActive).pipe(finalize(() => this.isUpdateLoading.set(false))).subscribe({
@@ -207,10 +209,13 @@ export class UserComponent implements OnInit {
           this.updateForm.patchValue({ isActive: updated.isActive });
           this.fetchUsers();
         }
+
+        progressLoading.set(false);
       },
       error: err => {
         console.error('Toggle active failed', err);
         this.actionMessage.set(err?.message || 'Failed to update member status.');
+        progressLoading.set(false);
       }
     });
   }
