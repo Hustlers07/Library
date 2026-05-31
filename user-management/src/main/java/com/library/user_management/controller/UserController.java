@@ -197,7 +197,7 @@ public class UserController {
     @PutMapping("/users/{userName}")
     @Operation(summary = "Update user details", description = "Update user information (Admin can update any user, Librarian can update only their own profile)")
     @SecurityRequirement(name = "Bearer Authentication")
-    @PreAuthorize("isAuthenticated() and (hasRole('ADMIN') or (hasRole('LIBRARIAN') and #userName == authentication.name))")
+    @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
     public ResponseEntity<?> updateUser(
             @PathVariable String userName,
             @RequestBody UpdateUserRequest request) {
