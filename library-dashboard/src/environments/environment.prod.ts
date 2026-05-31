@@ -3,6 +3,6 @@ export const environment = {
   devEmail: '',
   devPassword: '',
   apiUrl: 'https://cotton-overripe-skyrocket.ngrok-free.dev',
-  basePath: '/user-management'
+  basePath: 'user-management'
 
 };
