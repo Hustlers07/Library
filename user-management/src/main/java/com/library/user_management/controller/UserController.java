@@ -127,9 +127,9 @@ public class UserController {
 
     /**
      * Deactivate account
-     * POST /api/auth/status
+     * PUT /api/auth/status
      */
-    @PostMapping("/auth/status")
+    @PutMapping("/auth/status")
     @Operation(summary = "Update user status", description = "Update user account status")
     @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
