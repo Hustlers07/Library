@@ -65,14 +65,13 @@ export class UserService {
   setUserActive(username: string, isActive: boolean): Observable<User> {
 
     const params = new HttpParams()
-    .set('targetUsername', username)
     .set('active', isActive.toString());
     
-    return this.http.patch(API_ENDPOINTS.AUTH() + '/status', null, {params}).pipe(
+    return this.http.patch(API_ENDPOINTS.USERS()+ '/' + username + '/active', null, {params}).pipe(
       map(profile => new User(profile)),
       catchError(error => {
-        console.error('Error updating user status:', error);
-        return throwError(() => new Error('Failed to update user status'));
+        console.error('Error updating user role:', error);
+        return throwError(() => new Error('Failed to update user role'));
       })
     );
   }

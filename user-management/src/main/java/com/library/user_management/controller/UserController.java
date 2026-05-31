@@ -147,25 +147,25 @@ public class UserController {
     }
 
      /**
-     * Deactivate user
-     * PATCH /api/users/role
+     * Set user status
+     * PATCH /users/{userName}/active
      */
-    @PatchMapping("/api/users/role")
-    @Operation(summary = "Update user role", description = "Update user user role")
+    @PatchMapping("/users/{userName}/active")
+    @Operation(summary = "Update user role", description = "Update user user active")
     @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
-    public ResponseEntity<?> updateUserRole(@RequestParam(required = true) String targetUsername, @RequestParam(required = false) Boolean active) {
+    public ResponseEntity<?> updateUserRole(@PathVariable String userName, @RequestParam(required = false) Boolean active) {
 
-        log.info("Request for user role update for user: {}", targetUsername);
+        log.info("Request for user active update for user: {}", userName);
         try {
 
-            if(targetUsername == null || targetUsername.isEmpty() || active == null) {
-                throw new IllegalArgumentException("Target username and active status must be provided for user role update");
+            if(userName == null || userName.isEmpty() || active == null) {
+                throw new IllegalArgumentException("Target username and active status must be provided for user active update");
             }
    
-            userDetailsService.updateUserRole(targetUsername, active);
+            userDetailsService.updateUserRole(userName, active);
             
-            return ResponseEntity.ok(Map.of("message", "user role updated successfully"));
+            return ResponseEntity.ok(Map.of("message", "user active updated successfully"));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
         }
