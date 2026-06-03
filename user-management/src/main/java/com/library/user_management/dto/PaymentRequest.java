@@ -15,6 +15,8 @@ public class PaymentRequest {
 
     private Long bookingId;
 
+    private String userName;
+
     private String paymentMethod;
 
     private String paymentGateway;
