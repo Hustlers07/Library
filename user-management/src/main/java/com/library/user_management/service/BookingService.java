@@ -30,6 +30,7 @@ import com.library.user_management.repository.RoomRepository;
 import com.library.user_management.repository.SeatRepository;
 import com.library.user_management.repository.UserRepository;
 
+import io.micrometer.common.util.StringUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,12 +53,12 @@ public class BookingService {
      * Create a new booking
      * Supports booking complete floor or specific seats
      */
-    public BookingResponse createBooking(String username, BookingRequest bookingRequest) {
+    public BookingResponse createBooking(BookingRequest bookingRequest) {
         log.info("Creating booking for user: {} in room: {} with type: {}",
-                username, bookingRequest.getRoomId(), bookingRequest.getBookingType());
+                bookingRequest.getUserName(), bookingRequest.getRoomId(), bookingRequest.getBookingType());
 
         // Validate user and room
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsername(bookingRequest.getUserName())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         Room room = roomRepository.findById(bookingRequest.getRoomId())
@@ -65,9 +66,10 @@ public class BookingService {
 
         Plan plan = null;
 
-        if (bookingRequest.getPlanId() != 0)
-            plan = planRepository.findById(bookingRequest.getPlanId()).orElseThrow(
+        if (!StringUtils.isEmpty(bookingRequest.getPlanName())) {
+            plan = planRepository.findByPlanName(bookingRequest.getPlanName().trim()).orElseThrow(
                     () -> new IllegalArgumentException("Plan not found"));
+        }
 
         // Validate booking type and seats
         validateBookingType(bookingRequest, plan);
@@ -126,8 +128,8 @@ public class BookingService {
 
         // Apply coupon if provided
         Coupon coupon = null;
-        if (bookingRequest.getCouponId() != null) {
-            coupon = couponRepository.findById(bookingRequest.getCouponId())
+        if (!StringUtils.isEmpty(bookingRequest.getCouponCode())) {
+            coupon = couponRepository.findByCouponCode(bookingRequest.getCouponCode())
                     .orElseThrow(() -> new IllegalArgumentException("Coupon not found"));
 
             if (!isCouponValid(coupon)) {

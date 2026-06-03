@@ -111,14 +111,13 @@ public class UserController {
     @SecurityRequirement(name = "Bearer Authentication")
     @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'LIBRARIAN')")
     public ResponseEntity<?> changePassword(
-            @RequestBody Map<String, String> request,
+            @RequestBody ChangePasswordRequest request,
             Authentication authentication) {
-        log.info("Password change request for user: {}", authentication.getName());
         try {
-            
+            log.info("Changing password for user: {}", request.getUsername());
             authenticationService.changePassword(
-                    request.get("username"),
-                    request.get("newPassword")
+                    request.getUsername(),
+                    request.getNewPassword()
             );
             return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
         } catch (IllegalArgumentException ex) {
@@ -126,24 +125,7 @@ public class UserController {
         }
     }
 
-    /**
-     * Deactivate account
-     * POST /api/auth/deactivate
-     */
-    @PostMapping("/auth/deactivate")
-    @Operation(summary = "Deactivate account", description = "Deactivate user account")
-    @SecurityRequirement(name = "Bearer Authentication")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> deactivateAccount(Authentication authentication) {
-        log.info("Account deactivation request for user: {}", authentication.getName());
-        try {
-            authenticationService.deactivateAccount(authentication.getName());
-            return ResponseEntity.ok(Map.of("message", "Account deactivated successfully"));
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
-        }
-    }
-
+   
     // ==================== USER PROFILE ENDPOINTS ====================
 
     /**
@@ -164,6 +146,32 @@ public class UserController {
         }
     }
 
+     /**
+     * Set user status
+     * PATCH /users/{userName}/active
+     */
+    @PatchMapping("/users/{userName}/active")
+    @Operation(summary = "Update user role", description = "Update user user active")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
+    public ResponseEntity<?> updateUserRole(@PathVariable String userName, @RequestParam(required = false) Boolean active) {
+
+        log.info("Request for user active update for user: {}", userName);
+        try {
+
+            if(userName == null || userName.isEmpty() || active == null) {
+                throw new IllegalArgumentException("Target username and active status must be provided for user active update");
+            }
+   
+            userDetailsService.updateUserRole(userName, active);
+            
+            return ResponseEntity.ok(Map.of("message", "user active updated successfully"));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+        }
+    }
+
+
     /**
      * Get user by ID
      * GET /api/users/{userId}
@@ -183,6 +191,30 @@ public class UserController {
     }
 
     // ==================== USER MANAGEMENT ENDPOINTS ====================
+
+    /** 
+     * Update user details
+     * PUT /api/users/{userId}  
+     * Admin can update any user, Librarian can update only their own profile
+    */
+    @PutMapping("/users/{userName}")
+    @Operation(summary = "Update user details", description = "Update user information (Admin can update any user, Librarian can update only their own profile)")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
+    public ResponseEntity<?> updateUser(
+            @PathVariable String userName,
+            @RequestBody UpdateUserRequest request) {
+        log.info("Update request for user: {}", userName);
+        try {
+            UserResponse updatedUser = userDetailsService.updateUser(userName, request);
+            return ResponseEntity.ok(updatedUser);
+        } catch (IllegalArgumentException ex) { 
+            return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error updating user"));
+        }
+    }
 
     /**
      * Get all active users

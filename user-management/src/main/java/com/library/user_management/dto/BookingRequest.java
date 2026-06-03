@@ -19,6 +19,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BookingRequest {
 
+    private String userName;
+
     private Long roomId;
 
     private BookingType bookingType;
@@ -33,9 +35,9 @@ public class BookingRequest {
 
     private String specialNotes;
 
-    private Long couponId;
+    private String couponCode;
 
-    private Long planId;
+    private String planName;
 
     /**
      * List of seat IDs to book (required if bookingType is SEAT or FLOOR_AND_SEAT)
