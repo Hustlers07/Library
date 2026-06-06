@@ -88,5 +88,5 @@ spec:
           subPath: movies
           readOnly: true
       securityContext:
-        runAsUser: 1001
-        runAsGroup: 100
+        runAsUser: 0
+        runAsGroup: 0
