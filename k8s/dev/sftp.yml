@@ -18,37 +18,6 @@ stringData:
   sftp-directory: "/home/groot/Documents/rustfs/movies"
 
 ---
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: sftp-movies-pv-librarydev
-spec:
-  capacity:
-    storage: 50Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  hostPath:
-    path: /home/groot/Documents/rustfs/movies
-    type: DirectoryOrCreate
-  volumeMode: Filesystem
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: sftp-movies-pvc-librarydev
-  namespace: library-dev
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 50Gi
-  volumeName: sftp-movies-pv-librarydev
-  storageClassName: ""
-
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -69,9 +38,9 @@ spec:
       securityContext:
         fsGroup: 100
       volumes:
-        - name: sftp-data
-          persistentVolumeClaim:
-            claimName: sftp-movies-pvc-librarydev
+          - name: sftp-data
+            persistentVolumeClaim:
+              claimName: rustfs-shared-pvc-librarydev
       initContainers:
         - name: init-sftp-movies
           image: busybox:1.36
