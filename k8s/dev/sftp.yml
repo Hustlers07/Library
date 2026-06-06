@@ -1,4 +1,10 @@
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: library-dev
+
+---
+apiVersion: v1
 kind: Secret
 metadata:
   name: sftp-credentials
@@ -20,6 +26,8 @@ metadata:
   labels:
     app: sftp
 spec:
+  securityContext:
+    fsGroup: 100
   volumes:
     - name: sftp-data
       persistentVolumeClaim:
