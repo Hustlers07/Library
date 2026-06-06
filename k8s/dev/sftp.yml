@@ -90,4 +90,3 @@ spec:
       securityContext:
         runAsUser: 1001
         runAsGroup: 100
-        fsGroup: 100
