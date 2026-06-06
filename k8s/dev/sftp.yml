@@ -124,7 +124,7 @@ spec:
               exec /entrypoint "$SFTP_USERNAME:$SFTP_PASSWORD:$SFTP_UID:$SFTP_GID:$SFTP_DIRECTORY"
           volumeMounts:
             - name: sftp-data
-              mountPath: /home/groot/Documents/rustfs/movies
+              mountPath: /home/groot/Documents/rustfs
               subPath: movies
               readOnly: true
           securityContext:
