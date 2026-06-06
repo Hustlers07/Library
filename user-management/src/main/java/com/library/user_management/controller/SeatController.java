@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SeatController {
 
     private final SeatServiceImpl seatService;
+    
 
     @PostMapping("/add")
     @Operation(summary = "Add seat to vacant room", description = "Add seat to seat entity if a vacant room is available.")

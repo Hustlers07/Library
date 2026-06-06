@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sftp-credentials
+  namespace: library-dev
+type: Opaque
+stringData:
+  sftp-username: "${SFTP_USERNAME}"
+  sftp-password: "${SFTP_PASSWORD}"
+  sftp-uid: "${SFTP_UID:-1001}"
+  sftp-gid: "${SFTP_GID:-100}"
+  sftp-directory: "/home/groot/Documents/rustfs/movies"
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sftp
+  namespace: library-dev
+  labels:
+    app: sftp
+spec:
+  volumes:
+    - name: sftp-data
+      persistentVolumeClaim:
+        claimName: rustfs-shared-pvc-librarydev
+  initContainers:
+    - name: init-sftp-movies
+      image: busybox:1.36
+      command:
+        - sh
+        - -c
+        - |
+          mkdir -p /data/movies
+          chmod 755 /data/movies
+      volumeMounts:
+        - name: sftp-data
+          mountPath: /data
+  containers:
+    - name: sftp
+      image: atmoz/sftp:latest
+      imagePullPolicy: Always
+      ports:
+        - name: sftp
+          containerPort: 22
+      env:
+        - name: SFTP_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: sftp-credentials
+              key: sftp-username
+        - name: SFTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: sftp-credentials
+              key: sftp-password
+        - name: SFTP_UID
+          valueFrom:
+            secretKeyRef:
+              name: sftp-credentials
+              key: sftp-uid
+        - name: SFTP_GID
+          valueFrom:
+            secretKeyRef:
+              name: sftp-credentials
+              key: sftp-gid
+        - name: SFTP_DIRECTORY
+          valueFrom:
+            secretKeyRef:
+              name: sftp-credentials
+              key: sftp-directory
+      command:
+        - /bin/sh
+        - -c
+        - |
+          exec /entrypoint "$SFTP_USERNAME:$SFTP_PASSWORD:$SFTP_UID:$SFTP_GID:$SFTP_DIRECTORY"
+      volumeMounts:
+        - name: sftp-data
+          mountPath: /home/groot/Documents/rustfs/movies
+          subPath: movies
+          readOnly: true
+      securityContext:
+        runAsUser: 1001
+        runAsGroup: 100
+        fsGroup: 100

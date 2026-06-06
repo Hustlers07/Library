@@ -21,7 +21,7 @@ export type Card = {
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss',
+  styleUrls: ['./dashboard.component.scss'],
   imports: [
     AsyncPipe,
     MatGridListModule,

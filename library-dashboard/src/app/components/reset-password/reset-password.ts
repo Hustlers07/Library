@@ -24,7 +24,7 @@ import { environment } from '../../../environments/environment';
     MatChipsModule
   ],
   templateUrl: './reset-password.html',
-  styleUrl: './reset-password.scss',
+  styleUrls: ['./reset-password.scss'],
 })
 export class ResetPassword {
 

@@ -4,6 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-payment',
   imports: [],
   templateUrl: './payment.html',
-  styleUrl: './payment.scss',
+  styleUrls: ['./payment.scss'],
 })
 export class Payment {}
