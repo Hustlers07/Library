@@ -99,3 +99,40 @@ spec:
           securityContext:
             runAsUser: 0
             runAsGroup: 0
+
+---
+# Service: internal ClusterIP for SFTP
+apiVersion: v1
+kind: Service
+metadata:
+  name: sftp-service
+  namespace: library-dev
+  labels:
+    app: sftp
+spec:
+  selector:
+    app: sftp
+  ports:
+    - name: sftp
+      port: 22
+      targetPort: 22
+  type: ClusterIP
+
+---
+# Service: optional NodePort for external access (choose a nodePort if required)
+apiVersion: v1
+kind: Service
+metadata:
+  name: sftp-nodeport
+  namespace: library-dev
+  labels:
+    app: sftp
+spec:
+  selector:
+    app: sftp
+  ports:
+    - name: sftp
+      port: 22
+      targetPort: 22
+      nodePort: 30222
+  type: NodePort
