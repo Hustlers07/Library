@@ -54,48 +54,48 @@ spec:
             - name: sftp-data
               mountPath: /data
       containers:
-    - name: sftp
-      image: atmoz/sftp:latest
-      imagePullPolicy: Always
-      ports:
         - name: sftp
-          containerPort: 22
-      env:
-        - name: SFTP_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: sftp-credentials
-              key: sftp-username
-        - name: SFTP_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: sftp-credentials
-              key: sftp-password
-        - name: SFTP_UID
-          valueFrom:
-            secretKeyRef:
-              name: sftp-credentials
-              key: sftp-uid
-        - name: SFTP_GID
-          valueFrom:
-            secretKeyRef:
-              name: sftp-credentials
-              key: sftp-gid
-        - name: SFTP_DIRECTORY
-          valueFrom:
-            secretKeyRef:
-              name: sftp-credentials
-              key: sftp-directory
-      command:
-        - /bin/sh
-        - -c
-        - |
-          exec /entrypoint "$SFTP_USERNAME:$SFTP_PASSWORD:$SFTP_UID:$SFTP_GID:$SFTP_DIRECTORY"
-      volumeMounts:
-        - name: sftp-data
-          mountPath: /home/groot/Documents/rustfs/movies
-          subPath: movies
-          readOnly: true
-      securityContext:
-        runAsUser: 0
-        runAsGroup: 0
+          image: atmoz/sftp:latest
+          imagePullPolicy: Always
+          ports:
+            - name: sftp
+              containerPort: 22
+          env:
+            - name: SFTP_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: sftp-credentials
+                  key: sftp-username
+            - name: SFTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sftp-credentials
+                  key: sftp-password
+            - name: SFTP_UID
+              valueFrom:
+                secretKeyRef:
+                  name: sftp-credentials
+                  key: sftp-uid
+            - name: SFTP_GID
+              valueFrom:
+                secretKeyRef:
+                  name: sftp-credentials
+                  key: sftp-gid
+            - name: SFTP_DIRECTORY
+              valueFrom:
+                secretKeyRef:
+                  name: sftp-credentials
+                  key: sftp-directory
+          command:
+            - /bin/sh
+            - -c
+            - |
+              exec /entrypoint "$SFTP_USERNAME:$SFTP_PASSWORD:$SFTP_UID:$SFTP_GID:$SFTP_DIRECTORY"
+          volumeMounts:
+            - name: sftp-data
+              mountPath: /home/groot/Documents/rustfs/movies
+              subPath: movies
+              readOnly: true
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
