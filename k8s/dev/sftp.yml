@@ -18,33 +18,42 @@ stringData:
   sftp-directory: "/home/groot/Documents/rustfs/movies"
 
 ---
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: sftp
   namespace: library-dev
   labels:
     app: sftp
 spec:
-  securityContext:
-    fsGroup: 100
-  volumes:
-    - name: sftp-data
-      persistentVolumeClaim:
-        claimName: rustfs-shared-pvc-librarydev
-  initContainers:
-    - name: init-sftp-movies
-      image: busybox:1.36
-      command:
-        - sh
-        - -c
-        - |
-          mkdir -p /data/movies
-          chmod 755 /data/movies
-      volumeMounts:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sftp
+  template:
+    metadata:
+      labels:
+        app: sftp
+    spec:
+      securityContext:
+        fsGroup: 100
+      volumes:
         - name: sftp-data
-          mountPath: /data
-  containers:
+          persistentVolumeClaim:
+            claimName: rustfs-shared-pvc-librarydev
+      initContainers:
+        - name: init-sftp-movies
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /data/movies
+              chmod 755 /data/movies
+          volumeMounts:
+            - name: sftp-data
+              mountPath: /data
+      containers:
     - name: sftp
       image: atmoz/sftp:latest
       imagePullPolicy: Always
