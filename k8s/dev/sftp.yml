@@ -2,21 +2,41 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: library-dev
-
 ---
+# PersistentVolume for SFTP data on host path
 apiVersion: v1
-kind: Secret
+kind: PersistentVolume
 metadata:
-  name: sftp-credentials
+  name: sftp-pv-movies
+  labels:
+    app: sftp
+spec:
+  storageClassName: ""          # must match PVC
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /home/groot/Documents/rustfs/movies
+    type: DirectoryOrCreate
+  persistentVolumeReclaimPolicy: Retain
+---
+# PersistentVolumeClaim for SFTP
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sftp-pvc-movies
   namespace: library-dev
-type: Opaque
-stringData:
-  sftp-username: "${SFTP_USERNAME}"
-  sftp-password: "${SFTP_PASSWORD}"
-  sftp-uid: "${SFTP_UID:-1001}"
-  sftp-gid: "${SFTP_GID:-100}"
-  sftp-directory: "/home/groot/Documents/rustfs/movies"
-
+spec:
+  storageClassName: ""          # binds to the manual PV above
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  selector:
+    matchLabels:
+      app: sftp
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -35,73 +55,79 @@ spec:
       labels:
         app: sftp
     spec:
+      # Allow the sftp process (runs as root inside atmoz/sftp) to own mounted files
       securityContext:
-        fsGroup: 100
+        fsGroup: ${SFTP_GID}
+
       volumes:
-          - name: sftp-data
-            persistentVolumeClaim:
-              claimName: rustfs-shared-pvc-librarydev
+        - name: sftp-data
+          persistentVolumeClaim:
+            claimName: sftp-pvc-movies
+        # Persistent SSH host keys — prevents known_hosts warnings on redeployment.
+        # Generate once with the deploy script; keys live on the host and survive pod restarts.
+        - name: sftp-host-keys
+          hostPath:
+            path: /home/groot/Documents/rustfs/sftp-host-keys
+            type: Directory
+
       initContainers:
         - name: init-sftp-movies
           image: busybox:1.36
+          # Ensure the host directory exists and is world-readable
           command:
             - sh
             - -c
             - |
-              mkdir -p /data/movies
-              chmod 755 /data/movies
+              mkdir -p /data
+              chmod 755 /data
           volumeMounts:
             - name: sftp-data
               mountPath: /data
+
       containers:
         - name: sftp
           image: atmoz/sftp:latest
           imagePullPolicy: Always
+
           ports:
             - name: sftp
               containerPort: 22
-          env:
-            - name: SFTP_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: sftp-credentials
-                  key: sftp-username
-            - name: SFTP_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: sftp-credentials
-                  key: sftp-password
-            - name: SFTP_UID
-              valueFrom:
-                secretKeyRef:
-                  name: sftp-credentials
-                  key: sftp-uid
-            - name: SFTP_GID
-              valueFrom:
-                secretKeyRef:
-                  name: sftp-credentials
-                  key: sftp-gid
-            - name: SFTP_DIRECTORY
-              valueFrom:
-                secretKeyRef:
-                  name: sftp-credentials
-                  key: sftp-directory
-          command:
-            - /bin/sh
-            - -c
-            - |
-              exec /entrypoint "$SFTP_USERNAME:$SFTP_PASSWORD:$SFTP_UID:$SFTP_GID:$SFTP_DIRECTORY"
-          volumeMounts:
-            - name: sftp-data
-              mountPath: /home/groot/Documents/rustfs
-              subPath: movies
-              readOnly: true
-          securityContext:
-            runAsUser: 0
-            runAsGroup: 0
 
+          # atmoz/sftp entrypoint format:
+          #   user:pass[:uid[:gid[:dir]]]
+          # The variables are substituted by envsubst before kubectl apply,
+          # so no Secret object is required.
+          args:
+            - "${SFTP_USERNAME}:${SFTP_PASSWORD}:${SFTP_UID}:${SFTP_GID}:movies"
+
+          volumeMounts:
+            # atmoz/sftp chroots to /home/<user>; the upload dir lives inside.
+            # Mount to the chroot root so the image sets up permissions correctly.
+            - name: sftp-data
+              mountPath: /home/${SFTP_USERNAME}/movies
+            # Persistent SSH host keys — one subPath mount per file
+            - name: sftp-host-keys
+              mountPath: /etc/ssh/ssh_host_ed25519_key
+              subPath: ssh_host_ed25519_key
+              readOnly: true
+            - name: sftp-host-keys
+              mountPath: /etc/ssh/ssh_host_ed25519_key.pub
+              subPath: ssh_host_ed25519_key.pub
+              readOnly: true
+            - name: sftp-host-keys
+              mountPath: /etc/ssh/ssh_host_rsa_key
+              subPath: ssh_host_rsa_key
+              readOnly: true
+            - name: sftp-host-keys
+              mountPath: /etc/ssh/ssh_host_rsa_key.pub
+              subPath: ssh_host_rsa_key.pub
+              readOnly: true
+
+          securityContext:
+            runAsUser: 0   # atmoz/sftp requires root to set up chroot + sshd
+            runAsGroup: 0
 ---
-# Service: internal ClusterIP for SFTP
+# ClusterIP — for in-cluster consumers (e.g. other pods)
 apiVersion: v1
 kind: Service
 metadata:
@@ -117,9 +143,8 @@ spec:
       port: 22
       targetPort: 22
   type: ClusterIP
-
 ---
-# Service: optional NodePort for external access (choose a nodePort if required)
+# NodePort — for external / host access
 apiVersion: v1
 kind: Service
 metadata:
