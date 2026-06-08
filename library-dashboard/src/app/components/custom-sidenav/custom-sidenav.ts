@@ -13,7 +13,7 @@ import { RolePipe } from "../../pipes/role-pipe";
   selector: 'app-custom-sidenav',
   imports: [MatNavList, MatIcon, MatCard, RouterLink, TitleCasePipe, RolePipe],
   templateUrl: './custom-sidenav.html',
-  styleUrl: './custom-sidenav.scss',
+  styleUrls: ['./custom-sidenav.scss'],
 })
 export class CustomSidenav {
 

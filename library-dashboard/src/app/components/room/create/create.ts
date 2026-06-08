@@ -21,7 +21,7 @@ import { HttpErrorResponse } from '@angular/common/http';
     MatButtonModule
   ],
   templateUrl: './create.html',
-  styleUrl: './create.scss',
+  styleUrls: ['./create.scss'],
 })
 export class Create {
 

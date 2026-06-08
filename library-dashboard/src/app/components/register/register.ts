@@ -6,7 +6,7 @@ import { ROUTES } from '../../constants/api.constants';
   selector: 'app-register',
   imports: [RegisterationForm],
   templateUrl: './register.html',
-  styleUrl: './register.scss',
+  styleUrls: ['./register.scss'],
 })
 export class Register {
  redirect = ROUTES.LOGIN;

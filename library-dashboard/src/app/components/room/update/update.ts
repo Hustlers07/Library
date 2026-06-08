@@ -27,7 +27,7 @@ import { CommonModule } from '@angular/common';
     CommonModule
   ],
   templateUrl: './update.html',
-  styleUrl: './update.scss',
+  styleUrls: ['./update.scss'],
 })
 export class Update {
   @Input() room: any | null = null;

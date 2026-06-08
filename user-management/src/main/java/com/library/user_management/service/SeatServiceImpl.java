@@ -87,4 +87,22 @@ public class SeatServiceImpl {
         return seatRepository.save(currentSeat);
     }
 
+    public Seat removeUser(String seatId, String userName){ 
+        Optional<Seat> seat = seatRepository.findBySeatId(seatId);
+        if(!seat.isPresent())
+            throw new IllegalArgumentException("Invalid seatId.");
+
+        Seat currentSeat = seat.get();
+        currentSeat.setUsers(null);
+        return seatRepository.save(currentSeat);
+    }
+
+    public List<Seat> getAllSeats() {
+        return seatRepository.findAll();
+    }
+
+    public Seat getSeatById(String seatId) {
+        return seatRepository.findBySeatId(seatId).orElseThrow(() -> new EntityNotFoundException("Seat not found"));
+    }
+
 }

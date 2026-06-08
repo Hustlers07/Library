@@ -6,6 +6,7 @@ import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SeatController {
 
     private final SeatServiceImpl seatService;
+    
 
     @PostMapping("/add")
     @Operation(summary = "Add seat to vacant room", description = "Add seat to seat entity if a vacant room is available.")
@@ -58,6 +60,33 @@ public class SeatController {
     public ResponseEntity<?> addUser(@PathVariable String username, @PathVariable String seatId){
         Seat updatedSeat = seatService.addOrUpdateUser(username,seatId);
         return ResponseEntity.ok(updatedSeat);
+    }
+
+    @PostMapping("/remove-user/{seatId}/user/{username}")
+    @Operation(summary = "Removes user from seat.", description = "Removes user from seat")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
+    public ResponseEntity<?> removeUser(@PathVariable String seatId, @PathVariable String username){
+        Seat updatedSeat = seatService.removeUser(seatId, username);
+        return ResponseEntity.ok(updatedSeat);
+    }
+
+    @GetMapping("/all")
+    @Operation(summary = "Get all seats.", description = "Get all seats.")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
+    public ResponseEntity<?> getAllSeats(){
+        List<Seat> seats = seatService.getAllSeats();
+        return ResponseEntity.ok(seats);
+    }
+
+    @GetMapping("/{seatId}")
+    @Operation(summary = "Get seat by ID.", description = "Get seat by ID.")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
+    public ResponseEntity<?> getSeatById(@PathVariable String seatId){
+        Seat seat = seatService.getSeatById(seatId);
+        return ResponseEntity.ok(seat);
     }
 
 

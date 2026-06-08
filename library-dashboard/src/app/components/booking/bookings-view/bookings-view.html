@@ -1,0 +1,119 @@
+
+
+  <section class="booking-content">
+    <div *ngIf="action === 'create'" class="booking-create-form">
+      <h2>Create Booking</h2>
+
+      <form class="booking-form" (ngSubmit)="createBooking()">
+        <div class="booking-form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>User Name</mat-label>
+            <input matInput name="userName" [(ngModel)]="payload.userName" placeholder="Enter user name" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Room Id</mat-label>
+            <input matInput name="roomId" type="number" [(ngModel)]="payload.roomId" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Booking Type</mat-label>
+            <mat-select name="bookingType" [(ngModel)]="payload.bookingType">
+              <mat-option value="FLOOR">Floor</mat-option>
+              <mat-option value="SEAT">Seat</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Duration Type</mat-label>
+            <mat-select name="durationType" [(ngModel)]="payload.durationType">
+              <mat-option value="HOURLY">Hourly</mat-option>
+              <mat-option value="DAILY">Daily</mat-option>
+              <mat-option value="MONTHLY">Monthly</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Duration</mat-label>
+            <input matInput name="duration" type="number" [(ngModel)]="payload.duration" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Seat Ids</mat-label>
+            <input matInput name="seatIdsInput" [(ngModel)]="seatIdsInput" placeholder="e.g. 1,2" />
+            <mat-hint>Comma-separated seat IDs.</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Coupon Code</mat-label>
+            <input matInput name="couponCode" [(ngModel)]="payload.couponCode" placeholder="Optional" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Plan Name</mat-label>
+            <input matInput name="planName" [(ngModel)]="payload.planName" placeholder="Optional" />
+          </mat-form-field>
+        </div>
+
+        <div class="booking-form-actions">
+          <button mat-raised-button color="primary" type="submit">Create Booking</button>
+        </div>
+      </form>
+    </div>
+
+    <div *ngIf="action !== 'create'" class="booking-list-section">
+      <h2>{{ action === 'view' ? 'Existing Bookings' : action === 'renew' ? 'Renew Bookings' : 'Cancel Bookings' }}</h2>
+
+      <div *ngIf="bookings().length === 0" class="booking-empty">No bookings available.</div>
+
+      <mat-list *ngIf="bookings().length > 0" class="booking-list">
+        <mat-list-item *ngFor="let b of bookings()">
+          <mat-icon matListIcon>event</mat-icon>
+
+          <div matLine class="booking-line">
+            <strong>#{{ b.id }}</strong>
+            <span>{{ b.status }} • {{ b.bookingType | titlecase }}</span>
+          </div>
+          <div matLine class="booking-line">
+            Room: {{ b.roomId }}
+            <span>Start: {{ b.startTime }}</span>
+            <span>End: {{ b.endTime }}</span>
+          </div>
+
+          <div class="booking-actions" *ngIf="action === 'renew'">
+            <button mat-stroked-button color="primary" type="button" (click)="toggleRenew(b.id)">
+              {{ renewing()[b.id] ? 'Hide renew form' : 'Renew' }}
+            </button>
+          </div>
+
+          <div class="booking-actions" *ngIf="action === 'cancel'">
+            <button mat-stroked-button color="warn" type="button" (click)="cancelBooking(b.id)">Cancel</button>
+          </div>
+
+          <div *ngIf="renewing()[b.id] && action === 'renew'" class="renew-form">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>New Start Time</mat-label>
+              <input matInput name="newStartTime-{{ b.id }}" [(ngModel)]="renewInputs[b.id].newStartTime" placeholder="2026-06-03T16:30:27.841Z" />
+            </mat-form-field>
+
+            <div class="renew-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Renewal Count</mat-label>
+                <input matInput name="renewalCount-{{ b.id }}" type="number" [(ngModel)]="renewInputs[b.id].renewalCount" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Notes</mat-label>
+                <input matInput name="renewalNotes-{{ b.id }}" [(ngModel)]="renewInputs[b.id].renewalNotes" />
+              </mat-form-field>
+            </div>
+
+            <div class="booking-form-actions">
+              <button mat-raised-button color="primary" type="button" (click)="submitRenew(b.id)">Submit Renew</button>
+              <button mat-button type="button" (click)="toggleRenew(b.id)">Cancel</button>
+            </div>
+          </div>
+        </mat-list-item>
+      </mat-list>
+    </div>
+  </section>

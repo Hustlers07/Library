@@ -35,16 +35,16 @@ public class PaymentService {
     /**
      * Create a new payment for a booking
      */
-    public PaymentResponse createPayment(Long userId, PaymentRequest paymentRequest) {
-        log.info("Creating payment for user: {} and booking: {}", userId, paymentRequest.getBookingId());
+    public PaymentResponse createPayment(PaymentRequest paymentRequest) {
+        log.info("Creating payment for user: {} and booking: {}", paymentRequest.getUserName(), paymentRequest.getBookingId());
 
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByUsername(paymentRequest.getUserName())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         Booking booking = bookingRepository.findById(paymentRequest.getBookingId())
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found"));
 
-        if (!booking.getUser().getId().equals(userId)) {
+        if (!booking.getUser().getUsername().equals(paymentRequest.getUserName())) {
             throw new IllegalArgumentException("Booking does not belong to this user");
         }
 

@@ -21,7 +21,7 @@ import { User } from './models/user/user-module';
     CustomSidenav
     ],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrls: ['./app.scss']
 })
 export class App {
   protected readonly title = signal('library-dashboard');
