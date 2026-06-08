@@ -24,7 +24,7 @@ import { environment } from '../../../environments/environment';
     MatChipsModule,
     RouterLink],
   templateUrl: './registeration-form.html',
-  styleUrl: './registeration-form.scss',
+  styleUrls: ['./registeration-form.scss'],
 })
 export class RegisterationForm {
 

@@ -1,0 +1,164 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: library-dev
+---
+# PersistentVolume for SFTP data on host path
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sftp-pv-movies
+  labels:
+    app: sftp
+spec:
+  storageClassName: ""          # must match PVC
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /home/groot/Documents/rustfs/movies
+    type: DirectoryOrCreate
+  persistentVolumeReclaimPolicy: Retain
+---
+# PersistentVolumeClaim for SFTP
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sftp-pvc-movies
+  namespace: library-dev
+spec:
+  storageClassName: ""          # binds to the manual PV above
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  selector:
+    matchLabels:
+      app: sftp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sftp
+  namespace: library-dev
+  labels:
+    app: sftp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sftp
+  template:
+    metadata:
+      labels:
+        app: sftp
+    spec:
+      # Allow the sftp process (runs as root inside atmoz/sftp) to own mounted files
+      securityContext:
+        fsGroup: ${SFTP_GID}
+
+      volumes:
+        - name: sftp-data
+          persistentVolumeClaim:
+            claimName: sftp-pvc-movies
+        # Persistent SSH host keys — prevents known_hosts warnings on redeployment.
+        # Generate once with the deploy script; keys live on the host and survive pod restarts.
+        - name: sftp-host-keys
+          hostPath:
+            path: /home/groot/Documents/rustfs/sftp-host-keys
+            type: Directory
+
+      initContainers:
+        - name: init-sftp-movies
+          image: busybox:1.36
+          # Ensure the host directory exists, is owned by the SFTP user, and is writable by rustfs too
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /data
+              chown -R ${SFTP_UID}:${SFTP_GID} /data
+              chmod -R 777 /data
+          volumeMounts:
+            - name: sftp-data
+              mountPath: /data
+
+      containers:
+        - name: sftp
+          image: atmoz/sftp:latest
+          imagePullPolicy: Always
+
+          ports:
+            - name: sftp
+              containerPort: 22
+
+          # atmoz/sftp entrypoint format:
+          #   user:pass[:uid[:gid[:dir]]]
+          # The variables are substituted by envsubst before kubectl apply,
+          # so no Secret object is required.
+          args:
+            - "${SFTP_USERNAME}:${SFTP_PASSWORD}:${SFTP_UID}:${SFTP_GID}:movies"
+
+          volumeMounts:
+            # atmoz/sftp chroots to /home/<user>; the upload dir lives inside.
+            # Mount to the chroot root so the image sets up permissions correctly.
+            - name: sftp-data
+              mountPath: /home/${SFTP_USERNAME}/movies
+            # Persistent SSH host keys — one subPath mount per file
+            - name: sftp-host-keys
+              mountPath: /etc/ssh/ssh_host_ed25519_key
+              subPath: ssh_host_ed25519_key
+              readOnly: true
+            - name: sftp-host-keys
+              mountPath: /etc/ssh/ssh_host_ed25519_key.pub
+              subPath: ssh_host_ed25519_key.pub
+              readOnly: true
+            - name: sftp-host-keys
+              mountPath: /etc/ssh/ssh_host_rsa_key
+              subPath: ssh_host_rsa_key
+              readOnly: true
+            - name: sftp-host-keys
+              mountPath: /etc/ssh/ssh_host_rsa_key.pub
+              subPath: ssh_host_rsa_key.pub
+              readOnly: true
+
+          securityContext:
+            runAsUser: 0   # atmoz/sftp requires root to set up chroot + sshd
+            runAsGroup: 0
+---
+# ClusterIP — for in-cluster consumers (e.g. other pods)
+apiVersion: v1
+kind: Service
+metadata:
+  name: sftp-service
+  namespace: library-dev
+  labels:
+    app: sftp
+spec:
+  selector:
+    app: sftp
+  ports:
+    - name: sftp
+      port: 22
+      targetPort: 22
+  type: ClusterIP
+---
+# NodePort — for external / host access
+apiVersion: v1
+kind: Service
+metadata:
+  name: sftp-nodeport
+  namespace: library-dev
+  labels:
+    app: sftp
+spec:
+  selector:
+    app: sftp
+  ports:
+    - name: sftp
+      port: 22
+      targetPort: 22
+      nodePort: 30222
+  type: NodePort
