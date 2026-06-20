@@ -3,7 +3,7 @@ kind: Namespace
 metadata:
   name: library-dev
 ---
-# PersistentVolume for SFTP data on host path
+# Dedicated PersistentVolume for movie files shared with RustFS
 apiVersion: v1
 kind: PersistentVolume
 metadata:

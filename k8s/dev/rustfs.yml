@@ -85,12 +85,14 @@ spec:
             - sh
             - -c
             - |
-              mkdir -p /data /logs
-              chmod -R 777 /data /logs
+              mkdir -p /data /data/movies /logs
+              chmod -R 777 /data /data/movies /logs
               echo "Permissions set successfully"
           volumeMounts:
             - name: rustfs-data
               mountPath: /data
+            - name: rustfs-movies
+              mountPath: /data/movies
             - name: rustfs-logs
               mountPath: /logs
       containers:
@@ -124,6 +126,8 @@ spec:
           volumeMounts:
             - name: rustfs-data
               mountPath: /data
+            - name: rustfs-movies
+              mountPath: /data/movies
             - name: rustfs-logs
               mountPath: /logs
           # FIX: tcpSocket on S3 port — console returns 403 on all HTTP paths (auth required)
@@ -143,6 +147,9 @@ spec:
         - name: rustfs-data
           persistentVolumeClaim:
             claimName: rustfs-shared-pvc-librarydev
+        - name: rustfs-movies
+          persistentVolumeClaim:
+            claimName: sftp-pvc-movies
         - name: rustfs-logs
           hostPath:
             path: /home/groot/Documents/rustfs/shared/logs
@@ -152,6 +159,25 @@ spec:
 # ─────────────────────────────────────────────
 # Service: RustFS
 # ─────────────────────────────────────────────
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: rustfs-service
+#   namespace: library-dev
+#   labels:
+#     app: rustfs
+# spec:
+#   selector:
+#     app: rustfs
+#   ports:
+#     - name: s3
+#       port: 9002
+#       targetPort: 9002
+#     - name: console
+#       port: 80
+#       targetPort: 80
+#   type: LoadBalancer
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -169,4 +195,5 @@ spec:
     - name: console
       port: 80
       targetPort: 80
-  type: LoadBalancer
+      nodePort: 30081
+  type: NodePort
