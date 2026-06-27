@@ -29,35 +29,10 @@ data:
     provider = Other
     env_auth = false
     endpoint = http://rustfs-service.rustfs.svc.cluster.local:9000
+    access_key_id = $RCLONE_ACCESS_KEY
+    secret_access_key = $RCLONE_SECRET_KEY
     acl = private
     force_path_style = true
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nginx-config
-  namespace: rustfs
-data:
-  default.conf: |
-    server {
-      listen 80;
-      server_name _;
-      root /mnt/rustfs;
-      autoindex on;
-      autoindex_exact_size off;
-      autoindex_localtime on;
-
-      location / {
-        autoindex on;
-        autoindex_exact_size off;
-        autoindex_localtime on;
-        add_header Accept-Ranges bytes;
-      }
-
-      send_timeout 300s;
-      keepalive_timeout 300s;
-    }
 
 ---
 apiVersion: apps/v1
@@ -79,7 +54,7 @@ spec:
     spec:
       containers:
         - name: rclone-mount
-          image: rclone/rclone:latest
+          image: rclone/rclone:1.67.0
           securityContext:
             privileged: true
             capabilities:
@@ -117,8 +92,17 @@ spec:
               mountPath: /dev/fuse
 
         - name: rclone-gui
-          image: rclone/rclone:latest
-          command: ["rclone","rcd","--rc-web-gui","--rc-web-gui-no-open-browser","--rc-addr=0.0.0.0:5572"]
+          image: rclone/rclone:1.67.0
+          command:
+            - /bin/sh
+            - -c
+            - |
+              exec rclone rcd \
+                --rc-web-gui \
+                --rc-web-gui-no-open-browser \
+                --rc-addr=0.0.0.0:5572 \
+                --rc-user=$RCLONE_GUI_USER \
+                --rc-pass=$RCLONE_GUI_PASS
           envFrom:
             - secretRef:
                 name: rclone-s3-secret
@@ -127,25 +111,47 @@ spec:
           volumeMounts:
             - name: rclone-config
               mountPath: /config/rclone
+          readinessProbe:
+            tcpSocket:
+              port: 5572
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: 5572
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
 
-        - name: nginx
-          image: nginx:alpine
+        - name: rclone-sftp
+          image: rclone/rclone:1.67.0
+          command:
+            - /bin/sh
+            - -c
+            - |
+              exec rclone serve sftp rustfs: \
+                --addr :2222 \
+                --user $RCLONE_GUI_USER \
+                --pass $RCLONE_GUI_PASS \
+                --vfs-cache-mode full \
+                --vfs-cache-max-size 1G \
+                --log-level INFO
+          envFrom:
+            - secretRef:
+                name: rclone-s3-secret
           ports:
-            - containerPort: 80
+            - containerPort: 2222
           volumeMounts:
-            - name: nginx-config
-              mountPath: /etc/nginx/conf.d/default.conf
-              subPath: default.conf
-            - name: rustfs-mount
-              mountPath: /mnt/rustfs
+            - name: rclone-config
+              mountPath: /config/rclone
 
       volumes:
         - name: rclone-config
           configMap:
             name: rclone-config
-        - name: nginx-config
-          configMap:
-            name: nginx-config
         - name: rustfs-mount
           emptyDir: {}
         - name: fuse-device
@@ -172,13 +178,179 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-media
+  name: rclone-sftp
   namespace: rustfs
 spec:
   selector:
     app: rclone-nginx
   ports:
-    - port: 80
-      targetPort: 80
-      nodePort: 30082
+    - name: sftp
+      port: 2222
+      targetPort: 2222
+      nodePort: 32222
   type: NodePort
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyfin-config
+  namespace: rustfs
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyfin-cache
+  namespace: rustfs
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jellyfin
+  namespace: rustfs
+  labels:
+    app: jellyfin
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: jellyfin
+  template:
+    metadata:
+      labels:
+        app: jellyfin
+    spec:
+      containers:
+        - name: rclone-mount
+          image: rclone/rclone:1.67.0
+          securityContext:
+            privileged: true
+            capabilities:
+              add: [ "SYS_ADMIN" ]
+          command:
+            - /bin/sh
+            - -c
+            - |
+              mkdir -p /media/movies
+              exec rclone mount rustfs:movies /media/movies \
+                --allow-other \
+                --allow-non-empty \
+                --vfs-cache-mode full \
+                --vfs-cache-max-size 2G \
+                --vfs-cache-max-age 2h \
+                --log-level INFO
+          env:
+            - name: RCLONE_S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: rclone-s3-secret
+                  key: RCLONE_ACCESS_KEY
+            - name: RCLONE_S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rclone-s3-secret
+                  key: RCLONE_SECRET_KEY
+          volumeMounts:
+            - name: rclone-config
+              mountPath: /config/rclone
+            - name: rustfs-mount
+              mountPath: /media/movies
+              mountPropagation: Bidirectional
+            - name: fuse-device
+              mountPath: /dev/fuse
+
+        - name: jellyfin
+          image: jellyfin/jellyfin:latest
+          # Use linuxserver image for better ffmpeg/codec support
+          # image: lscr.io/linuxserver/jellyfin:latest
+          ports:
+            - containerPort: 8096
+              name: http
+          env:
+            - name: JELLYFIN_PublishedServerUrl
+              value: http://groot-server:30097
+          volumeMounts:
+            - name: jellyfin-config
+              mountPath: /config
+            - name: jellyfin-cache
+              mountPath: /cache
+            - name: rustfs-mount
+              mountPath: /media/movies
+              mountPropagation: HostToContainer
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 4000m
+              memory: 4Gi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8096
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8096
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3
+
+      volumes:
+        - name: rclone-config
+          configMap:
+            name: rclone-config
+        - name: jellyfin-config
+          persistentVolumeClaim:
+            claimName: jellyfin-config
+        - name: jellyfin-cache
+          persistentVolumeClaim:
+            claimName: jellyfin-cache
+        - name: rustfs-mount
+          hostPath:
+            path: /mnt/jellyfin-rustfs
+            type: DirectoryOrCreate
+        - name: fuse-device
+          hostPath:
+            path: /dev/fuse
+            type: CharDevice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jellyfin
+  namespace: rustfs
+  labels:
+    app: jellyfin
+spec:
+  selector:
+    app: jellyfin
+  type: NodePort
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8096
+      targetPort: 8096
+      nodePort: 30097
