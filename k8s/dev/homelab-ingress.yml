@@ -1,24 +1,42 @@
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+# ─── rustfs namespace: RustFS + Jellyfin routes ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
 metadata:
-  name: rustfs-ingress
+  name: home-lab-ingressroute
   namespace: rustfs
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
 spec:
-  ingressClassName: traefik
-  rules:
-    - host: home.lab.local
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: rustfs-service
-                port:
-                  number: 9001
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`home.lab.local`) && PathPrefix(`/rustfs`)
+      kind: Rule
+      services:
+        - name: rustfs-service
+          port: 9001
+
+    - match: Host(`home.lab.local`) && PathPrefix(`/jellyfin`)
+      kind: Rule
+      services:
+        - name: jellyfin-service
+          port: 8096
   tls:
-    - hosts:
-        - home.lab.local
-      secretName: local-cert-tls
+    secretName: local-cert-tls
+
+---
+# ─── technitium-dns namespace: DNS console on its own subdomain ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: technitium-dns-ingressroute
+  namespace: technitium-dns
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`home.lab.local`)
+      kind: Rule
+      services:
+        - name: technitium-dns-service
+          port: 5380
+  tls:
+    secretName: local-cert-tls

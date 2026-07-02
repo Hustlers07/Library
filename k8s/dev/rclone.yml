@@ -340,17 +340,16 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: jellyfin
+  name: jellyfin-service
   namespace: rustfs
   labels:
     app: jellyfin
 spec:
   selector:
     app: jellyfin
-  type: NodePort
+  type: ClusterIP
   ports:
     - name: http
       protocol: TCP
       port: 8096
       targetPort: 8096
-      nodePort: 30097
