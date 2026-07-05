@@ -171,8 +171,7 @@ spec:
   ports:
     - port: 5572
       targetPort: 5572
-      nodePort: 31572
-  type: NodePort
+  type: ClusterIP
 
 ---
 apiVersion: v1

@@ -39,10 +39,9 @@ spec:
   secretName: local-cert-tls
   duration: 8760h
   renewBefore: 360h
-  commonName: ${PRIMARY_DOMAIN}
+  commonName: "*.home.lab.local"
   dnsNames:
-    - ${PRIMARY_DOMAIN}
-    - ${SECONDARY_DOMAIN}
+    - "*.home.lab.local"
   ipAddresses:
     - ${HOMELAB_IP}
   issuerRef:
