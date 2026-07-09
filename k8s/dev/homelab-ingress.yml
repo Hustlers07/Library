@@ -67,23 +67,7 @@ spec:
   tls:
     secretName: local-cert-tls
 ---
-# ─── rustfs namespace: rclone GUI ───
-apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
-metadata:
-  name: rclone-gui-ingressroute
-  namespace: rustfs
-spec:
-  entryPoints:
-    - websecure
-  routes:
-    - match: Host(`rclone-gui.home.lab.local`)
-      kind: Rule
-      services:
-        - name: rclone-gui
-          port: 5572
-  tls:
-    secretName: local-cert-tls
+
 
 # ─── vault namespace: Vault on its own subdomain ───
 apiVersion: traefik.io/v1alpha1
