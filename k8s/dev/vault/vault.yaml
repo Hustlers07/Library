@@ -4,6 +4,12 @@ metadata:
   name: vault
 ---
 apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-server
+  namespace: vault
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: vault-data-pvc
@@ -55,6 +61,7 @@ spec:
       labels:
         app: vault
     spec:
+      serviceAccountName: vault-server
       containers:
         - name: vault
           image: hashicorp/vault:1.17
@@ -95,3 +102,16 @@ spec:
     - name: api
       port: 8200
       targetPort: 8200
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vault-server-auth-delegator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - kind: ServiceAccount
+    name: vault-server
+    namespace: vault
