@@ -1,19 +1,5 @@
 ---
 # ─────────────────────────────────────────────
-# Secret: RustFS credentials
-# ─────────────────────────────────────────────
-apiVersion: v1
-kind: Secret
-metadata:
-  name: rustfs-credentials
-  namespace: library-dev
-type: Opaque
-stringData:
-  RUSTFS_ACCESS_KEY: "${RUSTFS_ACCESS_KEY}"
-  RUSTFS_SECRET_KEY: "${RUSTFS_SECRET_KEY}"
- 
----
-# ─────────────────────────────────────────────
 # PersistentVolume: RustFS shared storage
 # ─────────────────────────────────────────────
 apiVersion: v1

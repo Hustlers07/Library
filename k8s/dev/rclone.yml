@@ -5,19 +5,6 @@ metadata:
 
 ---
 apiVersion: v1
-kind: Secret
-metadata:
-  name: rclone-s3-secret
-  namespace: rustfs
-type: Opaque
-stringData:
-  RCLONE_ACCESS_KEY: $RCLONE_ACCESS_KEY
-  RCLONE_SECRET_KEY: $RCLONE_SECRET_KEY
-  RCLONE_GUI_USER: $RCLONE_GUI_USER
-  RCLONE_GUI_PASS: $RCLONE_GUI_PASS
-
----
-apiVersion: v1
 kind: ConfigMap
 metadata:
   name: rclone-config
