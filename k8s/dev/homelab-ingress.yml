@@ -164,3 +164,37 @@ spec:
           port: 8200
   tls:
     secretName: local-cert-tls
+
+# ─── kubernetes-dashboard namespace: Dashboard on its own subdomain (HTTPS only) ───
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: dashboard-transport
+  namespace: kubernetes-dashboard
+spec:
+  # Dashboard auto-generates its own self-signed cert on startup.
+  # Traefik has no way to validate that cert against a CA, so we
+  # tell it to skip verification for this specific backend only -
+  # this does not affect the front-facing TLS (local-cert-tls) that
+  # the browser sees, only the Traefik -> Dashboard hop internally.
+  insecureSkipVerify: true
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: dashboard-ingressroute
+  namespace: kubernetes-dashboard
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`dashboard.home.lab.local`)
+      kind: Rule
+      services:
+        - name: kubernetes-dashboard
+          port: 443
+          scheme: https
+          serversTransport: dashboard-transport
+  tls:
+    secretName: local-cert-tls
