@@ -160,9 +160,7 @@ spec:
 # ============================================================
 # SONARR (TV shows)
 # Mounts a SEPARATE host path from Radarr's movies library so
-# the two apps never write into the same folder. Point this at
-# wherever your actual TV library/remote lives. If you don't
-# use TV at all, delete this Deployment/Service/PVC block.
+# the two apps never write into the same folder.
 # ============================================================
 apiVersion: apps/v1
 kind: Deployment
@@ -203,6 +201,7 @@ spec:
               mountPath: /downloads
             - name: media
               mountPath: /tv
+              mountPropagation: HostToContainer
       volumes:
         - name: config
           persistentVolumeClaim:
@@ -233,9 +232,9 @@ spec:
 ---
 # ============================================================
 # RADARR (Movies)
-# This is the app that actually handles movie downloads.
-# Mounted at your existing /mnt/jellyfin-rustfs path, which the
-# original manifest's comments already noted holds movie content.
+# Mounted at /mnt/jellyfin-rustfs, which is Jellyfin's FUSE
+# mountpoint for rustfs:movies. mountPropagation:HostToContainer
+# is required for Radarr to actually see the FUSE-mounted files.
 # ============================================================
 apiVersion: apps/v1
 kind: Deployment
@@ -276,6 +275,7 @@ spec:
               mountPath: /downloads
             - name: media
               mountPath: /movies
+              mountPropagation: HostToContainer
       volumes:
         - name: config
           persistentVolumeClaim:
@@ -362,3 +362,20 @@ spec:
     - port: 9696
       targetPort: 9696
   type: ClusterIP
+
+# ============================================================
+# NOTE: no CronJob / downloads bucket here anymore.
+#
+# Movies and TV sync to S3 continuously and automatically via the
+# live rclone FUSE mounts (see Jellyfin manifest) - the moment
+# Radarr/Sonarr import a file into /movies or /tv, it's already
+# in S3. No batch job needed for those.
+#
+# The raw /mnt/downloads folder doesn't need its own S3 backup or
+# cleanup job either: once Radarr/Sonarr import a completed
+# download, they delete the local copy automatically as long as
+# "Remove completed downloads" is enabled in each app's Download
+# Client settings (Radarr/Sonarr -> Settings -> Download Clients
+# -> qBittorrent -> edit). That keeps /mnt/downloads clean on its
+# own, right after each file is safely in S3 via import.
+# ============================================================

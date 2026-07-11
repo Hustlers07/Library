@@ -111,6 +111,20 @@ spec:
               mountPropagation: Bidirectional
             - name: fuse-device
               mountPath: /dev/fuse
+          livenessProbe:
+            # If the FUSE mount dies or goes stale ("transport endpoint
+            # is not connected"), `mountpoint -q` will fail and k8s will
+            # restart this container automatically, instead of leaving
+            # a broken mountpoint for every other pod that reads it.
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "mountpoint -q /media/movies && test -d /media/movies/.thumb"
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3
 
         - name: jellyfin
           image: jellyfin/jellyfin:latest
