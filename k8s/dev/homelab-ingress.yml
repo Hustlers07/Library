@@ -15,6 +15,7 @@ spec:
           port: 9001
   tls:
     secretName: local-cert-tls
+
 ---
 # ─── rustfs namespace: Jellyfin on its own subdomain (HTTP + HTTPS) ───
 apiVersion: traefik.io/v1alpha1
@@ -31,6 +32,7 @@ spec:
       services:
         - name: jellyfin-service
           port: 8096
+
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
@@ -48,6 +50,83 @@ spec:
           port: 8096
   tls:
     secretName: local-cert-tls
+
+---
+# ─── rustfs namespace: qBittorrent on its own subdomain (HTTPS only) ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: qbittorrent-ingressroute
+  namespace: rustfs
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`qbittorrent.home.lab.local`)
+      kind: Rule
+      services:
+        - name: qbittorrent
+          port: 8080
+  tls:
+    secretName: local-cert-tls
+
+---
+# ─── rustfs namespace: Sonarr on its own subdomain (HTTPS only) ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: sonarr-ingressroute
+  namespace: rustfs
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`sonarr.home.lab.local`)
+      kind: Rule
+      services:
+        - name: sonarr
+          port: 8989
+  tls:
+    secretName: local-cert-tls
+
+---
+# ─── rustfs namespace: Radarr on its own subdomain (HTTPS only) ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: radarr-ingressroute
+  namespace: rustfs
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`radarr.home.lab.local`)
+      kind: Rule
+      services:
+        - name: radarr
+          port: 7878
+  tls:
+    secretName: local-cert-tls
+
+---
+# ─── rustfs namespace: Prowlarr on its own subdomain (HTTPS only) ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prowlarr-ingressroute
+  namespace: rustfs
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`prowlarr.home.lab.local`)
+      kind: Rule
+      services:
+        - name: prowlarr
+          port: 9696
+  tls:
+    secretName: local-cert-tls
+
 ---
 # ─── technitium-dns namespace: DNS console on its own subdomain ───
 apiVersion: traefik.io/v1alpha1
@@ -66,9 +145,8 @@ spec:
           port: 5380
   tls:
     secretName: local-cert-tls
+
 ---
-
-
 # ─── vault namespace: Vault on its own subdomain ───
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute

@@ -1,0 +1,364 @@
+---
+# ============================================================
+# Reuses the "rustfs" namespace your Jellyfin manifest already
+# creates. Safe to apply even if the namespace already exists.
+# ============================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rustfs
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: servarr-env
+  namespace: rustfs
+data:
+  PUID: "1000"
+  PGID: "1000"
+  TZ: "Etc/UTC"          # match whatever Jellyfin is using
+
+---
+# ============================================================
+# CONFIG VOLUMES (one per app, small, RWO)
+# ============================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qbittorrent-config
+  namespace: rustfs
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarr-config
+  namespace: rustfs
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: radarr-config
+  namespace: rustfs
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prowlarr-config
+  namespace: rustfs
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 512Mi
+
+---
+# ============================================================
+# QBITTORRENT
+# Downloads go to a plain hostPath (NOT the rclone/S3 mount) -
+# torrent clients need normal random-write local disk. Sonarr
+# and Radarr will later move/copy completed downloads into the
+# media path.
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qbittorrent
+  namespace: rustfs
+  labels:
+    app: qbittorrent
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: qbittorrent
+  template:
+    metadata:
+      labels:
+        app: qbittorrent
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: qbittorrent
+          image: lscr.io/linuxserver/qbittorrent:latest
+          envFrom:
+            - configMapRef:
+                name: servarr-env
+          env:
+            - name: WEBUI_PORT
+              value: "8080"
+          ports:
+            - containerPort: 8080
+              name: webui
+            - containerPort: 6881
+              name: torrent-tcp
+              protocol: TCP
+            - containerPort: 6881
+              name: torrent-udp
+              protocol: UDP
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: downloads
+              mountPath: /downloads
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: qbittorrent-config
+        - name: downloads
+          hostPath:
+            path: /mnt/downloads
+            type: DirectoryOrCreate
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qbittorrent
+  namespace: rustfs
+spec:
+  selector:
+    app: qbittorrent
+  ports:
+    - name: webui
+      port: 8080
+      targetPort: 8080
+    - name: torrent-tcp
+      port: 6881
+      targetPort: 6881
+      protocol: TCP
+    - name: torrent-udp
+      port: 6881
+      targetPort: 6881
+      protocol: UDP
+  type: ClusterIP
+
+---
+# ============================================================
+# SONARR (TV shows)
+# Mounts a SEPARATE host path from Radarr's movies library so
+# the two apps never write into the same folder. Point this at
+# wherever your actual TV library/remote lives. If you don't
+# use TV at all, delete this Deployment/Service/PVC block.
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarr
+  namespace: rustfs
+  labels:
+    app: sonarr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: sonarr
+  template:
+    metadata:
+      labels:
+        app: sonarr
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: sonarr
+          image: lscr.io/linuxserver/sonarr:latest
+          envFrom:
+            - configMapRef:
+                name: servarr-env
+          ports:
+            - containerPort: 8989
+              name: web
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: downloads
+              mountPath: /downloads
+            - name: media
+              mountPath: /tv
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: sonarr-config
+        - name: downloads
+          hostPath:
+            path: /mnt/downloads
+            type: DirectoryOrCreate
+        - name: media
+          hostPath:
+            path: /mnt/jellyfin-tv     # <-- separate from movies path
+            type: DirectoryOrCreate
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonarr
+  namespace: rustfs
+spec:
+  selector:
+    app: sonarr
+  ports:
+    - port: 8989
+      targetPort: 8989
+  type: ClusterIP
+
+---
+# ============================================================
+# RADARR (Movies)
+# This is the app that actually handles movie downloads.
+# Mounted at your existing /mnt/jellyfin-rustfs path, which the
+# original manifest's comments already noted holds movie content.
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: radarr
+  namespace: rustfs
+  labels:
+    app: radarr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: radarr
+  template:
+    metadata:
+      labels:
+        app: radarr
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: radarr
+          image: lscr.io/linuxserver/radarr:latest
+          envFrom:
+            - configMapRef:
+                name: servarr-env
+          ports:
+            - containerPort: 7878
+              name: web
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: downloads
+              mountPath: /downloads
+            - name: media
+              mountPath: /movies
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: radarr-config
+        - name: downloads
+          hostPath:
+            path: /mnt/downloads
+            type: DirectoryOrCreate
+        - name: media
+          hostPath:
+            path: /mnt/jellyfin-rustfs
+            type: DirectoryOrCreate
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: radarr
+  namespace: rustfs
+spec:
+  selector:
+    app: radarr
+  ports:
+    - port: 7878
+      targetPort: 7878
+  type: ClusterIP
+
+---
+# ============================================================
+# PROWLARR
+# No media/downloads access needed - it only talks to indexers
+# and pushes config to Sonarr/Radarr via their APIs.
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prowlarr
+  namespace: rustfs
+  labels:
+    app: prowlarr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: prowlarr
+  template:
+    metadata:
+      labels:
+        app: prowlarr
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: prowlarr
+          image: lscr.io/linuxserver/prowlarr:latest
+          envFrom:
+            - configMapRef:
+                name: servarr-env
+          ports:
+            - containerPort: 9696
+              name: web
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: prowlarr-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prowlarr
+  namespace: rustfs
+spec:
+  selector:
+    app: prowlarr
+  ports:
+    - port: 9696
+      targetPort: 9696
+  type: ClusterIP
