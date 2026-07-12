@@ -81,6 +81,13 @@ spec:
             - -c
             - |
               mkdir -p /media/movies
+              # Force-clean any stale FUSE handle left behind by a previous
+              # container instance (crash, OOM, node reboot, probe-triggered
+              # restart, etc.) before attempting to mount again. Without this,
+              # a leftover mount entry can make the new `rclone mount` fail
+              # with errors like "transport endpoint is not connected" or
+              # "mountpoint already exists".
+              fusermount -uz /media/movies 2>/dev/null || umount -l /media/movies 2>/dev/null || true
               exec rclone mount rustfs:movies /media/movies \
                 --allow-other \
                 --allow-non-empty \
@@ -106,23 +113,80 @@ spec:
           volumeMounts:
             - name: rclone-config
               mountPath: /config/rclone
-            - name: rustfs-mount
+            - name: rustfs-movies-mount
               mountPath: /media/movies
               mountPropagation: Bidirectional
             - name: fuse-device
               mountPath: /dev/fuse
           livenessProbe:
-            # If the FUSE mount dies or goes stale ("transport endpoint
-            # is not connected"), `mountpoint -q` will fail and k8s will
-            # restart this container automatically, instead of leaving
-            # a broken mountpoint for every other pod that reads it.
+            # Checks that the FUSE mount is attached (mountpoint -q) and
+            # responsive (ls succeeds) without depending on any specific
+            # object/prefix existing in the S3 bucket. The previous check
+            # (`test -d /media/movies/.thumb`) assumed a `.thumb` object
+            # existed in the bucket, which is not guaranteed and caused
+            # false-positive failures -> unnecessary restarts -> stale
+            # FUSE mounts on the next attempt.
             exec:
               command:
                 - /bin/sh
                 - -c
-                - "mountpoint -q /media/movies && test -d /media/movies/.thumb"
-            initialDelaySeconds: 20
-            periodSeconds: 15
+                - "mountpoint -q /media/movies && ls /media/movies >/dev/null 2>&1"
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 3
+
+        - name: rclone-mount-tv
+          # Mirrors the movies rclone-mount sidecar above, but for the TV
+          # library (rustfs:tv bucket/prefix). Previously TV had no S3 sync
+          # at all - /mnt/jellyfin-tv was a plain hostPath only, so the TV
+          # library was NOT backed up to/served from rustfs like movies are.
+          image: rclone/rclone:1.67.0
+          securityContext:
+            privileged: true
+            capabilities:
+              add: [ "SYS_ADMIN" ]
+          command:
+            - /bin/sh
+            - -c
+            - |
+              mkdir -p /media/tv
+              fusermount -uz /media/tv 2>/dev/null || umount -l /media/tv 2>/dev/null || true
+              exec rclone mount rustfs:tv /media/tv \
+                --allow-other \
+                --allow-non-empty \
+                --vfs-cache-mode full \
+                --vfs-cache-max-size 2G \
+                --vfs-cache-max-age 2h \
+                --s3-no-check-bucket \
+                --log-level INFO
+          env:
+            - name: RCLONE_CONFIG_RUSTFS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: rclone-s3-secret
+                  key: RCLONE_ACCESS_KEY
+            - name: RCLONE_CONFIG_RUSTFS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rclone-s3-secret
+                  key: RCLONE_SECRET_KEY
+          volumeMounts:
+            - name: rclone-config
+              mountPath: /config/rclone
+            - name: rustfs-tv-mount
+              mountPath: /media/tv
+              mountPropagation: Bidirectional
+            - name: fuse-device
+              mountPath: /dev/fuse
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "mountpoint -q /media/tv && ls /media/tv >/dev/null 2>&1"
+            initialDelaySeconds: 30
+            periodSeconds: 20
             timeoutSeconds: 10
             failureThreshold: 3
 
@@ -141,8 +205,11 @@ spec:
               mountPath: /config
             - name: jellyfin-cache
               mountPath: /cache
-            - name: rustfs-mount
+            - name: rustfs-movies-mount
               mountPath: /media/movies
+              mountPropagation: HostToContainer
+            - name: rustfs-tv-mount
+              mountPath: /media/tv
               mountPropagation: HostToContainer
           resources:
             requests:
@@ -178,9 +245,15 @@ spec:
         - name: jellyfin-cache
           persistentVolumeClaim:
             claimName: jellyfin-cache
-        - name: rustfs-mount
+        - name: rustfs-movies-mount
           hostPath:
             path: /mnt/jellyfin-rustfs
+            type: DirectoryOrCreate
+        - name: rustfs-tv-mount
+          # Same host path Sonarr already mounts (see servarr manifest),
+          # now also FUSE-mounted here to rustfs:tv for S3 sync/serving.
+          hostPath:
+            path: /mnt/jellyfin-tv
             type: DirectoryOrCreate
         - name: fuse-device
           hostPath:
