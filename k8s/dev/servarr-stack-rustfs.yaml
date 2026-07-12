@@ -369,26 +369,74 @@ spec:
   type: ClusterIP
 
 # ============================================================
-# NOTE: no CronJob / downloads bucket here anymore.
-#
-# Movies and TV sync to S3 continuously and automatically via the
-# live rclone FUSE mounts (see Jellyfin manifest) - the moment
-# Radarr/Sonarr import a file into /movies or /tv, it's already
-# in S3. No batch job needed for those.
-#
-# The raw /mnt/downloads (now /home/groot/downloads) folder
-# doesn't need its own S3 backup or cleanup job either: once
-# Radarr/Sonarr import a completed download, they delete the
-# local copy automatically as long as "Remove completed
-# downloads" is enabled in each app's Download Client settings
-# (Radarr/Sonarr -> Settings -> Download Clients -> qBittorrent
-# -> edit). That keeps this folder clean on its own, right after
-# each file is safely in S3 via import.
-#
-# IMPORTANT: this assumption was previously unverified and
-# /mnt/downloads was found to have grown to 22G, triggering
-# node-level disk-pressure. Confirm the "Remove completed
-# downloads" setting is actually enabled in both Sonarr and
-# Radarr, and check their logs for import failures - otherwise
-# this folder will silently refill on the new disk too.
 # ============================================================
+# FLARESOLVERR
+# Proxy service that solves Cloudflare (and similar JS/captcha)
+# challenges on behalf of Prowlarr indexers. No config volume
+# needed - it's stateless. No media/downloads access needed either.
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flaresolverr
+  namespace: rustfs
+  labels:
+    app: flaresolverr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: flaresolverr
+  template:
+    metadata:
+      labels:
+        app: flaresolverr
+    spec:
+      containers:
+        - name: flaresolverr
+          image: ghcr.io/flaresolverr/flaresolverr:latest
+          env:
+            - name: LOG_LEVEL
+              value: "info"
+            - name: TZ
+              value: "Etc/UTC"     # match servarr-env TZ
+          ports:
+            - containerPort: 8191
+              name: web
+          resources:
+            # Chromium under the hood - give it real headroom or
+            # it OOMs on tougher Cloudflare challenges.
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "3000m"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8191
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8191
+            initialDelaySeconds: 20
+            periodSeconds: 15
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flaresolverr
+  namespace: rustfs
+spec:
+  selector:
+    app: flaresolverr
+  ports:
+    - port: 8191
+      targetPort: 8191
+  type: ClusterIP
