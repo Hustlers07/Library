@@ -190,6 +190,13 @@ spec:
         runAsUser: 1000
         runAsGroup: 1000
         fsGroup: 1000
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: jellyfin
+              topologyKey: "kubernetes.io/hostname"
       containers:
         - name: sonarr
           image: lscr.io/linuxserver/sonarr:latest
@@ -207,6 +214,15 @@ spec:
             - name: media
               mountPath: /tv
               mountPropagation: HostToContainer
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    # attempt clean unmount of FUSE-backed media path to avoid stale mounts
+                    fusermount -uz /tv 2>/dev/null || umount -l /tv 2>/dev/null || true
       volumes:
         - name: config
           persistentVolumeClaim:
@@ -217,7 +233,7 @@ spec:
             type: DirectoryOrCreate
         - name: media
           hostPath:
-            path: /mnt/jellyfin-tv     # <-- separate from movies path
+            path: /home/groot/jellyfin-tv     # <-- separate from movies path
             type: DirectoryOrCreate
 
 ---
@@ -264,6 +280,13 @@ spec:
         runAsUser: 1000
         runAsGroup: 1000
         fsGroup: 1000
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: jellyfin
+              topologyKey: "kubernetes.io/hostname"
       containers:
         - name: radarr
           image: lscr.io/linuxserver/radarr:latest
@@ -281,6 +304,15 @@ spec:
             - name: media
               mountPath: /movies
               mountPropagation: HostToContainer
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    # attempt clean unmount of FUSE-backed media path to avoid stale mounts
+                    fusermount -uz /movies 2>/dev/null || umount -l /movies 2>/dev/null || true
       volumes:
         - name: config
           persistentVolumeClaim:
@@ -291,7 +323,7 @@ spec:
             type: DirectoryOrCreate
         - name: media
           hostPath:
-            path: /mnt/jellyfin-rustfs
+            path: /home/groot/jellyfin-movies
             type: DirectoryOrCreate
 
 ---

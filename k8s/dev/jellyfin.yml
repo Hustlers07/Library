@@ -116,6 +116,9 @@ spec:
               rclone mount rustfs:movies /media/movies \
                 --allow-other \
                 --allow-non-empty \
+                --uid 1000 \
+                --gid 1000 \
+                --umask 002 \
                 --vfs-cache-mode full \
                 --vfs-cache-max-size 2G \
                 --vfs-cache-max-age 2h \
@@ -126,6 +129,9 @@ spec:
               rclone mount rustfs:jellyfin-tv /media/tv \
                 --allow-other \
                 --allow-non-empty \
+                --uid 1000 \
+                --gid 1000 \
+                --umask 002 \
                 --vfs-cache-mode full \
                 --vfs-cache-max-size 2G \
                 --vfs-cache-max-age 2h \
@@ -147,6 +153,24 @@ spec:
                 fi
                 sleep 5
               done
+          # Gives Kubernetes a chance to unmount both FUSE mounts cleanly
+          # BEFORE this container is killed (SIGTERM/rolling restart/pod
+          # delete). Without this, the underlying `rclone mount` processes
+          # get killed abruptly, leaving a dead mount table entry behind
+          # ("transport endpoint is not connected") on both the host path
+          # and any container still holding a HostToContainer view of it
+          # (Jellyfin itself, Radarr, Sonarr) -- which then blocks kubelet
+          # from even starting the next pod until manually cleared with
+          # `umount -l` on the host.
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    fusermount -uz /media/movies 2>/dev/null || umount -l /media/movies 2>/dev/null || true
+                    fusermount -uz /media/tv 2>/dev/null || umount -l /media/tv 2>/dev/null || true
           env:
             # Remote-specific env vars (RCLONE_CONFIG_<REMOTE>_<OPTION>)
             # target the [rustfs] remote specifically, rather than
@@ -245,13 +269,13 @@ spec:
             claimName: jellyfin-cache
         - name: rustfs-movies-mount
           hostPath:
-            path: /mnt/jellyfin-rustfs
+            path: /home/groot/jellyfin-movies
             type: DirectoryOrCreate
         - name: rustfs-tv-mount
           # Same host path Sonarr already mounts (see servarr manifest),
           # now also FUSE-mounted here to rustfs:jellyfin-tv for S3 sync/serving.
           hostPath:
-            path: /mnt/jellyfin-tv
+            path: /home/groot/jellyfin-tv
             type: DirectoryOrCreate
         - name: fuse-device
           hostPath:
