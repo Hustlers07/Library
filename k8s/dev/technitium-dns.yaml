@@ -24,6 +24,8 @@ metadata:
   namespace: technitium-dns
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: technitium-dns
@@ -32,22 +34,23 @@ spec:
       labels:
         app: technitium-dns
     spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: groot-server
       containers:
         - name: technitium-dns
           image: technitium/dns-server:latest
           ports:
             - containerPort: 53
-              hostPort: 53
               protocol: UDP
             - containerPort: 53
-              hostPort: 53
               protocol: TCP
             - containerPort: 5380
-              hostPort: 5380
               protocol: TCP
           volumeMounts:
             - name: dns-data
-              mountPath: /var/lib/technitium
+              mountPath: /etc/dns
       volumes:
         - name: dns-data
           persistentVolumeClaim:
@@ -57,7 +60,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: technitium-dns-service
+  name: technitium-dns-admin
   namespace: technitium-dns
 spec:
   selector:
