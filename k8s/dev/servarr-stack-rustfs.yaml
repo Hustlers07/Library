@@ -166,6 +166,16 @@ spec:
 # SONARR (TV shows)
 # Mounts a SEPARATE host path from Radarr's movies library so
 # the two apps never write into the same folder.
+#
+# livenessProbe added: the /tv path is a FUSE mount owned by
+# Jellyfin's rclone-mount sidecar (see jellyfin manifest). Every
+# time that sidecar restarts, it tears down and recreates the
+# FUSE connection, which can leave already-running containers
+# (this one) holding a dead mount reference -- "Socket not
+# connected" / "Transport endpoint is not connected". This probe
+# detects that condition and lets Kubernetes restart this pod
+# automatically to pick up a fresh mount, instead of it sitting
+# broken until someone notices and restarts it by hand.
 # ============================================================
 apiVersion: apps/v1
 kind: Deployment
@@ -214,6 +224,16 @@ spec:
             - name: media
               mountPath: /tv
               mountPropagation: HostToContainer
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "mountpoint -q /tv && ls /tv >/dev/null 2>&1"
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 3
           lifecycle:
             preStop:
               exec:
@@ -256,6 +276,11 @@ spec:
 # Mounted at /mnt/jellyfin-rustfs, which is Jellyfin's FUSE
 # mountpoint for rustfs:movies. mountPropagation:HostToContainer
 # is required for Radarr to actually see the FUSE-mounted files.
+#
+# livenessProbe added: same rationale as Sonarr above -- detects
+# a dead FUSE reference at /movies caused by the Jellyfin
+# rclone-mount sidecar restarting, and lets Kubernetes self-heal
+# this pod automatically.
 # ============================================================
 apiVersion: apps/v1
 kind: Deployment
@@ -304,6 +329,16 @@ spec:
             - name: media
               mountPath: /movies
               mountPropagation: HostToContainer
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "mountpoint -q /movies && ls /movies >/dev/null 2>&1"
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 3
           lifecycle:
             preStop:
               exec:
@@ -400,7 +435,7 @@ spec:
       targetPort: 9696
   type: ClusterIP
 
-# ============================================================
+---
 # ============================================================
 # FLARESOLVERR
 # Proxy service that solves Cloudflare (and similar JS/captcha)

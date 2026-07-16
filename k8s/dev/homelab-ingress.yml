@@ -198,3 +198,69 @@ spec:
           serversTransport: dashboard-transport
   tls:
     secretName: local-cert-tls
+
+---
+# ─── rustfs namespace: Capacitarr on its own subdomain (HTTPS only) ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: capacitarr-ingressroute
+  namespace: rustfs
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`capacitarr.home.lab.local`)
+      kind: Rule
+      services:
+        - name: capacitarr
+          port: 2187
+  tls:
+    secretName: local-cert-tls
+
+---
+# ─── rustfs namespace: Autopulse on its own subdomain (HTTPS only) ───
+# ─── rustfs namespace: Autopulse root redirect middleware ───
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: autopulse-root-redirect
+  namespace: rustfs
+spec:
+  redirectRegex:
+    # Matches exactly the bare host with no path or trailing slash only
+    regex: ^https://autopulse\.home\.lab\.local/?$
+    replacement: https://autopulse.home.lab.local/ui/login
+    permanent: false
+
+---
+# ─── rustfs namespace: Autopulse on its own subdomain (HTTPS only) ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: autopulse-ingressroute
+  namespace: rustfs
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    # Exact match on root -- redirects to /ui/login. Higher priority
+    # so it wins over the catch-all route below.
+    - match: Host(`autopulse.home.lab.local`) && Path(`/`)
+      kind: Rule
+      priority: 10
+      middlewares:
+        - name: autopulse-root-redirect
+      services:
+        - name: autopulse
+          port: 2875
+    # Everything else (including /ui/*, /triggers/*, /api/*) passes
+    # through untouched.
+    - match: Host(`autopulse.home.lab.local`)
+      kind: Rule
+      priority: 1
+      services:
+        - name: autopulse
+          port: 2875
+  tls:
+    secretName: local-cert-tls
