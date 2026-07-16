@@ -264,3 +264,48 @@ spec:
           port: 2875
   tls:
     secretName: local-cert-tls
+
+# ─── rustfs namespace: Seerr on its own subdomain (HTTPS only) ───
+# ─── rustfs namespace: Seerr on its own subdomain (HTTP + HTTPS) ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: seerr-ingressroute-http
+  namespace: rustfs
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`seerr.home.lab.local`)
+      kind: Rule
+      services:
+        - name: seerr
+          port: 5055
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: seerr-allow-iframe
+  namespace: rustfs
+spec:
+  headers:
+    customResponseHeaders:
+      X-Frame-Options: ""
+    contentSecurityPolicy: "frame-ancestors 'self' http://jellyfin.home.lab.local"
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: seerr-ingressroute-https
+  namespace: rustfs
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`seerr.home.lab.local`)
+      kind: Rule
+      services:
+        - name: seerr
+          port: 5055
+  tls:
+    secretName: local-cert-tls

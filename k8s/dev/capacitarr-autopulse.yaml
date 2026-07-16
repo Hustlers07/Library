@@ -223,3 +223,78 @@ spec:
     - port: 2875
       targetPort: 2875
   type: ClusterIP
+
+---
+# ============================================================
+# SEERR (successor to Jellyseerr/Overseerr, merged Feb 2026)
+# Runs as non-root (UID 1000) by default -- no PUID/PGID root
+# dance needed here, unlike capacitarr/jellyseerr's old pattern.
+# ============================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: seerr-config
+  namespace: rustfs
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 512Mi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seerr
+  namespace: rustfs
+  labels:
+    app: seerr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: seerr
+  template:
+    metadata:
+      labels:
+        app: seerr
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: seerr
+          image: ghcr.io/seerr-team/seerr:latest
+          env:
+            - name: TZ
+              valueFrom:
+                configMapKeyRef:
+                  name: servarr-env
+                  key: TZ
+          ports:
+            - containerPort: 5055
+              name: web
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: seerr-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seerr
+  namespace: rustfs
+spec:
+  selector:
+    app: seerr
+  ports:
+    - port: 5055
+      targetPort: 5055
+  type: ClusterIP
