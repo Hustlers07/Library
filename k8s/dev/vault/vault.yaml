@@ -61,6 +61,8 @@ spec:
       labels:
         app: vault
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: "groot-server"
       serviceAccountName: vault-server
       containers:
         - name: vault
