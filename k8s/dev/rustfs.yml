@@ -14,7 +14,7 @@ spec:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   hostPath:
-    path: /home/groot/Documents/rustfs
+    path: /mnt/pi-box-1tb/rustfs/data
     type: DirectoryOrCreate
 ---
 apiVersion: v1
@@ -124,7 +124,7 @@ spec:
           claimName: rustfs-pvc
       - name: rustfs-logs
         hostPath:
-          path: /home/groot/Documents/rustfs/logs
+          path: /mnt/pi-box-1tb/rustfs/logs
           type: DirectoryOrCreate
 ---
 apiVersion: v1

@@ -7,7 +7,6 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: rustfs
-
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -18,7 +17,6 @@ data:
   PUID: "1000"
   PGID: "1000"
   TZ: "Etc/UTC"          # match whatever Jellyfin is using
-
 ---
 # ============================================================
 # CONFIG VOLUMES (one per app, small, RWO)
@@ -33,7 +31,6 @@ spec:
   resources:
     requests:
       storage: 1Gi
-
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -45,7 +42,6 @@ spec:
   resources:
     requests:
       storage: 1Gi
-
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -57,7 +53,6 @@ spec:
   resources:
     requests:
       storage: 1Gi
-
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -69,10 +64,10 @@ spec:
   resources:
     requests:
       storage: 512Mi
-
 ---
 # ============================================================
-# QBITTORRENT
+# QBITTORRENT (behind a gluetun VPN sidecar)
+#
 # Downloads go to a plain hostPath (NOT the rclone/S3 mount) -
 # torrent clients need normal random-write local disk. Sonarr
 # and Radarr will later move/copy completed downloads into the
@@ -82,6 +77,24 @@ spec:
 # 46G total, was hitting disk-pressure at 84% usage) to
 # /home/groot/downloads (/dev/sda4, 404G total, ~260G free).
 # Existing data was rsynced over before this change; see runbook.
+#
+# GLUETUN: shares this pod's network namespace, so once its
+# OpenVPN tunnel is up, ALL traffic from qbittorrent (including
+# torrent traffic) is forced through the VPN. If the tunnel
+# drops, gluetun's firewall blocks traffic instead of leaking to
+# the real IP. The .ovpn file comes from the "qbittorrent-vpn-
+# config" Secret synced from Vault above.
+#
+# PATCH (2026-07-18): OPENVPN_USER / OPENVPN_PASSWORD removed
+# from this container. The current custom.ovpn (VPNGate export)
+# uses embedded certificate auth only -- "#auth-user-pass" is
+# commented out in the file and <ca>/<cert>/<key> blocks are
+# inline instead. Sending a username/password to a server that
+# isn't expecting one caused OpenVPN's "AUTH_FAILED" error. The
+# qbittorrent-vpn-config Secret/ExternalSecret still defines
+# these keys (harmless, unused) in case a future provider swap
+# needs them back -- just re-add the two env entries below if
+# that happens.
 # ============================================================
 apiVersion: apps/v1
 kind: Deployment
@@ -103,18 +116,104 @@ spec:
         app: qbittorrent
     spec:
       securityContext:
-        runAsUser: 1000
-        runAsGroup: 1000
         fsGroup: 1000
-      containers:
-        - name: qbittorrent
-          image: lscr.io/linuxserver/qbittorrent:latest
-          envFrom:
-            - configMapRef:
-                name: servarr-env
+      initContainers:
+        - name: set-webui-credentials
+          image: python:3.12-alpine
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "32Mi"
+            limits:
+              cpu: "200m"
+              memory: "64Mi"
           env:
-            - name: WEBUI_PORT
-              value: "8080"
+            - name: QBITTORRENT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: qbittorrent-vpn-config
+                  key: QBITTORRENT_USERNAME
+            - name: QBITTORRENT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: qbittorrent-vpn-config
+                  key: QBITTORRENT_PASSWORD
+          volumeMounts:
+            - name: config
+              mountPath: /config
+          command:
+            - python3
+            - -c
+            - |
+              import os, base64, hashlib, configparser, pathlib
+
+              conf_dir = pathlib.Path("/config/qBittorrent")
+              conf_dir.mkdir(parents=True, exist_ok=True)
+              conf_path = conf_dir / "qBittorrent.conf"
+
+              cp = configparser.ConfigParser(strict=False)
+              cp.optionxform = str  # preserve case and backslashes in key names
+              if conf_path.exists():
+                  cp.read(conf_path)
+
+              if "Preferences" not in cp:
+                  cp["Preferences"] = {}
+
+              username = os.environ["QBITTORRENT_USERNAME"]
+              password = os.environ["QBITTORRENT_PASSWORD"].encode()
+
+              salt = os.urandom(16)
+              digest = hashlib.pbkdf2_hmac("sha512", password, salt, 100000)
+              b64_salt = base64.b64encode(salt).decode()
+              b64_hash = base64.b64encode(digest).decode()
+
+              cp["Preferences"]["WebUI\\Username"] = username
+              cp["Preferences"]["WebUI\\Password_PBKDF2"] = (
+                  f'"@ByteArray({b64_salt}:{b64_hash})"'
+              )
+
+              with open(conf_path, "w") as f:
+                  cp.write(f, space_around_delimiters=False)
+
+              print(f"WebUI credentials set for user '{username}'")
+      containers:
+        - name: gluetun
+          image: qmcgaw/gluetun:latest
+          securityContext:
+            runAsUser: 0
+            capabilities:
+              add: ["NET_ADMIN"]
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "128Mi"
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
+          env:
+            - name: VPN_SERVICE_PROVIDER
+              value: "custom"
+            - name: VPN_TYPE
+              value: "openvpn"
+            - name: OPENVPN_CUSTOM_CONFIG
+              value: "/gluetun/custom.ovpn"
+            - name: TZ
+              value: "Etc/UTC"
+            - name: DOT
+              value: "off"
+            - name: DNS_ADDRESS
+              value: "1.1.1.1"
+            - name: HEALTH_SERVER_ADDRESS
+              value: "0.0.0.0:9999"
+          volumeMounts:
+            - name: vpn-config
+              mountPath: /gluetun/custom.ovpn
+              subPath: custom.ovpn
+            - name: dev-tun
+              mountPath: /dev/net/tun
           ports:
             - containerPort: 8080
               name: webui
@@ -124,6 +223,33 @@ spec:
             - containerPort: 6881
               name: torrent-udp
               protocol: UDP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 9999
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+        - name: qbittorrent
+          image: lscr.io/linuxserver/qbittorrent:latest
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2500m"
+              memory: "4Gi"
+          envFrom:
+            - configMapRef:
+                name: servarr-env
+          env:
+            - name: WEBUI_PORT
+              value: "8080"
           volumeMounts:
             - name: config
               mountPath: /config
@@ -137,7 +263,13 @@ spec:
           hostPath:
             path: /home/groot/downloads
             type: DirectoryOrCreate
-
+        - name: vpn-config
+          secret:
+            secretName: qbittorrent-vpn-config
+        - name: dev-tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice
 ---
 apiVersion: v1
 kind: Service
@@ -159,8 +291,7 @@ spec:
       port: 6881
       targetPort: 6881
       protocol: UDP
-  type: ClusterIP
-
+  type: LoadBalancer
 ---
 # ============================================================
 # SONARR (TV shows)
@@ -255,7 +386,6 @@ spec:
           hostPath:
             path: /home/groot/jellyfin-tv     # <-- separate from movies path
             type: DirectoryOrCreate
-
 ---
 apiVersion: v1
 kind: Service
@@ -269,7 +399,6 @@ spec:
     - port: 8989
       targetPort: 8989
   type: ClusterIP
-
 ---
 # ============================================================
 # RADARR (Movies)
@@ -360,7 +489,6 @@ spec:
           hostPath:
             path: /home/groot/jellyfin-movies
             type: DirectoryOrCreate
-
 ---
 apiVersion: v1
 kind: Service
@@ -374,7 +502,6 @@ spec:
     - port: 7878
       targetPort: 7878
   type: ClusterIP
-
 ---
 # ============================================================
 # PROWLARR
@@ -420,7 +547,6 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: prowlarr-config
-
 ---
 apiVersion: v1
 kind: Service
@@ -434,7 +560,6 @@ spec:
     - port: 9696
       targetPort: 9696
   type: ClusterIP
-
 ---
 # ============================================================
 # FLARESOLVERR
@@ -485,15 +610,16 @@ spec:
             httpGet:
               path: /health
               port: 8191
-            initialDelaySeconds: 10
+            initialDelaySeconds: 20
             periodSeconds: 5
+            failureThreshold: 12 
           livenessProbe:
             httpGet:
               path: /health
               port: 8191
-            initialDelaySeconds: 20
+            initialDelaySeconds: 30
             periodSeconds: 15
-
+            failureThreshold: 3
 ---
 apiVersion: v1
 kind: Service
