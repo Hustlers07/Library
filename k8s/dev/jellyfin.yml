@@ -69,6 +69,8 @@ spec:
       labels:
         app: jellyfin
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: groot-server
       containers:
         - name: rclone-mount
           # Mounts both the movies and jellyfin-tv S3 buckets in a single

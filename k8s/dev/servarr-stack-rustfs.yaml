@@ -1,8 +1,4 @@
 ---
-# ============================================================
-# Reuses the "rustfs" namespace your Jellyfin manifest already
-# creates. Safe to apply even if the namespace already exists.
-# ============================================================
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -16,11 +12,8 @@ metadata:
 data:
   PUID: "1000"
   PGID: "1000"
-  TZ: "Etc/UTC"          # match whatever Jellyfin is using
+  TZ: "Etc/UTC"
 ---
-# ============================================================
-# CONFIG VOLUMES (one per app, small, RWO)
-# ============================================================
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -66,35 +59,12 @@ spec:
       storage: 512Mi
 ---
 # ============================================================
-# QBITTORRENT (behind a gluetun VPN sidecar)
-#
-# Downloads go to a plain hostPath (NOT the rclone/S3 mount) -
-# torrent clients need normal random-write local disk. Sonarr
-# and Radarr will later move/copy completed downloads into the
-# media path.
-#
-# NOTE: downloads hostPath moved from /mnt/downloads (/dev/sda2,
-# 46G total, was hitting disk-pressure at 84% usage) to
-# /home/groot/downloads (/dev/sda4, 404G total, ~260G free).
-# Existing data was rsynced over before this change; see runbook.
-#
-# GLUETUN: shares this pod's network namespace, so once its
-# OpenVPN tunnel is up, ALL traffic from qbittorrent (including
-# torrent traffic) is forced through the VPN. If the tunnel
-# drops, gluetun's firewall blocks traffic instead of leaking to
-# the real IP. The .ovpn file comes from the "qbittorrent-vpn-
-# config" Secret synced from Vault above.
-#
-# PATCH (2026-07-18): OPENVPN_USER / OPENVPN_PASSWORD removed
-# from this container. The current custom.ovpn (VPNGate export)
-# uses embedded certificate auth only -- "#auth-user-pass" is
-# commented out in the file and <ca>/<cert>/<key> blocks are
-# inline instead. Sending a username/password to a server that
-# isn't expecting one caused OpenVPN's "AUTH_FAILED" error. The
-# qbittorrent-vpn-config Secret/ExternalSecret still defines
-# these keys (harmless, unused) in case a future provider swap
-# needs them back -- just re-add the two env entries below if
-# that happens.
+# QBITTORRENT (VPN REMOVED 2026-07-19)
+# gluetun sidecar removed entirely -- was routed through a free
+# VPN Gate relay (opengw.net) with no port-forwarding support,
+# which left qBittorrent permanently "firewalled" and unable to
+# accept incoming peer connections. That was the real cause of
+# slow downloads, not a k8s networking issue.
 # ============================================================
 apiVersion: apps/v1
 kind: Deployment
@@ -115,6 +85,8 @@ spec:
       labels:
         app: qbittorrent
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: groot-server
       securityContext:
         fsGroup: 1000
       initContainers:
@@ -155,7 +127,7 @@ spec:
               conf_path = conf_dir / "qBittorrent.conf"
 
               cp = configparser.ConfigParser(strict=False)
-              cp.optionxform = str  # preserve case and backslashes in key names
+              cp.optionxform = str
               if conf_path.exists():
                   cp.read(conf_path)
 
@@ -180,58 +152,6 @@ spec:
 
               print(f"WebUI credentials set for user '{username}'")
       containers:
-        - name: gluetun
-          image: qmcgaw/gluetun:latest
-          securityContext:
-            runAsUser: 0
-            capabilities:
-              add: ["NET_ADMIN"]
-          resources:
-            requests:
-              cpu: "250m"
-              memory: "128Mi"
-            limits:
-              cpu: "1000m"
-              memory: "512Mi"
-          env:
-            - name: VPN_SERVICE_PROVIDER
-              value: "custom"
-            - name: VPN_TYPE
-              value: "openvpn"
-            - name: OPENVPN_CUSTOM_CONFIG
-              value: "/gluetun/custom.ovpn"
-            - name: TZ
-              value: "Etc/UTC"
-            - name: DOT
-              value: "off"
-            - name: DNS_ADDRESS
-              value: "1.1.1.1"
-            - name: HEALTH_SERVER_ADDRESS
-              value: "0.0.0.0:9999"
-          volumeMounts:
-            - name: vpn-config
-              mountPath: /gluetun/custom.ovpn
-              subPath: custom.ovpn
-            - name: dev-tun
-              mountPath: /dev/net/tun
-          ports:
-            - containerPort: 8080
-              name: webui
-            - containerPort: 6881
-              name: torrent-tcp
-              protocol: TCP
-            - containerPort: 6881
-              name: torrent-udp
-              protocol: UDP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 9999
-            initialDelaySeconds: 20
-            periodSeconds: 15
-            timeoutSeconds: 5
-            failureThreshold: 3
-
         - name: qbittorrent
           image: lscr.io/linuxserver/qbittorrent:latest
           securityContext:
@@ -250,6 +170,15 @@ spec:
           env:
             - name: WEBUI_PORT
               value: "8080"
+          ports:
+            - containerPort: 8080
+              name: webui
+            - containerPort: 6881
+              name: torrent-tcp
+              protocol: TCP
+            - containerPort: 6881
+              name: torrent-udp
+              protocol: UDP
           volumeMounts:
             - name: config
               mountPath: /config
@@ -263,13 +192,6 @@ spec:
           hostPath:
             path: /home/groot/downloads
             type: DirectoryOrCreate
-        - name: vpn-config
-          secret:
-            secretName: qbittorrent-vpn-config
-        - name: dev-tun
-          hostPath:
-            path: /dev/net/tun
-            type: CharDevice
 ---
 apiVersion: v1
 kind: Service
@@ -293,21 +215,6 @@ spec:
       protocol: UDP
   type: LoadBalancer
 ---
-# ============================================================
-# SONARR (TV shows)
-# Mounts a SEPARATE host path from Radarr's movies library so
-# the two apps never write into the same folder.
-#
-# livenessProbe added: the /tv path is a FUSE mount owned by
-# Jellyfin's rclone-mount sidecar (see jellyfin manifest). Every
-# time that sidecar restarts, it tears down and recreates the
-# FUSE connection, which can leave already-running containers
-# (this one) holding a dead mount reference -- "Socket not
-# connected" / "Transport endpoint is not connected". This probe
-# detects that condition and lets Kubernetes restart this pod
-# automatically to pick up a fresh mount, instead of it sitting
-# broken until someone notices and restarts it by hand.
-# ============================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -327,6 +234,8 @@ spec:
       labels:
         app: sonarr
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: groot-server
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
@@ -372,7 +281,6 @@ spec:
                   - /bin/sh
                   - -c
                   - |
-                    # attempt clean unmount of FUSE-backed media path to avoid stale mounts
                     fusermount -uz /tv 2>/dev/null || umount -l /tv 2>/dev/null || true
       volumes:
         - name: config
@@ -384,7 +292,7 @@ spec:
             type: DirectoryOrCreate
         - name: media
           hostPath:
-            path: /home/groot/jellyfin-tv     # <-- separate from movies path
+            path: /home/groot/jellyfin-tv
             type: DirectoryOrCreate
 ---
 apiVersion: v1
@@ -400,17 +308,6 @@ spec:
       targetPort: 8989
   type: ClusterIP
 ---
-# ============================================================
-# RADARR (Movies)
-# Mounted at /mnt/jellyfin-rustfs, which is Jellyfin's FUSE
-# mountpoint for rustfs:movies. mountPropagation:HostToContainer
-# is required for Radarr to actually see the FUSE-mounted files.
-#
-# livenessProbe added: same rationale as Sonarr above -- detects
-# a dead FUSE reference at /movies caused by the Jellyfin
-# rclone-mount sidecar restarting, and lets Kubernetes self-heal
-# this pod automatically.
-# ============================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -430,6 +327,8 @@ spec:
       labels:
         app: radarr
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: groot-server
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
@@ -475,7 +374,6 @@ spec:
                   - /bin/sh
                   - -c
                   - |
-                    # attempt clean unmount of FUSE-backed media path to avoid stale mounts
                     fusermount -uz /movies 2>/dev/null || umount -l /movies 2>/dev/null || true
       volumes:
         - name: config
@@ -503,11 +401,6 @@ spec:
       targetPort: 7878
   type: ClusterIP
 ---
-# ============================================================
-# PROWLARR
-# No media/downloads access needed - it only talks to indexers
-# and pushes config to Sonarr/Radarr via their APIs.
-# ============================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -561,12 +454,6 @@ spec:
       targetPort: 9696
   type: ClusterIP
 ---
-# ============================================================
-# FLARESOLVERR
-# Proxy service that solves Cloudflare (and similar JS/captcha)
-# challenges on behalf of Prowlarr indexers. No config volume
-# needed - it's stateless. No media/downloads access needed either.
-# ============================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -593,13 +480,11 @@ spec:
             - name: LOG_LEVEL
               value: "info"
             - name: TZ
-              value: "Etc/UTC"     # match servarr-env TZ
+              value: "Etc/UTC"
           ports:
             - containerPort: 8191
               name: web
           resources:
-            # Chromium under the hood - give it real headroom or
-            # it OOMs on tougher Cloudflare challenges.
             requests:
               memory: "512Mi"
               cpu: "500m"
@@ -612,7 +497,7 @@ spec:
               port: 8191
             initialDelaySeconds: 20
             periodSeconds: 5
-            failureThreshold: 12 
+            failureThreshold: 12
           livenessProbe:
             httpGet:
               path: /health
