@@ -99,6 +99,13 @@ spec:
             privileged: true
             capabilities:
               add: [ "SYS_ADMIN" ]
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1500m"
+              memory: "1.5Gi"
           command:
             - /bin/sh
             - -c
@@ -199,25 +206,35 @@ spec:
             - name: fuse-device
               mountPath: /dev/fuse
           livenessProbe:
-            # Checks that both FUSE mounts are attached (mountpoint -q) and
-            # responsive (ls succeeds) without depending on any specific
-            # object/prefix existing in either bucket.
+            # Only checks that both FUSE mounts are attached (mountpoint -q).
+            # Deliberately does NOT run `ls`, since `ls` on a FUSE/S3-backed
+            # mount round-trips to the RustFS backend -- if RustFS is briefly
+            # slow, overloaded, or itself restarting, `ls` can hang past the
+            # timeout and cause kubelet to kill an otherwise-healthy
+            # rclone-mount container. Killing this container mid-write is
+            # exactly what causes files to get silently "shadowed" by the
+            # raw hostPath filesystem underneath once the mount re-attaches.
             exec:
               command:
                 - /bin/sh
                 - -c
-                - >
-                  mountpoint -q /media/movies && ls /media/movies >/dev/null 2>&1 &&
-                  mountpoint -q /media/tv && ls /media/tv >/dev/null 2>&1
+                - "mountpoint -q /media/movies && mountpoint -q /media/tv"
             initialDelaySeconds: 30
-            periodSeconds: 20
-            timeoutSeconds: 10
-            failureThreshold: 3
+            periodSeconds: 30
+            timeoutSeconds: 15
+            failureThreshold: 6
 
         - name: jellyfin
           image: jellyfin/jellyfin:latest
           # Use linuxserver image for better ffmpeg/codec support
           # image: lscr.io/linuxserver/jellyfin:latest
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "4000m"
+              memory: "4Gi"
           ports:
             - containerPort: 8096
               name: http
@@ -235,29 +252,22 @@ spec:
             - name: rustfs-tv-mount
               mountPath: /media/tv
               mountPropagation: HostToContainer
-          resources:
-            requests:
-              cpu: 500m
-              memory: 1Gi
-            limits:
-              cpu: 4000m
-              memory: 4Gi
           livenessProbe:
             httpGet:
               path: /health
               port: 8096
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 30
-            timeoutSeconds: 10
-            failureThreshold: 5
+            timeoutSeconds: 15
+            failureThreshold: 6
           readinessProbe:
             httpGet:
               path: /health
               port: 8096
-            initialDelaySeconds: 15
+            initialDelaySeconds: 30
             periodSeconds: 15
             timeoutSeconds: 10
-            failureThreshold: 3
+            failureThreshold: 5
 
       volumes:
         - name: rclone-config

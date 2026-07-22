@@ -256,6 +256,13 @@ spec:
           ports:
             - containerPort: 8989
               name: web
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
           volumeMounts:
             - name: config
               mountPath: /config
@@ -264,16 +271,25 @@ spec:
             - name: media
               mountPath: /tv
               mountPropagation: HostToContainer
+          # Dropped the `ls /tv` check -- it round-trips to the RustFS S3
+          # backend over the FUSE mount, and hangs (past timeoutSeconds)
+          # whenever RustFS is briefly slow, under load, or restarting.
+          # A hung ls -> failed probe -> killed container -> brief window
+          # where writes could land on the raw hostPath underneath the
+          # FUSE mount instead of going through rclone -- silently
+          # "shadowing" files from ever being uploaded to S3.
+          # mountpoint -q alone confirms the FUSE mount is attached
+          # without touching the backend at all.
           livenessProbe:
             exec:
               command:
                 - /bin/sh
                 - -c
-                - "mountpoint -q /tv && ls /tv >/dev/null 2>&1"
+                - "mountpoint -q /tv"
             initialDelaySeconds: 30
-            periodSeconds: 20
-            timeoutSeconds: 10
-            failureThreshold: 3
+            periodSeconds: 30
+            timeoutSeconds: 15
+            failureThreshold: 6
           lifecycle:
             preStop:
               exec:
@@ -349,6 +365,13 @@ spec:
           ports:
             - containerPort: 7878
               name: web
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
           volumeMounts:
             - name: config
               mountPath: /config
@@ -357,16 +380,17 @@ spec:
             - name: media
               mountPath: /movies
               mountPropagation: HostToContainer
+          # Same reasoning as sonarr above: mountpoint -q only, no ls.
           livenessProbe:
             exec:
               command:
                 - /bin/sh
                 - -c
-                - "mountpoint -q /movies && ls /movies >/dev/null 2>&1"
+                - "mountpoint -q /movies"
             initialDelaySeconds: 30
-            periodSeconds: 20
-            timeoutSeconds: 10
-            failureThreshold: 3
+            periodSeconds: 30
+            timeoutSeconds: 15
+            failureThreshold: 6
           lifecycle:
             preStop:
               exec:
@@ -433,6 +457,13 @@ spec:
           ports:
             - containerPort: 9696
               name: web
+          resources:
+            requests:
+              cpu: "150m"
+              memory: "192Mi"
+            limits:
+              cpu: "750m"
+              memory: "512Mi"
           volumeMounts:
             - name: config
               mountPath: /config
