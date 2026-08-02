@@ -1,1 +1,173 @@
-<p>user works!</p>
+<div class="user-page">
+  <section class="user-header">
+    <h1>Member Management</h1>
+    <mat-button-toggle-group aria-label="User action" (change)="onActionChange($event)" [value]="selectedAction">
+      <mat-button-toggle *ngFor="let action of actionOptions" [value]="action.value">{{ action.key }}</mat-button-toggle>
+    </mat-button-toggle-group>
+  </section>
+
+  <section class="user-content">
+    <div *ngIf="selectedAction === 'view'">
+      <div class="user-status" *ngIf="isLoading()">Loading members...</div>
+      <div class="user-status" *ngIf="!isLoading() && users().length === 0">No members found.</div>
+      <div class="user-message" *ngIf="actionMessage()">{{ actionMessage() }}</div>
+
+      <table *ngIf="!isLoading() && users().length > 0" class="user-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Last Login</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users()">
+            <td>{{ user.fullName }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.phoneNumber }}</td>
+            <td>{{ user.role }}</td>
+            <td>{{ user.isActive ? 'Active' : 'Inactive' }}</td>
+            <td>{{ user.lastLogin | date:'short' }}</td>
+            <td class="actions-cell">
+              <button mat-stroked-button color="primary" type="button" (click)="selectUserForUpdate(user)">Edit</button>
+
+              @if(user.username !== currentUsername){
+                <button mat-stroked-button color="warn" type="button" (click)="toggleActive(user)">{{ user.isActive ? 'Deactivate' : 'Activate' }}</button>
+              }
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="selectedAction === 'register'" class="user-panel">
+      <h2>Register New Member</h2>
+      <form [formGroup]="registerForm" class="user-form" (ngSubmit)="onRegisterMember()">
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>First Name</mat-label>
+            <input matInput formControlName="firstName" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Last Name</mat-label>
+            <input matInput formControlName="lastName" />
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Phone Number</mat-label>
+            <input matInput formControlName="phoneNumber" />
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Password</mat-label>
+            <input matInput type="password" formControlName="password" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Confirm Password</mat-label>
+            <input matInput type="password" formControlName="confirmPassword" />
+          </mat-form-field>
+        </div>
+
+        <div class="form-actions">
+          <button mat-raised-button color="primary" type="submit" [disabled]="registerForm.invalid || isSubmitting()">{{ isSubmitting() ? 'Registering...' : 'Register Member' }}</button>
+          <span class="user-message" *ngIf="actionMessage()">{{ actionMessage() }}</span>
+        </div>
+      </form>
+    </div>
+
+    <div *ngIf="selectedAction === 'update'" class="user-panel">
+      <h2>Update Member</h2>
+      <form [formGroup]="searchForm" class="user-search" (ngSubmit)="searchUserByUsername()">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search by username or email</mat-label>
+          <input matInput formControlName="username" />
+        </mat-form-field>
+        <button mat-raised-button color="primary" type="submit" [disabled]="searchForm.invalid || isUpdateLoading()">{{ isUpdateLoading() ? 'Searching...' : 'Search' }}</button>
+      </form>
+
+      <div class="user-message error" *ngIf="searchError()">{{ searchError() }}</div>
+      <div class="user-message" *ngIf="actionMessage()">{{ actionMessage() }}</div>
+
+      <div *ngIf="selectedUser()" class="update-panel">
+        <h3>Edit {{ selectedUser()?.fullName }}</h3>
+        <form [formGroup]="updateForm" class="user-form" (ngSubmit)="onUpdateMember()">
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Email</mat-label>
+              <input matInput type="email" formControlName="email" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Phone Number</mat-label>
+              <input matInput formControlName="phoneNumber" />
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>First Name</mat-label>
+              <input matInput formControlName="firstName" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Last Name</mat-label>
+              <input matInput formControlName="lastName" />
+            </mat-form-field>
+          </div>
+
+          <mat-checkbox formControlName="isActive">Active</mat-checkbox>
+
+          <div class="form-actions">
+            <button mat-raised-button color="primary" type="submit" [disabled]="updateForm.invalid || isUpdateLoading()">{{ isUpdateLoading() ? 'Updating...' : 'Update Member' }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div *ngIf="selectedAction === 'password'" class="user-panel">
+      <h2>Change Password</h2>
+      <form [formGroup]="passwordForm" class="user-form" (ngSubmit)="onChangePassword()">
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Current Password</mat-label>
+            <input matInput type="password" formControlName="currentPassword" />
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>New Password</mat-label>
+            <input matInput type="password" formControlName="newPassword" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Confirm New Password</mat-label>
+            <input matInput type="password" formControlName="confirmNewPassword" />
+          </mat-form-field>
+        </div>
+
+        <div class="form-actions">
+          <button mat-raised-button color="primary" type="submit" [disabled]="passwordForm.invalid || isSubmitting()">{{ isSubmitting() ? 'Updating...' : 'Change Password' }}</button>
+          <span class="user-message" *ngIf="actionMessage()">{{ actionMessage() }}</span>
+        </div>
+      </form>
+    </div>
+  </section>
+</div>

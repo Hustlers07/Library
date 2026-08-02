@@ -1,0 +1,311 @@
+# ─── rustfs namespace: RustFS on its own subdomain (HTTPS only) ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: rustfs-ingressroute
+  namespace: rustfs
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`rustfs.home.lab.local`)
+      kind: Rule
+      services:
+        - name: rustfs-service
+          port: 9001
+  tls:
+    secretName: local-cert-tls
+
+---
+# ─── rustfs namespace: Jellyfin on its own subdomain (HTTP + HTTPS) ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: jellyfin-ingressroute-http
+  namespace: rustfs
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`jellyfin.home.lab.local`)
+      kind: Rule
+      services:
+        - name: jellyfin-service
+          port: 8096
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: jellyfin-ingressroute-https
+  namespace: rustfs
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`jellyfin.home.lab.local`)
+      kind: Rule
+      services:
+        - name: jellyfin-service
+          port: 8096
+  tls:
+    secretName: local-cert-tls
+
+---
+# ─── rustfs namespace: qBittorrent on its own subdomain (HTTPS only) ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: qbittorrent-ingressroute
+  namespace: rustfs
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`qbittorrent.home.lab.local`)
+      kind: Rule
+      services:
+        - name: qbittorrent
+          port: 8080
+  tls:
+    secretName: local-cert-tls
+
+---
+# ─── rustfs namespace: Sonarr on its own subdomain (HTTPS only) ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: sonarr-ingressroute
+  namespace: rustfs
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`sonarr.home.lab.local`)
+      kind: Rule
+      services:
+        - name: sonarr
+          port: 8989
+  tls:
+    secretName: local-cert-tls
+
+---
+# ─── rustfs namespace: Radarr on its own subdomain (HTTPS only) ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: radarr-ingressroute
+  namespace: rustfs
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`radarr.home.lab.local`)
+      kind: Rule
+      services:
+        - name: radarr
+          port: 7878
+  tls:
+    secretName: local-cert-tls
+
+---
+# ─── rustfs namespace: Prowlarr on its own subdomain (HTTPS only) ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prowlarr-ingressroute
+  namespace: rustfs
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`prowlarr.home.lab.local`)
+      kind: Rule
+      services:
+        - name: prowlarr
+          port: 9696
+  tls:
+    secretName: local-cert-tls
+
+---
+# ─── technitium-dns namespace: DNS console on its own subdomain ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: technitium-dns-ingressroute
+  namespace: technitium-dns
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`dns.home.lab.local`)
+      kind: Rule
+      services:
+        - name: technitium-dns-admin
+          port: 5380
+  tls:
+    secretName: local-cert-tls
+
+---
+# ─── vault namespace: Vault on its own subdomain ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: vault-ingressroute
+  namespace: vault
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`vault.home.lab.local`)
+      kind: Rule
+      services:
+        - name: vault-service
+          port: 8200
+  tls:
+    secretName: local-cert-tls
+
+# ─── kubernetes-dashboard namespace: Dashboard on its own subdomain (HTTPS only) ───
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: dashboard-transport
+  namespace: kubernetes-dashboard
+spec:
+  # Dashboard auto-generates its own self-signed cert on startup.
+  # Traefik has no way to validate that cert against a CA, so we
+  # tell it to skip verification for this specific backend only -
+  # this does not affect the front-facing TLS (local-cert-tls) that
+  # the browser sees, only the Traefik -> Dashboard hop internally.
+  insecureSkipVerify: true
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: dashboard-ingressroute
+  namespace: kubernetes-dashboard
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`dashboard.home.lab.local`)
+      kind: Rule
+      services:
+        - name: kubernetes-dashboard
+          port: 443
+          scheme: https
+          serversTransport: dashboard-transport
+  tls:
+    secretName: local-cert-tls
+
+---
+# ─── rustfs namespace: Capacitarr on its own subdomain (HTTPS only) ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: capacitarr-ingressroute
+  namespace: rustfs
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`capacitarr.home.lab.local`)
+      kind: Rule
+      services:
+        - name: capacitarr
+          port: 2187
+  tls:
+    secretName: local-cert-tls
+
+---
+# ─── rustfs namespace: Autopulse on its own subdomain (HTTPS only) ───
+# ─── rustfs namespace: Autopulse root redirect middleware ───
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: autopulse-root-redirect
+  namespace: rustfs
+spec:
+  redirectRegex:
+    # Matches exactly the bare host with no path or trailing slash only
+    regex: ^https://autopulse\.home\.lab\.local/?$
+    replacement: https://autopulse.home.lab.local/ui/login
+    permanent: false
+
+---
+# ─── rustfs namespace: Autopulse on its own subdomain (HTTPS only) ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: autopulse-ingressroute
+  namespace: rustfs
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    # Exact match on root -- redirects to /ui/login. Higher priority
+    # so it wins over the catch-all route below.
+    - match: Host(`autopulse.home.lab.local`) && Path(`/`)
+      kind: Rule
+      priority: 10
+      middlewares:
+        - name: autopulse-root-redirect
+      services:
+        - name: autopulse
+          port: 2875
+    # Everything else (including /ui/*, /triggers/*, /api/*) passes
+    # through untouched.
+    - match: Host(`autopulse.home.lab.local`)
+      kind: Rule
+      priority: 1
+      services:
+        - name: autopulse
+          port: 2875
+  tls:
+    secretName: local-cert-tls
+
+# ─── rustfs namespace: Seerr on its own subdomain (HTTPS only) ───
+# ─── rustfs namespace: Seerr on its own subdomain (HTTP + HTTPS) ───
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: seerr-ingressroute-http
+  namespace: rustfs
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`seerr.home.lab.local`)
+      kind: Rule
+      services:
+        - name: seerr
+          port: 5055
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: seerr-allow-iframe
+  namespace: rustfs
+spec:
+  headers:
+    customResponseHeaders:
+      X-Frame-Options: ""
+    contentSecurityPolicy: "frame-ancestors 'self' http://jellyfin.home.lab.local"
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: seerr-ingressroute-https
+  namespace: rustfs
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`seerr.home.lab.local`)
+      kind: Rule
+      services:
+        - name: seerr
+          port: 5055
+  tls:
+    secretName: local-cert-tls

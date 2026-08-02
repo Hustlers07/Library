@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -137,7 +138,8 @@ public class SecurityConfig {
                     auth.anyRequest().authenticated();
                 }).authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-                // .addFilterBefore(jwtAuthenticationFilter, AnonymousAuthenticationFilter.class);
+        // .addFilterBefore(jwtAuthenticationFilter,
+        // AnonymousAuthenticationFilter.class);
         return http.build();
     }
 
@@ -146,15 +148,18 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // Split comma-separated origins from env variable
-        // List<String> origins = Arrays.asList(allowedOrigins.split(","));
-        // configuration.setAllowedOrigins(origins);
+        List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .collect(Collectors.toList());
+        configuration.setAllowedOrigins(origins);
 
         // Allow all origins
-        configuration.addAllowedOriginPattern("*");
+        // configuration.addAllowedOriginPattern("*");
 
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L); // reduces preflight requests
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

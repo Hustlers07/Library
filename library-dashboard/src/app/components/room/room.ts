@@ -33,7 +33,7 @@ import { Seat } from './seat/seat';
     CommonModule
   ],
   templateUrl: './room.html',
-  styleUrl: './room.scss',
+  styleUrls: ['./room.scss'],
 })
 export class Room implements OnInit {
 

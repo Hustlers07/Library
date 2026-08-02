@@ -1,0 +1,313 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rustfs
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rclone-config
+  namespace: rustfs
+data:
+  rclone.conf: |
+    [rustfs]
+    type = s3
+    provider = Other
+    env_auth = false
+    endpoint = http://rustfs-service.rustfs.svc.cluster.local:9000
+    acl = private
+    force_path_style = true
+    # access_key_id / secret_access_key intentionally omitted here.
+    # ConfigMaps do NOT expand $VARS, so they were previously written
+    # into rclone.conf as literal strings. Credentials are now supplied
+    # exclusively via RCLONE_CONFIG_RUSTFS_* env vars below.
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyfin-config
+  namespace: rustfs
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyfin-cache
+  namespace: rustfs
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jellyfin
+  namespace: rustfs
+  labels:
+    app: jellyfin
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: jellyfin
+  template:
+    metadata:
+      labels:
+        app: jellyfin
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: groot-server
+      containers:
+        - name: rclone-mount
+          # Mounts both the movies and jellyfin-tv S3 buckets in a single
+          # sidecar. Both `rclone mount` processes run in the background;
+          # if either one dies, the polling loop below exits the container
+          # so Kubernetes restarts it and re-establishes both mounts
+          # cleanly together (avoids one mount silently going stale while
+          # the other keeps running).
+          #
+          # IMPORTANT: on container start, Kubernetes has ALREADY bind-mounted
+          # the hostPath onto /media/movies and /media/tv with shared
+          # propagation set up (because mountPropagation: Bidirectional is
+          # set below). That bind mount must NOT be blindly unmounted before
+          # `rclone mount` runs, or the propagation link back to the host
+          # (and therefore to the jellyfin container's HostToContainer mount)
+          # is destroyed, and rclone's FUSE mount ends up isolated in its own
+          # peer group that never reaches the jellyfin container.
+          #
+          # The cleanup below only unmounts if a *stale FUSE mount* (fs type
+          # fuse.rclone) is actually present at that path -- it never falls
+          # back to a blind `umount -l`, since that would tear down the
+          # legitimate, freshly-created propagation-enabled bind mount on
+          # every normal pod start.
+          image: rclone/rclone:1.67.0
+          securityContext:
+            privileged: true
+            capabilities:
+              add: [ "SYS_ADMIN" ]
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1500m"
+              memory: "1.5Gi"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              mkdir -p /media/movies /media/tv
+
+              cleanup_stale_fuse_mount() {
+                path="$1"
+                if grep -qs " $path fuse.rclone " /proc/mounts; then
+                  echo "found stale fuse.rclone mount at $path, cleaning up"
+                  fusermount -uz "$path" 2>/dev/null || umount -l "$path" 2>/dev/null || true
+                fi
+              }
+              cleanup_stale_fuse_mount /media/movies
+              cleanup_stale_fuse_mount /media/tv
+
+              rclone mount rustfs:movies /media/movies \
+                --allow-other \
+                --allow-non-empty \
+                --uid 1000 \
+                --gid 1000 \
+                --umask 002 \
+                --vfs-cache-mode full \
+                --vfs-cache-max-size 2G \
+                --vfs-cache-max-age 2h \
+                --s3-no-check-bucket \
+                --log-level INFO &
+              MOVIES_PID=$!
+
+              rclone mount rustfs:jellyfin-tv /media/tv \
+                --allow-other \
+                --allow-non-empty \
+                --uid 1000 \
+                --gid 1000 \
+                --umask 002 \
+                --vfs-cache-mode full \
+                --vfs-cache-max-size 2G \
+                --vfs-cache-max-age 2h \
+                --s3-no-check-bucket \
+                --log-level INFO &
+              TV_PID=$!
+
+              # Poll instead of `wait -n` for portability across shells
+              # (BusyBox ash / dash in this image may not support `wait -n`
+              # with explicit PID arguments).
+              while true; do
+                if ! kill -0 "$MOVIES_PID" 2>/dev/null; then
+                  echo "movies mount process exited, restarting container"
+                  exit 1
+                fi
+                if ! kill -0 "$TV_PID" 2>/dev/null; then
+                  echo "tv mount process exited, restarting container"
+                  exit 1
+                fi
+                sleep 5
+              done
+          # Gives Kubernetes a chance to unmount both FUSE mounts cleanly
+          # BEFORE this container is killed (SIGTERM/rolling restart/pod
+          # delete). Without this, the underlying `rclone mount` processes
+          # get killed abruptly, leaving a dead mount table entry behind
+          # ("transport endpoint is not connected") on both the host path
+          # and any container still holding a HostToContainer view of it
+          # (Jellyfin itself, Radarr, Sonarr) -- which then blocks kubelet
+          # from even starting the next pod until manually cleared with
+          # `umount -l` on the host.
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    fusermount -uz /media/movies 2>/dev/null || umount -l /media/movies 2>/dev/null || true
+                    fusermount -uz /media/tv 2>/dev/null || umount -l /media/tv 2>/dev/null || true
+          env:
+            # Remote-specific env vars (RCLONE_CONFIG_<REMOTE>_<OPTION>)
+            # target the [rustfs] remote specifically, rather than
+            # RCLONE_S3_* which applies to any s3-type remote.
+            - name: RCLONE_CONFIG_RUSTFS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: rclone-s3-secret
+                  key: RCLONE_ACCESS_KEY
+            - name: RCLONE_CONFIG_RUSTFS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rclone-s3-secret
+                  key: RCLONE_SECRET_KEY
+          volumeMounts:
+            - name: rclone-config
+              mountPath: /config/rclone
+            - name: rustfs-movies-mount
+              mountPath: /media/movies
+              mountPropagation: Bidirectional
+            - name: rustfs-tv-mount
+              mountPath: /media/tv
+              mountPropagation: Bidirectional
+            - name: fuse-device
+              mountPath: /dev/fuse
+          livenessProbe:
+            # Only checks that both FUSE mounts are attached (mountpoint -q).
+            # Deliberately does NOT run `ls`, since `ls` on a FUSE/S3-backed
+            # mount round-trips to the RustFS backend -- if RustFS is briefly
+            # slow, overloaded, or itself restarting, `ls` can hang past the
+            # timeout and cause kubelet to kill an otherwise-healthy
+            # rclone-mount container. Killing this container mid-write is
+            # exactly what causes files to get silently "shadowed" by the
+            # raw hostPath filesystem underneath once the mount re-attaches.
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "mountpoint -q /media/movies && mountpoint -q /media/tv"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 15
+            failureThreshold: 6
+
+        - name: jellyfin
+          image: jellyfin/jellyfin:latest
+          # Use linuxserver image for better ffmpeg/codec support
+          # image: lscr.io/linuxserver/jellyfin:latest
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "4000m"
+              memory: "4Gi"
+          ports:
+            - containerPort: 8096
+              name: http
+          env:
+            - name: JELLYFIN_PublishedServerUrl
+              value: http://groot-server:30097
+          volumeMounts:
+            - name: jellyfin-config
+              mountPath: /config
+            - name: jellyfin-cache
+              mountPath: /cache
+            - name: rustfs-movies-mount
+              mountPath: /media/movies
+              mountPropagation: HostToContainer
+            - name: rustfs-tv-mount
+              mountPath: /media/tv
+              mountPropagation: HostToContainer
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8096
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 15
+            failureThreshold: 6
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8096
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+
+      volumes:
+        - name: rclone-config
+          configMap:
+            name: rclone-config
+        - name: jellyfin-config
+          persistentVolumeClaim:
+            claimName: jellyfin-config
+        - name: jellyfin-cache
+          persistentVolumeClaim:
+            claimName: jellyfin-cache
+        - name: rustfs-movies-mount
+          hostPath:
+            path: /home/groot/jellyfin-movies
+            type: DirectoryOrCreate
+        - name: rustfs-tv-mount
+          # Same host path Sonarr already mounts (see servarr manifest),
+          # now also FUSE-mounted here to rustfs:jellyfin-tv for S3 sync/serving.
+          hostPath:
+            path: /home/groot/jellyfin-tv
+            type: DirectoryOrCreate
+        - name: fuse-device
+          hostPath:
+            path: /dev/fuse
+            type: CharDevice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jellyfin-service
+  namespace: rustfs
+  labels:
+    app: jellyfin
+spec:
+  selector:
+    app: jellyfin
+  type: ClusterIP
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8096
+      targetPort: 8096

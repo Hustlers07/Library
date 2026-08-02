@@ -4,6 +4,6 @@ import { Component } from '@angular/core';
   selector: 'app-seat',
   imports: [],
   templateUrl: './seat.html',
-  styleUrl: './seat.scss',
+  styleUrls: ['./seat.scss'],
 })
 export class Seat {}

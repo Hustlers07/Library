@@ -1,0 +1,146 @@
+.plan-page {
+  padding: 1.25rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.plan-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.plan-header h1 {
+  margin: 0 0 0.25rem;
+}
+
+.plan-content {
+  overflow-x: auto;
+}
+
+.plan-loading,
+.plan-empty {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.plan-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.plan-table th,
+.plan-table td {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+}
+
+.plan-table th {
+  background-color: #f8f8f8;
+  font-weight: 600;
+}
+
+.plan-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.plan-create-form,
+.plan-update {
+  padding: 1rem 0;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.plan-update h2,
+.plan-create-form h2 {
+  margin: 0 0 0.75rem;
+}
+
+.plan-update-form {
+  display: grid;
+  gap: 1.25rem;
+  padding-top: 1rem;
+}
+
+.plan-update-form h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.plan-search-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-items: center;
+}
+
+.plan-search-form .full-width {
+  flex: 1 1 420px;
+  min-width: 260px;
+  width: 100%;
+}
+
+.plan-search-form .mat-form-field {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.plan-search-form button {
+  flex: 0 0 auto;
+  height: 56px;
+  min-height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+@media (max-width: 780px) {
+  .plan-search-form {
+    align-items: stretch;
+  }
+
+  .plan-search-form .full-width,
+  .plan-search-form button {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+}
+
+.plan-form {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.plan-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.plan-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.plan-message {
+  color: #256029;
+  font-weight: 600;
+}
+
+.plan-message.error {
+  color: #b00020;
+}
+
+@media (max-width: 780px) {
+  .plan-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
