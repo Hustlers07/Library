@@ -1,0 +1,154 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: technitium-dns
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: technitium-dns-pvc
+  namespace: technitium-dns
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+# ---------------------------------------------------------------------------
+# ServiceAccount for the Tailscale sidecar's own state persistence
+# (tsnet stores its device identity in a Secret via TS_KUBE_SECRET below,
+# separate from the vault-auth ServiceAccount used by ESO).
+# ---------------------------------------------------------------------------
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tailscale-technitium
+  namespace: technitium-dns
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tailscale-technitium
+  namespace: technitium-dns
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "create", "update", "patch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tailscale-technitium
+  namespace: technitium-dns
+subjects:
+  - kind: ServiceAccount
+    name: tailscale-technitium
+    namespace: technitium-dns
+roleRef:
+  kind: Role
+  name: tailscale-technitium
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: technitium-dns
+  namespace: technitium-dns
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: technitium-dns
+  template:
+    metadata:
+      labels:
+        app: technitium-dns
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: groot-server
+      serviceAccountName: tailscale-technitium
+      containers:
+        - name: technitium-dns
+          image: technitium/dns-server:latest
+          ports:
+            - containerPort: 53
+              protocol: UDP
+            - containerPort: 53
+              protocol: TCP
+            - containerPort: 5380
+              protocol: TCP
+          volumeMounts:
+            - name: dns-data
+              mountPath: /etc/dns
+
+        # ---------------------------------------------------------------
+        # Tailscale sidecar. Because the pod uses hostNetwork: true, this
+        # attaches directly to groot-server's real network stack -- same
+        # effect as installing Tailscale natively on the host, but as a
+        # declarative, GitOps-managed workload instead.
+        # ---------------------------------------------------------------
+        - name: tailscale
+          image: tailscale/tailscale:latest
+          env:
+            - name: TS_AUTHKEY
+              valueFrom:
+                secretKeyRef:
+                  name: tailscale-technitium-auth
+                  key: TS_AUTHKEY
+            - name: TS_KUBE_SECRET
+              value: "tailscale-technitium-state"
+            - name: TS_STATE_DIR
+              value: "/var/lib/tailscale"
+            - name: TS_USERSPACE
+              value: "false"
+            - name: TS_HOSTNAME
+              value: "technitium-dns"
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+                - NET_RAW
+          volumeMounts:
+            - name: dev-net-tun
+              mountPath: /dev/net/tun
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+
+      volumes:
+        - name: dns-data
+          persistentVolumeClaim:
+            claimName: technitium-dns-pvc
+        - name: dev-net-tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: technitium-dns-admin
+  namespace: technitium-dns
+spec:
+  selector:
+    app: technitium-dns
+  ports:
+    - name: web-admin
+      port: 5380
+      protocol: TCP
+      targetPort: 5380

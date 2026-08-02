@@ -141,7 +141,7 @@ spec:
     - match: Host(`dns.home.lab.local`)
       kind: Rule
       services:
-        - name: technitium-dns-service
+        - name: technitium-dns-admin
           port: 5380
   tls:
     secretName: local-cert-tls

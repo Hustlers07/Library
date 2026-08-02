@@ -17,6 +17,39 @@ spec:
       storage: 1Gi
 
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tailscale-technitium
+  namespace: technitium-dns
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tailscale-technitium
+  namespace: technitium-dns
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "create", "update", "patch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tailscale-technitium
+  namespace: technitium-dns
+subjects:
+  - kind: ServiceAccount
+    name: tailscale-technitium
+    namespace: technitium-dns
+roleRef:
+  kind: Role
+  name: tailscale-technitium
+  apiGroup: rbac.authorization.k8s.io
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -38,6 +71,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       nodeSelector:
         kubernetes.io/hostname: groot-server
+      serviceAccountName: tailscale-technitium
       containers:
         - name: technitium-dns
           image: technitium/dns-server:latest
