@@ -161,13 +161,13 @@ public class AuthenticationService {
     /**
      * Deactivate account
      */
-    public void deactivateAccount(String email) {
-        User user = userRepository.findByEmail(email)
+    public void deactivateAccount(String username) {
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         user.setIsActive(false);
         userRepository.save(user);
-        log.info("Account deactivated for user: {}", email);
+        log.info("Account deactivated for user: {}", username);
     }
 
     /**
@@ -223,4 +223,6 @@ public class AuthenticationService {
         long hours = seconds / 3600;
         return hours + " hours";
     }
+
+  
 }

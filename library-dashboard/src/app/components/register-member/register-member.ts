@@ -5,6 +5,6 @@ import { RegisterationForm } from "../registeration-form/registeration-form";
   selector: 'app-register-member',
   imports: [RegisterationForm],
   templateUrl: './register-member.html',
-  styleUrl: './register-member.scss',
+  styleUrls: ['./register-member.scss'],
 })
 export class RegisterMember {}

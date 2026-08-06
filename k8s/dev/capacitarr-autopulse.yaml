@@ -1,0 +1,300 @@
+---
+# ============================================================
+# CAPACITARR (patched: fixed "addgroup: permission denied" crash)
+#
+# Root cause: capacitarr's entrypoint follows the same pattern as
+# pocket-id and similar images -- it needs to start as ROOT so it
+# can run addgroup/adduser to create the PUID/PGID user, chown
+# /config, and then drop privileges itself (via setuid/setgid).
+# The previous pod-level securityContext forced runAsUser:1000
+# from the start, so the entrypoint's addgroup call had no
+# permission to run at all, causing a crash loop.
+#
+# Fix (matches capacitarr's own documented docker-compose.yml):
+#   - No pod-level runAsUser/runAsGroup/fsGroup -- container starts
+#     as root like the entrypoint expects.
+#   - Container-level securityContext explicitly sets
+#     runAsUser/runAsGroup: 0 -- the image itself defaults to a
+#     non-root user when no override is given, so capabilities
+#     alone (SETUID/SETGID) aren't enough; the container actually
+#     needs to start as root for addgroup/adduser to work.
+#   - Also drops ALL capabilities and re-adds only the four the
+#     entrypoint needs: CHOWN, DAC_OVERRIDE, SETUID, SETGID --
+#     equivalent to their cap_drop/cap_add + security_opt
+#     no-new-privileges settings.
+# ============================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: capacitarr-config
+  namespace: rustfs
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 512Mi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: capacitarr
+  namespace: rustfs
+  labels:
+    app: capacitarr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: capacitarr
+  template:
+    metadata:
+      labels:
+        app: capacitarr
+    spec:
+      initContainers:
+        - name: init-create-perms
+          image: busybox:1.36
+          command: ["sh","-c","chown -R 1000:1000 /config || true"]
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      containers:
+        - name: capacitarr
+          image: ghcr.io/ghent/capacitarr:stable
+          securityContext:
+            runAsUser: 0    # image defaults to non-root; must override explicitly
+            runAsGroup: 0
+            allowPrivilegeEscalation: false   # k8s equivalent of no-new-privileges:true
+            capabilities:
+              drop: ["ALL"]
+              add: ["CHOWN", "DAC_OVERRIDE", "SETUID", "SETGID"]
+          envFrom:
+            - configMapRef:
+                name: servarr-env   # gives it PUID/PGID/TZ
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: capacitarr-secret   # from secrets.yaml
+                  key: JWT_SECRET
+          ports:
+            - containerPort: 2187
+              name: web
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: capacitarr-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: capacitarr
+  namespace: rustfs
+spec:
+  selector:
+    app: capacitarr
+  ports:
+    - port: 2187
+      targetPort: 2187
+  type: ClusterIP
+
+---
+# ============================================================
+# AUTOPULSE (unchanged)
+# ============================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: autopulse-db
+  namespace: rustfs
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 512Mi
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: autopulse-config
+  namespace: rustfs
+data:
+  config.yaml: |
+    app:
+      hostname: 0.0.0.0
+      port: 2875
+      database_url: sqlite:///config/autopulse.db
+
+    opts:
+      check_path: true
+      max_retries: 5
+
+    # Sonarr/Radarr both write into /downloads first, then move the
+    # final file into /tv or /movies respectively (see the existing
+    # Sonarr/Radarr Deployments). autopulse doesn't mount /tv or
+    # /movies itself, so check_path just validates the webhook
+    # payload path is well-formed here - mount those hostPaths into
+    # this pod too if you want it to verify the file actually
+    # exists before notifying Jellyfin.
+    triggers:
+      sonarr:
+        type: sonarr
+      radarr:
+        type: radarr
+
+    targets:
+      jellyfin:
+        type: jellyfin
+        url: http://jellyfin.rustfs.svc.cluster.local:8096   # adjust to your Jellyfin service name/namespace
+        # token is injected via AUTOPULSE__TARGETS__JELLYFIN__TOKEN env var, not set here
+        refresh_metadata: true
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autopulse
+  namespace: rustfs
+  labels:
+    app: autopulse
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: autopulse
+  template:
+    metadata:
+      labels:
+        app: autopulse
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: autopulse
+          image: ghcr.io/dan-online/autopulse:latest-sqlite
+          envFrom:
+            - configMapRef:
+                name: servarr-env
+            - secretRef:
+                name: autopulse-secret   # from secrets.yaml - provides AUTOPULSE__TARGETS__JELLYFIN__TOKEN
+          workingDir: /app
+          ports:
+            - containerPort: 2875
+              name: web
+          volumeMounts:
+            - name: db
+              mountPath: /config
+            - name: config-file
+              mountPath: /app/config.yaml   # autopulse looks for config.yaml in its cwd (/app)
+              subPath: config.yaml
+              readOnly: true
+      volumes:
+        - name: db
+          persistentVolumeClaim:
+            claimName: autopulse-db
+        - name: config-file
+          configMap:
+            name: autopulse-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: autopulse
+  namespace: rustfs
+spec:
+  selector:
+    app: autopulse
+  ports:
+    - port: 2875
+      targetPort: 2875
+  type: ClusterIP
+
+---
+# ============================================================
+# SEERR (successor to Jellyseerr/Overseerr, merged Feb 2026)
+# Runs as non-root (UID 1000) by default -- no PUID/PGID root
+# dance needed here, unlike capacitarr/jellyseerr's old pattern.
+# ============================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: seerr-config
+  namespace: rustfs
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 512Mi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seerr
+  namespace: rustfs
+  labels:
+    app: seerr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: seerr
+  template:
+    metadata:
+      labels:
+        app: seerr
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: seerr
+          image: ghcr.io/seerr-team/seerr:latest
+          env:
+            - name: TZ
+              valueFrom:
+                configMapKeyRef:
+                  name: servarr-env
+                  key: TZ
+          ports:
+            - containerPort: 5055
+              name: web
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: seerr-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seerr
+  namespace: rustfs
+spec:
+  selector:
+    app: seerr
+  ports:
+    - port: 5055
+      targetPort: 5055
+  type: ClusterIP

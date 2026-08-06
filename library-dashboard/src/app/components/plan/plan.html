@@ -1,1 +1,197 @@
-<p>plan works!</p>
+<div class="plan-page">
+  <section class="plan-header">
+    <h1>Plans</h1>
+    <mat-button-toggle-group aria-label="Plan action" (change)="onActionChange($event)" [value]="selectedAction">
+      <mat-button-toggle value="view">View</mat-button-toggle>
+      <mat-button-toggle value="create">Create</mat-button-toggle>
+      <mat-button-toggle value="update">Update</mat-button-toggle>
+    </mat-button-toggle-group>
+  </section>
+
+  <section class="plan-content">
+    <div *ngIf="selectedAction === 'create'" class="plan-create-form">
+      <h2>Create Plan</h2>
+      <form [formGroup]="planForm" class="plan-form" (ngSubmit)="onCreatePlan()">
+        <div class="plan-form-grid">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Plan Name</mat-label>
+            <input matInput formControlName="planName" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Plan Type</mat-label>
+            <mat-select formControlName="planType">
+              <mat-option *ngFor="let type of planTypes" [value]="type">{{ type }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Description</mat-label>
+            <input matInput formControlName="description" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Price</mat-label>
+            <input matInput type="number" formControlName="price" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Validity Days</mat-label>
+            <input matInput type="number" formControlName="validityDays" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Hourly Limit</mat-label>
+            <input matInput type="number" formControlName="hourlyLimit" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Daily Limit</mat-label>
+            <input matInput type="number" formControlName="dailyLimit" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Monthly Limit</mat-label>
+            <input matInput type="number" formControlName="monthlyLimit" />
+          </mat-form-field>
+
+          <mat-checkbox formControlName="floorAccessAllowed">Floor access allowed</mat-checkbox>
+          <mat-checkbox formControlName="seatAccessAllowed">Seat access allowed</mat-checkbox>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Discount %</mat-label>
+            <input matInput type="number" formControlName="discountPercentage" />
+          </mat-form-field>
+        </div>
+
+        <div class="plan-form-actions">
+          <button mat-raised-button color="primary" type="submit" [disabled]="planForm.invalid || isSubmitting()">
+            {{ isSubmitting() ? 'Creating...' : 'Create Plan' }}
+          </button>
+          <span class="plan-message" *ngIf="submissionMessage()">{{ submissionMessage() }}</span>
+        </div>
+      </form>
+    </div>
+
+    <div *ngIf="selectedAction === 'view'">
+      <div *ngIf="loading()" class="plan-loading">Loading plans...</div>
+      <div *ngIf="!loading() && plans().length === 0" class="plan-empty">No plans available.</div>
+
+      <table *ngIf="!loading() && plans().length > 0" class="plan-table">
+        <thead>
+          <tr>
+            <th>Plan Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>Validity</th>
+            <th>Hourly</th>
+            <th>Daily</th>
+            <th>Monthly</th>
+            <th>Floor</th>
+            <th>Seat</th>
+            <th>Discount</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let plan of plans()">
+            <td>{{ plan.planName }}</td>
+            <td>{{ plan.planType }}</td>
+            <td>{{ plan.description }}</td>
+            <td>{{ plan.price | currency:'INR':'symbol' }}</td>
+            <td>{{ plan.validityDays }} days</td>
+            <td>{{ plan.hourlyLimit }}</td>
+            <td>{{ plan.dailyLimit }}</td>
+            <td>{{ plan.monthlyLimit }}</td>
+            <td>{{ plan.floorAccessAllowed ? 'Yes' : 'No' }}</td>
+            <td>{{ plan.seatAccessAllowed ? 'Yes' : 'No' }}</td>
+            <td>{{ plan.discountPercentage }}%</td>
+            <td>{{ getPlanStatus(plan) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="selectedAction === 'update'" class="plan-update">
+      <h2>Search plan for update</h2>
+
+      <form [formGroup]="searchPlanForm" class="plan-search-form" (ngSubmit)="searchPlanByName()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Plan Name</mat-label>
+          <input matInput formControlName="planName" placeholder="Monthly" />
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit" [disabled]="searchPlanForm.invalid || isUpdateLoading()">
+          {{ isUpdateLoading() ? 'Searching...' : 'Search Plan' }}
+        </button>
+      </form>
+
+      <div class="plan-message error" *ngIf="searchError()">{{ searchError() }}</div>
+
+      <div *ngIf="selectedPlan()" class="plan-update-form">
+        <h3>Update plan #{{ selectedPlan()?.id }}</h3>
+        <form [formGroup]="updateForm" class="plan-form" (ngSubmit)="onUpdatePlan()">
+          <div class="plan-form-grid">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Plan Name</mat-label>
+              <input matInput formControlName="planName" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Plan Type</mat-label>
+              <mat-select formControlName="planType">
+                <mat-option *ngFor="let type of planTypes" [value]="type">{{ type }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Description</mat-label>
+              <input matInput formControlName="description" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Price</mat-label>
+              <input matInput type="number" formControlName="price" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Validity Days</mat-label>
+              <input matInput type="number" formControlName="validityDays" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Hourly Limit</mat-label>
+              <input matInput type="number" formControlName="hourlyLimit" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Daily Limit</mat-label>
+              <input matInput type="number" formControlName="dailyLimit" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Monthly Limit</mat-label>
+              <input matInput type="number" formControlName="monthlyLimit" />
+            </mat-form-field>
+
+            <mat-checkbox formControlName="floorAccessAllowed">Floor access allowed</mat-checkbox>
+            <mat-checkbox formControlName="seatAccessAllowed">Seat access allowed</mat-checkbox>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Discount %</mat-label>
+              <input matInput type="number" formControlName="discountPercentage" />
+            </mat-form-field>
+          </div>
+
+          <div class="plan-form-actions">
+            <button mat-raised-button color="primary" type="submit" [disabled]="updateForm.invalid || isUpdateLoading()">
+              {{ isUpdateLoading() ? 'Updating...' : 'Update Plan' }}
+            </button>
+            <span class="plan-message" *ngIf="updateMessage()">{{ updateMessage() }}</span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</div>

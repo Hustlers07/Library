@@ -27,7 +27,7 @@ import { environment } from '../../../environments/environment';
     RouterLink
   ],
   templateUrl: './login.html',
-  styleUrl: './login.scss',
+  styleUrls: ['./login.scss'],
 })
 export class Login {
 

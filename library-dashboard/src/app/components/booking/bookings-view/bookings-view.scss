@@ -1,0 +1,104 @@
+.booking-page {
+  padding: 1.25rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.booking-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.booking-header h1 {
+  margin: 0 0 0.25rem;
+}
+
+.booking-message {
+  color: #256029;
+  margin: 0;
+}
+
+.booking-content {
+  overflow-x: auto;
+}
+
+.booking-create-form,
+.booking-list-section {
+  padding: 1rem 0;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.booking-create-form h2,
+.booking-list-section h2 {
+  margin: 0;
+}
+
+.booking-form {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.booking-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.booking-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.booking-list {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.booking-empty {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.booking-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.booking-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.renew-form {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f7f7f7;
+  border-radius: 8px;
+}
+
+.renew-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.full-width {
+  width: 100%;
+}
+
+@media (max-width: 780px) {
+  .booking-form-grid,
+  .renew-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -6,7 +6,7 @@ import { ResetPassword } from './components/reset-password/reset-password';
 import { Dashboard } from './components/dashbard-component/dashboard/dashboard.component';
 import { Profile } from './components/profile/profile';
 import { Room } from './components/room/room';
-import { User } from './components/user/user';
+import { UserComponent as User } from './components/user/user';
 import { Plan } from './components/plan/plan';
 import { Coupon } from './components/coupon/coupon';
 import { Booking } from './components/booking/booking';

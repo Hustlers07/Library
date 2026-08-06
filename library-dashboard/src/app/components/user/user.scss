@@ -1,0 +1,87 @@
+.user-page {
+  padding: 24px;
+}
+
+.user-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.user-header h1 {
+  margin: 0;
+}
+
+.user-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.user-table th,
+.user-table td {
+  border: 1px solid #e0e0e0;
+  padding: 10px;
+  text-align: left;
+}
+
+.user-table th {
+  background: #f6f6f6;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.user-panel {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.user-form,
+.user-search {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-message {
+  color: #333;
+}
+
+.user-message.error {
+  color: #d32f2f;
+}
+
+.user-status {
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.search-field {
+  width: 100%;
+}

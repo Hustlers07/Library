@@ -37,7 +37,7 @@ interface RoomWithSeats extends RoomObj {
     CommonModule,
   ],
   templateUrl: './seat.html',
-  styleUrl: './seat.scss',
+  styleUrls: ['./seat.scss'],
 })
 export class Seat implements OnInit {
   mapForm: FormGroup;

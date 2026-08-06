@@ -87,6 +87,22 @@
       <div *ngIf="loading()" class="coupon-loading">Loading coupons...</div>
       <div *ngIf="!loading() && coupons().length === 0" class="coupon-empty">No coupons available.</div>
 
+      <div *ngIf="!loading() && coupons().length > 0" class="coupon-table-controls">
+        <label>
+          Sort by
+          <select [value]="selectedSortField()" (change)="selectedSortField.set($any($event.target).value)">
+            <option value="couponCode">Coupon Code</option>
+            <option value="validTill">Expiry Date</option>
+            <option value="discountPercentage">Discount %</option>
+            <option value="status">Status</option>
+          </select>
+        </label>
+
+        <button mat-button type="button" (click)="toggleSortDirection()">
+          {{ sortDirection() === 'asc' ? 'Ascending' : 'Descending' }}
+        </button>
+      </div>
+
       <table *ngIf="!loading() && coupons().length > 0" class="coupon-table">
         <thead>
           <tr>
@@ -101,7 +117,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let coupon of coupons()">
+          <tr *ngFor="let coupon of sortedCoupons()">
             <td>{{ coupon.couponCode }}</td>
             <td>{{ coupon.description }}</td>
             <td>
@@ -113,7 +129,7 @@
             <td>{{ coupon.maximumDiscountAmount | currency:'INR':'symbol' }}</td>
             <td>{{ coupon.usedCount }} / {{ coupon.usageLimit }}</td>
             <td>{{ coupon.validFrom | date:'short' }} - {{ coupon.validTill | date:'short' }}</td>
-            <td>{{ coupon.isActive ? 'Active' : 'Inactive' }}</td>
+            <td>{{ getCouponStatus(coupon) }}</td>
           </tr>
         </tbody>
       </table>

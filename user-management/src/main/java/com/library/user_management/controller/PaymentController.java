@@ -38,10 +38,10 @@ public class PaymentController {
             HttpServletRequest httpRequest) {
         log.info("Create payment request received");
 
-        String token = extractToken(httpRequest);
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+        // String token = extractToken(httpRequest);
+        // Long userId = jwtTokenProvider.getUserIdFromToken(token);
 
-        PaymentResponse response = paymentService.createPayment(userId, paymentRequest);
+        PaymentResponse response = paymentService.createPayment(paymentRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

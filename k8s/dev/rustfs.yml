@@ -1,0 +1,168 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rustfs
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: rustfs-pv
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /mnt/pi-box-1tb/rustfs/data
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rustfs-pvc
+  namespace: rustfs
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  volumeName: rustfs-pv
+  storageClassName: ""
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rustfs
+  namespace: rustfs
+  labels:
+    app: rustfs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rustfs
+  template:
+    metadata:
+      labels:
+        app: rustfs
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: "groot-server"
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
+      initContainers:
+        - name: init-chown-data
+          image: busybox:1.36
+          securityContext:
+            runAsUser: 0
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /data /logs
+              chmod -R 777 /data /logs
+              echo "Permissions set successfully"
+          volumeMounts:
+            - name: rustfs-data
+              mountPath: /data
+            - name: rustfs-logs
+              mountPath: /logs
+      containers:
+        - name: rustfs
+          image: rustfs/rustfs:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0
+          # No resources were previously set here, which meant this
+          # container had no protection from node memory pressure and
+          # could be OOM-killed at any time. Since jellyfin/rclone-mount
+          # depend on RustFS being consistently reachable (their liveness
+          # probes and every S3 upload go through this pod), an
+          # unprotected/OOM-killed RustFS pod was very likely a root
+          # contributor to the rclone-mount flapping seen separately.
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "3Gi"
+          ports:
+            - name: s3
+              containerPort: 9000
+              hostPort: 9000
+            - name: console
+              containerPort: 9001
+              hostPort: 9001
+          env:
+            - name: RUSTFS_CONSOLE_ENABLE
+              value: "true"
+            - name: RUSTFS_ADDRESS
+              value: ":9000"
+            - name: RUSTFS_CONSOLE_ADDRESS
+              value: ":9001"
+            - name: RUSTFS_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rustfs-credentials
+                  key: RUSTFS_ACCESS_KEY
+            - name: RUSTFS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rustfs-credentials
+                  key: RUSTFS_SECRET_KEY
+          volumeMounts:
+            - name: rustfs-data
+              mountPath: /data
+            - name: rustfs-logs
+              mountPath: /logs
+          # Loosened thresholds/timeouts so brief disk or CPU contention
+          # (e.g. during large uploads) doesn't trigger unnecessary
+          # restarts of the S3 backend that everything else depends on.
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 9001
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 9001
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
+      volumes:
+        - name: rustfs-data
+          persistentVolumeClaim:
+            claimName: rustfs-pvc
+        - name: rustfs-logs
+          hostPath:
+            path: /mnt/pi-box-1tb/rustfs/logs
+            type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rustfs-service
+  namespace: rustfs
+  labels:
+    app: rustfs
+spec:
+  selector:
+    app: rustfs
+  ports:
+    - name: s3
+      port: 9000
+      targetPort: 9000
+    - name: console
+      port: 9001
+      targetPort: 9001
+  type: ClusterIP
