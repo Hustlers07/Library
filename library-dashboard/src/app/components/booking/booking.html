@@ -1,1 +1,29 @@
-<p>booking works!</p>
+<div class="booking-page">
+    <section class="booking-header">
+        <div>
+            <h1>Bookings</h1>
+            <!-- <p class="booking-message" *ngIf="message">{{ message }}</p> -->
+            
+
+        </div>
+        <div class="actions">
+                <mat-button-toggle-group [value]="selectedAction" (change)="onActionChange($event)">
+                    <mat-button-toggle *ngFor="let a of actions" [value]="a.value">{{a.key}}</mat-button-toggle>
+                </mat-button-toggle-group>
+            </div>
+    </section>
+
+    @switch(selectedAction)
+        @case('upcoming')
+            <app-bookings-view [action]="'upcoming'"></app-bookings-view>
+            @break
+        @case('past')
+            <app-bookings-view [action]="'past'"></app-bookings-view>
+            @break
+        @case('cancelled')
+            <app-bookings-view [action]="'cancelled'"></app-bookings-view>
+            @break
+        @default
+            <app-bookings-view [action]="'upcoming'"></app-bookings-view>
+
+</div>

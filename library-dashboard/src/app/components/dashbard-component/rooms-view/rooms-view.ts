@@ -8,7 +8,7 @@ import { RoomObj, RoomService } from '../../../services/room-service';
   selector: 'app-rooms-view',
   imports: [MatListModule, MatIconModule, TitleCasePipe],
   templateUrl: './rooms-view.html',
-  styleUrl: './rooms-view.scss',
+  styleUrls: ['./rooms-view.scss'],
 })
 export class RoomsView implements OnInit{
 onClick($event: PointerEvent) {

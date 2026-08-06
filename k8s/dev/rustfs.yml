@@ -1,63 +1,41 @@
----
-# ─────────────────────────────────────────────
-# Secret: RustFS credentials
-# ─────────────────────────────────────────────
 apiVersion: v1
-kind: Secret
+kind: Namespace
 metadata:
-  name: rustfs-credentials
-  namespace: library-dev
-type: Opaque
-stringData:
-  RUSTFS_ACCESS_KEY: "${RUSTFS_ACCESS_KEY}"
-  RUSTFS_SECRET_KEY: "${RUSTFS_SECRET_KEY}"
- 
+  name: rustfs
 ---
-# ─────────────────────────────────────────────
-# PersistentVolume: RustFS shared storage
-# ─────────────────────────────────────────────
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: rustfs-shared-pv-librarydev
+  name: rustfs-pv
 spec:
   capacity:
-    storage: 200Gi
+    storage: 20Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   hostPath:
-    path: /home/groot/Documents/rustfs/shared
+    path: /mnt/pi-box-1tb/rustfs/data
     type: DirectoryOrCreate
-  volumeMode: Filesystem
- 
 ---
-# ─────────────────────────────────────────────
-# PersistentVolumeClaim: RustFS shared storage
-# ─────────────────────────────────────────────
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: rustfs-shared-pvc-librarydev
-  namespace: library-dev
+  name: rustfs-pvc
+  namespace: rustfs
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 200Gi
-  volumeName: rustfs-shared-pv-librarydev
+      storage: 20Gi
+  volumeName: rustfs-pv
   storageClassName: ""
- 
 ---
-# ─────────────────────────────────────────────
-# Deployment: RustFS
-# ─────────────────────────────────────────────
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: rustfs
-  namespace: library-dev
+  namespace: rustfs
   labels:
     app: rustfs
 spec:
@@ -96,21 +74,37 @@ spec:
       containers:
         - name: rustfs
           image: rustfs/rustfs:latest
-          imagePullPolicy: Always        # FIX: was IfNotPresent; Always ensures latest tag is fresh
+          imagePullPolicy: IfNotPresent
           securityContext:
             runAsUser: 0
+          # No resources were previously set here, which meant this
+          # container had no protection from node memory pressure and
+          # could be OOM-killed at any time. Since jellyfin/rclone-mount
+          # depend on RustFS being consistently reachable (their liveness
+          # probes and every S3 upload go through this pod), an
+          # unprotected/OOM-killed RustFS pod was very likely a root
+          # contributor to the rclone-mount flapping seen separately.
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "3Gi"
           ports:
             - name: s3
-              containerPort: 9002
+              containerPort: 9000
+              hostPort: 9000
             - name: console
-              containerPort: 80
+              containerPort: 9001
+              hostPort: 9001
           env:
             - name: RUSTFS_CONSOLE_ENABLE
               value: "true"
             - name: RUSTFS_ADDRESS
-              value: ":9002"
+              value: ":9000"
             - name: RUSTFS_CONSOLE_ADDRESS
-              value: ":80"
+              value: ":9001"
             - name: RUSTFS_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
@@ -126,37 +120,39 @@ spec:
               mountPath: /data
             - name: rustfs-logs
               mountPath: /logs
-          # FIX: tcpSocket on S3 port — console returns 403 on all HTTP paths (auth required)
+          # Loosened thresholds/timeouts so brief disk or CPU contention
+          # (e.g. during large uploads) doesn't trigger unnecessary
+          # restarts of the S3 backend that everything else depends on.
           readinessProbe:
-            tcpSocket:
-              port: 9002
+            httpGet:
+              path: /health
+              port: 9001
             initialDelaySeconds: 10
-            periodSeconds: 10
-            failureThreshold: 5
-          livenessProbe:
-            tcpSocket:
-              port: 9002
-            initialDelaySeconds: 30
-            periodSeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 10
             failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 9001
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
       volumes:
         - name: rustfs-data
           persistentVolumeClaim:
-            claimName: rustfs-shared-pvc-librarydev
+            claimName: rustfs-pvc
         - name: rustfs-logs
           hostPath:
-            path: /home/groot/Documents/rustfs/shared/logs
+            path: /mnt/pi-box-1tb/rustfs/logs
             type: DirectoryOrCreate
- 
 ---
-# ─────────────────────────────────────────────
-# Service: RustFS
-# ─────────────────────────────────────────────
 apiVersion: v1
 kind: Service
 metadata:
   name: rustfs-service
-  namespace: library-dev
+  namespace: rustfs
   labels:
     app: rustfs
 spec:
@@ -164,9 +160,9 @@ spec:
     app: rustfs
   ports:
     - name: s3
-      port: 9002
-      targetPort: 9002
+      port: 9000
+      targetPort: 9000
     - name: console
-      port: 80
-      targetPort: 80
-  type: LoadBalancer
+      port: 9001
+      targetPort: 9001
+  type: ClusterIP

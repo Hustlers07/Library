@@ -1,0 +1,551 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rustfs
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: servarr-env
+  namespace: rustfs
+data:
+  PUID: "1000"
+  PGID: "1000"
+  TZ: "Etc/UTC"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qbittorrent-config
+  namespace: rustfs
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarr-config
+  namespace: rustfs
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: radarr-config
+  namespace: rustfs
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prowlarr-config
+  namespace: rustfs
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 512Mi
+---
+# ============================================================
+# QBITTORRENT (VPN REMOVED 2026-07-19)
+# gluetun sidecar removed entirely -- was routed through a free
+# VPN Gate relay (opengw.net) with no port-forwarding support,
+# which left qBittorrent permanently "firewalled" and unable to
+# accept incoming peer connections. That was the real cause of
+# slow downloads, not a k8s networking issue.
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qbittorrent
+  namespace: rustfs
+  labels:
+    app: qbittorrent
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: qbittorrent
+  template:
+    metadata:
+      labels:
+        app: qbittorrent
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: groot-server
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+        - name: set-webui-credentials
+          image: python:3.12-alpine
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "32Mi"
+            limits:
+              cpu: "200m"
+              memory: "64Mi"
+          env:
+            - name: QBITTORRENT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: qbittorrent-vpn-config
+                  key: QBITTORRENT_USERNAME
+            - name: QBITTORRENT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: qbittorrent-vpn-config
+                  key: QBITTORRENT_PASSWORD
+          volumeMounts:
+            - name: config
+              mountPath: /config
+          command:
+            - python3
+            - -c
+            - |
+              import os, base64, hashlib, configparser, pathlib
+
+              conf_dir = pathlib.Path("/config/qBittorrent")
+              conf_dir.mkdir(parents=True, exist_ok=True)
+              conf_path = conf_dir / "qBittorrent.conf"
+
+              cp = configparser.ConfigParser(strict=False)
+              cp.optionxform = str
+              if conf_path.exists():
+                  cp.read(conf_path)
+
+              if "Preferences" not in cp:
+                  cp["Preferences"] = {}
+
+              username = os.environ["QBITTORRENT_USERNAME"]
+              password = os.environ["QBITTORRENT_PASSWORD"].encode()
+
+              salt = os.urandom(16)
+              digest = hashlib.pbkdf2_hmac("sha512", password, salt, 100000)
+              b64_salt = base64.b64encode(salt).decode()
+              b64_hash = base64.b64encode(digest).decode()
+
+              cp["Preferences"]["WebUI\\Username"] = username
+              cp["Preferences"]["WebUI\\Password_PBKDF2"] = (
+                  f'"@ByteArray({b64_salt}:{b64_hash})"'
+              )
+
+              with open(conf_path, "w") as f:
+                  cp.write(f, space_around_delimiters=False)
+
+              print(f"WebUI credentials set for user '{username}'")
+      containers:
+        - name: qbittorrent
+          image: lscr.io/linuxserver/qbittorrent:latest
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2500m"
+              memory: "4Gi"
+          envFrom:
+            - configMapRef:
+                name: servarr-env
+          env:
+            - name: WEBUI_PORT
+              value: "8080"
+          ports:
+            - containerPort: 8080
+              name: webui
+            - containerPort: 6881
+              name: torrent-tcp
+              protocol: TCP
+            - containerPort: 6881
+              name: torrent-udp
+              protocol: UDP
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: downloads
+              mountPath: /downloads
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: qbittorrent-config
+        - name: downloads
+          hostPath:
+            path: /home/groot/downloads
+            type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qbittorrent
+  namespace: rustfs
+spec:
+  selector:
+    app: qbittorrent
+  ports:
+    - name: webui
+      port: 8080
+      targetPort: 8080
+    - name: torrent-tcp
+      port: 6881
+      targetPort: 6881
+      protocol: TCP
+    - name: torrent-udp
+      port: 6881
+      targetPort: 6881
+      protocol: UDP
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarr
+  namespace: rustfs
+  labels:
+    app: sonarr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: sonarr
+  template:
+    metadata:
+      labels:
+        app: sonarr
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: groot-server
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: jellyfin
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: sonarr
+          image: lscr.io/linuxserver/sonarr:latest
+          envFrom:
+            - configMapRef:
+                name: servarr-env
+          ports:
+            - containerPort: 8989
+              name: web
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: downloads
+              mountPath: /downloads
+            - name: media
+              mountPath: /tv
+              mountPropagation: HostToContainer
+          # Dropped the `ls /tv` check -- it round-trips to the RustFS S3
+          # backend over the FUSE mount, and hangs (past timeoutSeconds)
+          # whenever RustFS is briefly slow, under load, or restarting.
+          # A hung ls -> failed probe -> killed container -> brief window
+          # where writes could land on the raw hostPath underneath the
+          # FUSE mount instead of going through rclone -- silently
+          # "shadowing" files from ever being uploaded to S3.
+          # mountpoint -q alone confirms the FUSE mount is attached
+          # without touching the backend at all.
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "mountpoint -q /tv"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 15
+            failureThreshold: 6
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    fusermount -uz /tv 2>/dev/null || umount -l /tv 2>/dev/null || true
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: sonarr-config
+        - name: downloads
+          hostPath:
+            path: /home/groot/downloads
+            type: DirectoryOrCreate
+        - name: media
+          hostPath:
+            path: /home/groot/jellyfin-tv
+            type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonarr
+  namespace: rustfs
+spec:
+  selector:
+    app: sonarr
+  ports:
+    - port: 8989
+      targetPort: 8989
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: radarr
+  namespace: rustfs
+  labels:
+    app: radarr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: radarr
+  template:
+    metadata:
+      labels:
+        app: radarr
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: groot-server
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: jellyfin
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: radarr
+          image: lscr.io/linuxserver/radarr:latest
+          envFrom:
+            - configMapRef:
+                name: servarr-env
+          ports:
+            - containerPort: 7878
+              name: web
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: downloads
+              mountPath: /downloads
+            - name: media
+              mountPath: /movies
+              mountPropagation: HostToContainer
+          # Same reasoning as sonarr above: mountpoint -q only, no ls.
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "mountpoint -q /movies"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 15
+            failureThreshold: 6
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    fusermount -uz /movies 2>/dev/null || umount -l /movies 2>/dev/null || true
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: radarr-config
+        - name: downloads
+          hostPath:
+            path: /home/groot/downloads
+            type: DirectoryOrCreate
+        - name: media
+          hostPath:
+            path: /home/groot/jellyfin-movies
+            type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: radarr
+  namespace: rustfs
+spec:
+  selector:
+    app: radarr
+  ports:
+    - port: 7878
+      targetPort: 7878
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prowlarr
+  namespace: rustfs
+  labels:
+    app: prowlarr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: prowlarr
+  template:
+    metadata:
+      labels:
+        app: prowlarr
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: prowlarr
+          image: lscr.io/linuxserver/prowlarr:latest
+          envFrom:
+            - configMapRef:
+                name: servarr-env
+          ports:
+            - containerPort: 9696
+              name: web
+          resources:
+            requests:
+              cpu: "150m"
+              memory: "192Mi"
+            limits:
+              cpu: "750m"
+              memory: "512Mi"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: prowlarr-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prowlarr
+  namespace: rustfs
+spec:
+  selector:
+    app: prowlarr
+  ports:
+    - port: 9696
+      targetPort: 9696
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flaresolverr
+  namespace: rustfs
+  labels:
+    app: flaresolverr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: flaresolverr
+  template:
+    metadata:
+      labels:
+        app: flaresolverr
+    spec:
+      containers:
+        - name: flaresolverr
+          image: ghcr.io/flaresolverr/flaresolverr:latest
+          env:
+            - name: LOG_LEVEL
+              value: "info"
+            - name: TZ
+              value: "Etc/UTC"
+          ports:
+            - containerPort: 8191
+              name: web
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "3000m"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8191
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8191
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flaresolverr
+  namespace: rustfs
+spec:
+  selector:
+    app: flaresolverr
+  ports:
+    - port: 8191
+      targetPort: 8191
+  type: ClusterIP

@@ -1,0 +1,110 @@
+---
+# ---------------------------------------------------------------------------
+# RBAC for the Tailscale sidecar itself (tsnet state storage -- separate
+# concern from the vault-auth ServiceAccount below, which is only for ESO).
+# ---------------------------------------------------------------------------
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tailscale-technitium
+  namespace: technitium-dns
+
+---
+# Needed so the sidecar can persist its Tailscale identity/state in a
+# Secret instead of a PersistentVolume (survives pod restarts without
+# re-registering as a new device each time).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tailscale-technitium
+  namespace: technitium-dns
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "create", "update", "patch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tailscale-technitium
+  namespace: technitium-dns
+subjects:
+  - kind: ServiceAccount
+    name: tailscale-technitium
+    namespace: technitium-dns
+roleRef:
+  kind: Role
+  name: tailscale-technitium
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# ============================================================
+# TAILSCALE AUTH KEY FOR TECHNITIUM SIDECAR (via ESO/Vault)
+#
+# Reuses the EXISTING media/tailscale secret (same one
+# tailscale-operator-oauth reads client_id/client_secret from) --
+# this just reads a different field (auth_key) out of the same
+# secret. Confirmed present via:
+#   vault kv get media/tailscale
+#
+# libraryapp's Kubernetes auth role needs technitium-dns added to its
+# bound namespaces (it currently only lists library-dev, rustfs):
+#
+#   vault write auth/kubernetes/role/libraryapp \
+#     bound_service_account_names=vault-auth \
+#     bound_service_account_namespaces=library-dev,rustfs,technitium-dns \
+#     policies=libraryapp \
+#     ttl=1h
+#
+# No new policy path needed -- libraryapp already has read access to
+# media/data/tailscale and media/metadata/tailscale from the operator
+# OAuth setup earlier.
+# ============================================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-auth
+  namespace: technitium-dns
+
+---
+apiVersion: external-secrets.io/v1beta1
+kind: SecretStore
+metadata:
+  name: vault-backend-media
+  namespace: technitium-dns
+spec:
+  provider:
+    vault:
+      server: http://vault-service.vault.svc.cluster.local:8200
+      path: media
+      version: v2
+      auth:
+        kubernetes:
+          mountPath: kubernetes
+          role: libraryapp
+          serviceAccountRef:
+            name: vault-auth
+
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: tailscale-technitium-auth
+  namespace: technitium-dns
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault-backend-media
+    kind: SecretStore
+  target:
+    # Consumed by the sidecar container as TS_AUTHKEY
+    name: tailscale-technitium-auth
+    creationPolicy: Owner
+    template:
+      type: Opaque
+  data:
+    - secretKey: TS_AUTHKEY
+      remoteRef:
+        key: tailscale
+        property: auth_key

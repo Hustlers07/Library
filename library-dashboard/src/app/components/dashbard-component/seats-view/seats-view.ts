@@ -28,7 +28,7 @@ interface RoomWithSeats extends RoomObj {
   selector: 'app-seats-view',
   imports: [CommonModule, MatCardModule, MatGridListModule, MatIconModule],
   templateUrl: './seats-view.html',
-  styleUrl: './seats-view.scss',
+  styleUrls: ['./seats-view.scss'],
 })
 export class SeatsView implements OnInit {
   seats: SeatObj[] = [];

@@ -18,6 +18,10 @@ export const API_ENDPOINTS = {
   PLANS: () => `${environment.apiUrl}/${environment.basePath}/api/plans`,
   PLAN_BY_ID: (id: number) => `${environment.apiUrl}/${environment.basePath}/api/plans/${id}`,
   AUTH: () => `${environment.apiUrl}/${environment.basePath}/api/auth`,
+  BOOKINGS: () => `${environment.apiUrl}/${environment.basePath}/api/bookings`,
+  BOOKING_BY_ID: (id: number) => `${environment.apiUrl}/${environment.basePath}/api/bookings/${id}`,
+  BOOKING_RENEW: (id: number) => `${environment.apiUrl}/${environment.basePath}/api/bookings/${id}/renew`,
+  BOOKING_CANCEL: (id: number) => `${environment.apiUrl}/${environment.basePath}/api/bookings/${id}/cancel`,
 };
 
 

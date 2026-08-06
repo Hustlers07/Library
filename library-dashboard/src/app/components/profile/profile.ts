@@ -8,7 +8,7 @@ import { User } from '../../models/user/user-module';
   selector: 'app-profile',
   imports: [],
   templateUrl: './profile.html',
-  styleUrl: './profile.scss',
+  styleUrls: ['./profile.scss'],
 })
 export class Profile implements OnInit {
 
